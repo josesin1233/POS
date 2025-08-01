@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro de Ventas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <style>
+    body {
+      padding: 2rem;
+      background-color: #f8f9fa;
+    }
+    h1 {
+      margin-bottom: 2rem;
+    }
+    .table-container {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .ticket-header {
+      background-color: #e9ecef;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Registro de Ventas</h1>
+    <h4 class="text-end mb-3">
+  Total del día: <span id="total-dia" class="fw-bold text-success">$0.00</span>
+</h4>
+
+<form id="filtro-form" class="row g-3 mb-4">
+  <div class="col-md-3">
+    <label for="filtro-dia" class="form-label">Filtrar por día:</label>
+    <input type="date" id="filtro-dia" class="form-control" />
+  </div>
+  <div class="col-md-3">
+    <label for="filtro-mes" class="form-label">Filtrar por mes:</label>
+    <input type="month" id="filtro-mes" class="form-control" />
+  </div>
+  <div class="col-md-3">
+    <label for="filtro-anio" class="form-label">Filtrar por año:</label>
+    <input type="number" id="filtro-anio" class="form-control" placeholder="Ej. 2025" min="2000" />
+  </div>
+  <div class="col-md-3 d-flex align-items-end">
+    <button type="submit" class="btn btn-primary w-100">Aplicar filtro</button>
+  </div>
+</form>
+
+    <div class="table-container">
+      <form id="filtro-form" class="mb-4 d-flex gap-3 align-items-end flex-wrap">
+  <div>
+    <label>Día:</label>
+    <input type="date" id="filtro-dia" class="form-control" />
+  </div>
+  <div>
+    <label>Mes:</label>
+    <input type="month" id="filtro-mes" class="form-control" />
+  </div>
+  <div>
+    <label>Año:</label>
+    <input type="number" id="filtro-anio" class="form-control" min="2000" max="2100" placeholder="2025" />
+  </div>
+  <button type="submit" class="btn btn-primary">Filtrar</button>
+</form>
+
+      <table class="table table-bordered table-hover table-striped" id="tabla-ventas">
+        <thead class="table-dark">
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio Unitario</th>
+            <th>Total</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <a href="/" class="btn btn-secondary mt-3">Volver</a>
+  </div>
+
+<script>
+  const formFiltro = document.getElementById("filtro-form");
+  const tabla = document.querySelector("#tabla-ventas tbody");
+  const totalSpan = document.getElementById("total-ventas");
+
+  async function cargarVentas(queryParams = "") {
+    try {
+      const res = await fetch(`/ventas/api${queryParams}`);
+      const ventas = await res.json();
+
+      tabla.innerHTML = "";
+      let sumaTotal = 0;
+
+      ventas.forEach(venta => {
+        const fecha = new Date(venta.fecha).toLocaleString();
+        sumaTotal += venta.total_venta;
+
+        // Fila resumen de venta
+        const filaHeader = document.createElement("tr");
+        filaHeader.classList.add("ticket-header");
+        filaHeader.innerHTML = `
+          <td colspan="5">Venta del ${fecha} - Total: $${venta.total_venta.toFixed(2)}</td>
+        `;
+        tabla.appendChild(filaHeader);
+
+        // Filas por producto
+        venta.productos.forEach(p => {
+          const fila = document.createElement("tr");
+          fila.innerHTML = `
+            <td>${p.nombre_producto}</td>
+            <td>${p.cantidad_vendida}</td>
+            <td>$${p.precio_unitario.toFixed(2)}</td>
+            <td>$${p.total.toFixed(2)}</td>
+            <td></td>
+          `;
+          tabla.appendChild(fila);
+        });
+      });
+
+      totalSpan.textContent = `Total: $${sumaTotal.toFixed(2)}`;
+    } catch (error) {
+      console.error("Error al cargar ventas:", error);
+    }
+  }
+
+  // Cargar al inicio todas las ventas
+  cargarVentas();
+
+  // Manejar el envío del formulario de filtros
+  formFiltro.addEventListener("submit", e => {
+    e.preventDefault();
+
+    const dia = document.getElementById("filtro-dia").value;
+    const mes = document.getElementById("filtro-mes").value;
+    const anio = document.getElementById("filtro-anio").value;
+
+    const params = new URLSearchParams();
+    if (dia) params.append("dia", dia);
+    if (mes) params.append("mes", mes);
+    if (anio) params.append("anio", anio);
+
+    cargarVentas("?" + params.toString());
+  });
+</script>
+
+</body>
+</html>

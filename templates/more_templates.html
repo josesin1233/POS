@@ -1,0 +1,1152 @@
+<!-- templates/accounts/dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ user.business.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p class="text-gray-600">Resumen de tu negocio {{ user.business.name }}</p>
+    </div>
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Ventas Hoy</p>
+                    <p class="text-2xl font-bold">${{ stats_hoy.total_ventas|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Ventas del Mes</p>
+                    <p class="text-2xl font-bold">${{ stats_mes.total_ventas|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="flex items-center">
+                <div class="p-2 bg-yellow-100 rounded-lg">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Stock Bajo</p>
+                    <p class="text-2xl font-bold">{{ total_productos_bajo_stock }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="flex items-center">
+                <div class="p-2 bg-purple-100 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Usuarios Conectados</p>
+                    <p class="text-2xl font-bold">{{ plan_info.usuarios_conectados }} / {{ plan_info.usuarios_permitidos }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Información del plan -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Plan Actual</h2>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Plan:</span>
+                    <span class="font-semibold">{{ plan_info.nombre }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Usuarios permitidos:</span>
+                    <span class="font-semibold">{{ plan_info.usuarios_permitidos }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Costo mensual:</span>
+                    <span class="font-semibold">${{ plan_info.costo_mensual }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Estado:</span>
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Activo</span>
+                </div>
+            </div>
+            
+            {% if user.is_business_owner %}
+            <div class="mt-4">
+                <a href="{% url 'accounts:configuracion' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Configurar Negocio
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Productos con stock bajo -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Productos con Stock Bajo</h2>
+            {% if productos_bajo_stock %}
+            <div class="space-y-2">
+                {% for producto in productos_bajo_stock %}
+                <div class="flex justify-between items-center p-2 bg-red-50 rounded">
+                    <div>
+                        <p class="font-medium">{{ producto.nombre }}</p>
+                        <p class="text-sm text-gray-600">Código: {{ producto.codigo }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-red-600 font-bold">{{ producto.stock }}</p>
+                        <p class="text-xs text-gray-500">Min: {{ producto.stock_minimo }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if total_productos_bajo_stock > 5 %}
+            <p class="text-sm text-gray-500 mt-2">
+                Y {{ total_productos_bajo_stock|add:"-5" }} productos más...
+            </p>
+            {% endif %}
+            {% else %}
+            <p class="text-gray-500">No hay productos con stock bajo</p>
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{% url 'inventario:inventario' %}" class="text-blue-600 hover:text-blue-800">
+                    Ver inventario completo →
+                </a>
+            </div>
+        </div>
+
+        <!-- Usuarios activos -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Usuarios Conectados</h2>
+            {% if usuarios_activos %}
+            <div class="space-y-2">
+                {% for usuario in usuarios_activos %}
+                <div class="flex justify-between items-center p-2 bg-green-50 rounded">
+                    <div>
+                        <p class="font-medium">{{ usuario.nombre_completo|default:usuario.username }}</p>
+                        <p class="text-sm text-gray-600">{{ usuario.ip_address }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-green-600 font-bold">● Activo</p>
+                        <p class="text-xs text-gray-500">{{ usuario.ultima_actividad }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500">Solo tú estás conectado</p>
+            {% endif %}
+        </div>
+
+        <!-- Accesos rápidos -->
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-lg font-semibold mb-4">Accesos Rápidos</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="{% url 'pos:index' %}" class="bg-blue-600 text-white p-3 rounded text-center hover:bg-blue-700">
+                    <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                    </svg>
+                    Punto de Venta
+                </a>
+                
+                <a href="{% url 'inventario:inventario' %}" class="bg-green-600 text-white p-3 rounded text-center hover:bg-green-700">
+                    <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    Inventario
+                </a>
+                
+                <a href="{% url 'ventas:ventas' %}" class="bg-purple-600 text-white p-3 rounded text-center hover:bg-purple-700">
+                    <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    Reportes
+                </a>
+                
+                <a href="{% url 'pos:cerrar_dia_page' %}" class="bg-red-600 text-white p-3 rounded text-center hover:bg-red-700">
+                    <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Cerrar Día
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+<!-- templates/pos/cerrar.html -->
+{% extends 'base.html' %}
+
+{% block title %}Cerrar Día - {{ user.business.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <div class="max-w-2xl mx-auto">
+        <header class="bg-red-600 text-white p-6 shadow rounded-lg mb-6">
+            <h1 class="text-3xl font-bold text-center">Cerrar Día</h1>
+            <p class="text-center text-red-200 mt-2">Generar reporte del día y cerrar operaciones</p>
+        </header>
+
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="text-center mb-6">
+                <h2 class="text-xl font-semibold mb-4">Resumen del Día</h2>
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="bg-green-50 p-4 rounded">
+                        <p class="text-green-600 font-bold text-2xl" id="total-ventas">$0.00</p>
+                        <p class="text-green-700 text-sm">Total Ventas</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded">
+                        <p class="text-blue-600 font-bold text-2xl" id="num-ventas">0</p>
+                        <p class="text-blue-700 text-sm">Número de Ventas</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded">
+                        <p class="text-purple-600 font-bold text-2xl" id="productos-vendidos">0</p>
+                        <p class="text-purple-700 text-sm">Productos Vendidos</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="border-t pt-4">
+                    <h3 class="font-semibold mb-3">Productos con Stock Bajo</h3>
+                    <div id="productos-stock-bajo" class="space-y-2">
+                        <!-- Se llena con JavaScript -->
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <h3 class="font-semibold mb-3">Opciones de Cierre</h3>
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="enviar-correo" class="mr-2" checked>
+                            <span>Enviar reporte por correo electrónico</span>
+                        </label>
+                        
+                        <div id="email-section" class="ml-6">
+                            <input type="email" id="email-destino" 
+                                   placeholder="correo@ejemplo.com" 
+                                   class="w-full p-2 border rounded"
+                                   value="{{ user.business.settings.report_email|default:user.business.email }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4 flex gap-4">
+                    <button onclick="cerrarDia()" 
+                            class="bg-red-600 text-white px-6 py-3 rounded hover:bg-red-700 flex-1">
+                        🔒 Cerrar el Día
+                    </button>
+                    
+                    <button onclick="previsualizarReporte()" 
+                            class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700">
+                        👁 Previsualizar
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <a href="{% url 'pos:index' %}" class="text-gray-600 hover:text-gray-800">
+                        ← Volver al punto de venta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Cargar resumen del día
+async function cargarResumenDia() {
+    try {
+        const res = await fetch("{% url 'pos:total_hoy' %}");
+        const data = await res.json();
+        
+        if (res.ok) {
+            document.getElementById('total-ventas').textContent = `${data.total_hoy.toFixed(2)}`;
+            document.getElementById('num-ventas').textContent = data.numero_ventas;
+            document.getElementById('productos-vendidos').textContent = data.productos_vendidos;
+        }
+    } catch (error) {
+        console.error("Error cargando resumen:", error);
+    }
+}
+
+// Cargar productos con stock bajo
+async function cargarStockBajo() {
+    try {
+        const res = await fetch("{% url 'inventario:stock_bajo' %}");
+        const data = await res.json();
+        
+        const container = document.getElementById('productos-stock-bajo');
+        
+        if (res.ok && data.productos.length > 0) {
+            container.innerHTML = data.productos.map(producto => `
+                <div class="bg-yellow-50 p-2 rounded flex justify-between">
+                    <span>${producto.nombre}</span>
+                    <span class="text-red-600 font-bold">Stock: ${producto.stock}</span>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p class="text-green-600">✅ Todos los productos tienen stock suficiente</p>';
+        }
+    } catch (error) {
+        console.error("Error cargando stock bajo:", error);
+    }
+}
+
+// Cerrar día
+async function cerrarDia() {
+    if (!confirm("¿Estás seguro de que deseas cerrar el día? Esta acción no se puede deshacer.")) {
+        return;
+    }
+
+    try {
+        const res = await fetch("{% url 'pos:cerrar_dia' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            // Enviar correo si está marcado
+            if (document.getElementById('enviar-correo').checked) {
+                await enviarReportePorCorreo();
+            }
+            
+            alert(`✅ Día cerrado exitosamente!\n\nTotal del día: ${data.total_dia.toFixed(2)}\nVentas realizadas: ${data.numero_ventas}`);
+            
+            // Redirigir al dashboard
+            window.location.href = "{% url 'accounts:dashboard' %}";
+        } else {
+            alert("❌ Error: " + (data.error || "No se pudo cerrar el día"));
+        }
+    } catch (error) {
+        console.error("Error cerrando día:", error);
+        alert("❌ Error al cerrar el día");
+    }
+}
+
+// Enviar reporte por correo
+async function enviarReportePorCorreo() {
+    const email = document.getElementById('email-destino').value.trim();
+    
+    if (!email) {
+        alert("Ingresa un email válido");
+        return;
+    }
+
+    try {
+        const res = await fetch("{% url 'ventas:reporte_diario' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                fecha: new Date().toISOString().slice(0, 10),
+                email: email
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            console.error("Error enviando reporte:", data.error);
+        }
+    } catch (error) {
+        console.error("Error enviando reporte:", error);
+    }
+}
+
+// Previsualizar reporte
+async function previsualizarReporte() {
+    try {
+        const res = await fetch("{% url 'ventas:reporte_diario' %}");
+        const data = await res.json();
+        
+        if (res.ok) {
+            const ventana = window.open("", "_blank", "width=800,height=600");
+            ventana.document.write(`
+                <html>
+                <head>
+                    <title>Reporte del Día - ${data.fecha}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+                        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+                        .stat { background-color: #e5f3ff; padding: 10px; border-radius: 8px; text-align: center; }
+                        .productos { margin-top: 20px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f3f4f6; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📊 Reporte del Día</h1>
+                        <h2>${data.business} - ${data.fecha}</h2>
+                    </div>
+                    
+                    <div class="stats">
+                        <div class="stat">
+                            <h3>💰 Total Ingresos</h3>
+                            <p>${data.estadisticas.total_ingresos.toFixed(2)}</p>
+                        </div>
+                        <div class="stat">
+                            <h3>🛍️ Total Ventas</h3>
+                            <p>${data.estadisticas.total_ventas}</p>
+                        </div>
+                        <div class="stat">
+                            <h3>📈 Venta Promedio</h3>
+                            <p>${data.estadisticas.venta_promedio.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    
+                    ${data.productos_bajo_stock.length > 0 ? `
+                    <div class="productos">
+                        <h3>⚠️ Productos con Stock Bajo</h3>
+                        <table>
+                            <tr><th>Producto</th><th>Stock Actual</th><th>Stock Mínimo</th></tr>
+                            ${data.productos_bajo_stock.map(p => `
+                                <tr><td>${p.nombre}</td><td>${p.stock}</td><td>${p.stock_minimo}</td></tr>
+                            `).join('')}
+                        </table>
+                    </div>
+                    ` : '<p style="color: green;">✅ Todos los productos tienen stock suficiente</p>'}
+                    
+                    <div style="margin-top: 30px; text-align: center; color: #666;">
+                        <p>Reporte generado el ${new Date().toLocaleString()}</p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+    } catch (error) {
+        console.error("Error previsualizando reporte:", error);
+        alert("Error al generar la previsualización");
+    }
+}
+
+// Controlar visibilidad del campo email
+document.getElementById('enviar-correo').addEventListener('change', function() {
+    const emailSection = document.getElementById('email-section');
+    emailSection.style.display = this.checked ? 'block' : 'none';
+});
+
+// Cargar datos al iniciar
+document.addEventListener("DOMContentLoaded", () => {
+    cargarResumenDia();
+    cargarStockBajo();
+    
+    // Token CSRF para las peticiones
+    if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = '{{ csrf_token }}';
+        document.body.appendChild(csrfInput);
+    }
+});
+</script>
+{% endblock %}
+
+<!-- templates/inventario/inventario.html -->
+{% extends 'base.html' %}
+
+{% block title %}Inventario - {{ user.business.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <header class="bg-blue-600 text-white p-6 shadow rounded-lg mb-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold">Inventario</h1>
+            <a href="{% url 'pos:index' %}" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-100 font-semibold">
+                Volver al POS
+            </a>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Agregar producto -->
+        <div class="xl:col-span-1 bg-white shadow p-6 rounded-xl">
+            <h2 class="text-xl font-semibold text-blue-700 mb-4">Agregar Producto</h2>
+            <form id="formulario-inventario" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium mb-1">Código:</label>
+                    <input type="text" id="inv-codigo" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nombre:</label>
+                    <input type="text" id="inv-nombre" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500" required />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Precio:</label>
+                        <input type="number" id="inv-precio" class="w-full p-2 border rounded" required min="0" step="0.01" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Stock:</label>
+                        <input type="number" id="inv-stock" class="w-full p-2 border rounded" required min="0" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Stock mínimo:</label>
+                        <input type="number" id="inv-stock-minimo" class="w-full p-2 border rounded" required min="0" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Categoría:</label>
+                        <input type="text" id="inv-categoria" class="w-full p-2 border rounded" placeholder="Opcional" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Descripción:</label>
+                    <textarea id="inv-descripcion" class="w-full p-2 border rounded" rows="3" placeholder="Opcional"></textarea>
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+                    Agregar Producto
+                </button>
+            </form>
+
+            <!-- Actualizar stock -->
+            <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-semibold text-blue-900 mb-4">Actualizar Stock</h3>
+                <form id="formulario-stock" class="space-y-3">
+                    <input type="text" id="stock-codigo" class="w-full p-2 border rounded" placeholder="Código del producto" />
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="stock-agregar" class="w-full p-2 border rounded" placeholder="Stock a agregar" min="1" />
+                        <input type="number" id="nuevo-precio" class="w-full p-2 border rounded" placeholder="Nuevo precio (opcional)" step="0.01" />
+                    </div>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">
+                        Actualizar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de productos -->
+        <div class="xl:col-span-2 space-y-6">
+            <!-- Productos con stock bajo -->
+            <div class="bg-red-50 shadow p-6 rounded-xl">
+                <h2 class="text-xl font-semibold text-red-600 mb-4">⚠️ Productos con Stock Bajo</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b text-gray-600">
+                            <tr>
+                                <th class="text-left pb-2">Código</th>
+                                <th class="text-left pb-2">Nombre</th>
+                                <th class="text-left pb-2">Stock</th>
+                                <th class="text-left pb-2">Mínimo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-poco-stock"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Inventario completo -->
+            <div class="bg-white shadow p-6 rounded-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-blue-700">Inventario Completo</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="buscar-productos" class="p-2 border rounded" placeholder="Buscar productos..." />
+                        <select id="filtro-categoria" class="p-2 border rounded">
+                            <option value="">Todas las categorías</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b text-gray-600">
+                            <tr>
+                                <th class="text-left pb-2">Código</th>
+                                <th class="text-left pb-2">Nombre</th>
+                                <th class="text-left pb-2">Precio</th>
+                                <th class="text-left pb-2">Stock</th>
+                                <th class="text-left pb-2">Categoría</th>
+                                <th class="text-left pb-2">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-inventario"></tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <p class="text-gray-600">Total de productos: <span id="total-productos" class="font-bold">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+let productosCache = [];
+
+// Cargar inventario
+async function cargarInventario() {
+    try {
+        const res = await fetch("{% url 'inventario:inventario_api' %}");
+        const data = await res.json();
+        
+        if (res.ok) {
+            productosCache = data.productos;
+            mostrarProductos(productosCache);
+            cargarCategorias();
+            document.getElementById('total-productos').textContent = data.total;
+        }
+    } catch (error) {
+        console.error("Error cargando inventario:", error);
+    }
+}
+
+// Mostrar productos en tabla
+function mostrarProductos(productos) {
+    const tabla = document.getElementById("tabla-inventario");
+    tabla.innerHTML = "";
+    
+    productos.forEach(producto => {
+        let estadoStock = "";
+        if (producto.stock === 0) {
+            estadoStock = '<span class="text-red-600">❌ Agotado</span>';
+        } else if (producto.tiene_stock_bajo) {
+            estadoStock = '<span class="text-orange-600">⚠️ Stock bajo</span>';
+        } else {
+            estadoStock = '<span class="text-green-600">✅ Disponible</span>';
+        }
+        
+        tabla.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="py-2">${producto.codigo}</td>
+                <td class="py-2 font-medium">${producto.nombre}</td>
+                <td class="py-2">$${producto.precio.toFixed(2)}</td>
+                <td class="py-2">${producto.stock}</td>
+                <td class="py-2">${producto.categoria || '-'}</td>
+                <td class="py-2">${estadoStock}</td>
+            </tr>
+        `;
+    });
+}
+
+// Cargar productos con stock bajo
+async function cargarStockBajo() {
+    try {
+        const res = await fetch("{% url 'inventario:stock_bajo' %}");
+        const data = await res.json();
+        
+        if (res.ok) {
+            const tabla = document.getElementById("tabla-poco-stock");
+            tabla.innerHTML = "";
+            
+            data.productos.forEach(producto => {
+                tabla.innerHTML += `
+                    <tr class="border-b">
+                        <td class="py-2">${producto.codigo}</td>
+                        <td class="py-2">${producto.nombre}</td>
+                        <td class="py-2 text-red-600 font-bold">${producto.stock}</td>
+                        <td class="py-2">${producto.stock_minimo}</td>
+                    </tr>
+                `;
+            });
+            
+            if (data.productos.length === 0) {
+                tabla.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No hay productos con stock bajo</td></tr>';
+            }
+        }
+    } catch (error) {
+        console.error("Error cargando stock bajo:", error);
+    }
+}
+
+// Cargar categorías para filtro
+async function cargarCategorias() {
+    try {
+        const res = await fetch("{% url 'inventario:categorias' %}");
+        const data = await res.json();
+        
+        if (res.ok) {
+            const select = document.getElementById("filtro-categoria");
+            select.innerHTML = '<option value="">Todas las categorías</option>';
+            
+            data.categorias.forEach(categoria => {
+                select.innerHTML += `<option value="${categoria}">${categoria}</option>`;
+            });
+        }
+    } catch (error) {
+        console.error("Error cargando categorías:", error);
+    }
+}
+
+// Filtrar productos
+function filtrarProductos() {
+    const busqueda = document.getElementById("buscar-productos").value.toLowerCase();
+    const categoria = document.getElementById("filtro-categoria").value;
+    
+    let productosFiltrados = productosCache.filter(producto => {
+        const coincideBusqueda = busqueda === "" || 
+            producto.nombre.toLowerCase().includes(busqueda) ||
+            producto.codigo.toLowerCase().includes(busqueda);
+            
+        const coincideCategoria = categoria === "" || producto.categoria === categoria;
+        
+        return coincideBusqueda && coincideCategoria;
+    });
+    
+    mostrarProductos(productosFiltrados);
+    document.getElementById('total-productos').textContent = productosFiltrados.length;
+}
+
+// Event listeners
+document.getElementById("buscar-productos").addEventListener("input", filtrarProductos);
+document.getElementById("filtro-categoria").addEventListener("change", filtrarProductos);
+
+// Formulario agregar producto
+document.getElementById("formulario-inventario").addEventListener("submit", async e => {
+    e.preventDefault();
+    
+    const datos = {
+        codigo: document.getElementById("inv-codigo").value.trim(),
+        nombre: document.getElementById("inv-nombre").value.trim(),
+        precio: parseFloat(document.getElementById("inv-precio").value),
+        stock: parseInt(document.getElementById("inv-stock").value),
+        stock_minimo: parseInt(document.getElementById("inv-stock-minimo").value),
+        categoria: document.getElementById("inv-categoria").value.trim(),
+        descripcion: document.getElementById("inv-descripcion").value.trim()
+    };
+    
+    try {
+        const res = await fetch("{% url 'inventario:agregar_producto' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(datos)
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            alert(data.mensaje);
+            document.getElementById("formulario-inventario").reset();
+            cargarInventario();
+            cargarStockBajo();
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error al agregar producto");
+    }
+});
+
+// Formulario actualizar stock
+document.getElementById("formulario-stock").addEventListener("submit", async e => {
+    e.preventDefault();
+    
+    const codigo = document.getElementById("stock-codigo").value.trim();
+    const stockAgregar = parseInt(document.getElementById("stock-agregar").value);
+    const nuevoPrecio = parseFloat(document.getElementById("nuevo-precio").value);
+    
+    if (!codigo || !stockAgregar) {
+        alert("Código y stock a agregar son requeridos");
+        return;
+    }
+    
+    const datos = {
+        codigo: codigo,
+        stock_agregar: stockAgregar,
+        nuevo_precio: isNaN(nuevoPrecio) ? null : nuevoPrecio
+    };
+    
+    try {
+        const res = await fetch("{% url 'inventario:actualizar_producto' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(datos)
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            alert(data.mensaje);
+            document.getElementById("formulario-stock").reset();
+            cargarInventario();
+            cargarStockBajo();
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Error al actualizar producto");
+    }
+});
+
+// Cargar datos al iniciar
+document.addEventListener("DOMContentLoaded", () => {
+    cargarInventario();
+    cargarStockBajo();
+});
+</script>
+{% endblock %}
+
+
+<!-- templates/ventas/registro.html -->
+{% extends 'base.html' %}
+
+{% block title %}Registro de Ventas - {{ user.business.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <header class="bg-green-600 text-white p-6 shadow rounded-lg mb-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-3xl font-bold">Registro de Ventas</h1>
+            <div class="text-right">
+                <p class="text-green-200">Total del día</p>
+                <p class="text-2xl font-bold" id="total-dia">$0.00</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filtros -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-4">Filtros de búsqueda</h2>
+        <form id="filtro-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">Día específico:</label>
+                <input type="date" id="filtro-dia" class="w-full p-2 border rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Mes:</label>
+                <input type="month" id="filtro-mes" class="w-full p-2 border rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Año:</label>
+                <input type="number" id="filtro-anio" class="w-full p-2 border rounded" placeholder="2024" min="2020" max="2030" />
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+                    Filtrar
+                </button>
+            </div>
+        </form>
+        
+        <div class="mt-4 flex gap-2">
+            <button onclick="exportarVentas()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                Exportar CSV
+            </button>
+            <button onclick="enviarReporte()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                Enviar Reporte
+            </button>
+        </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-lg shadow">
+            <p class="text-gray-600 text-sm">Total Ventas</p>
+            <p class="text-2xl font-bold text-green-600" id="stat-total">$0.00</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+            <p class="text-gray-600 text-sm">Número de Ventas</p>
+            <p class="text-2xl font-bold text-blue-600" id="stat-numero">0</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+            <p class="text-gray-600 text-sm">Venta Promedio</p>
+            <p class="text-2xl font-bold text-purple-600" id="stat-promedio">$0.00</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+            <p class="text-gray-600 text-sm">Productos Vendidos</p>
+            <p class="text-2xl font-bold text-orange-600" id="stat-productos">0</p>
+        </div>
+    </div>
+
+    <!-- Tabla de ventas -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b">
+            <h2 class="text-lg font-semibold">Historial de Ventas</h2>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vendedor</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Productos</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-ventas" class="divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+        
+        <div class="px-6 py-4 border-t">
+            <p class="text-gray-600 text-center">Mostrando <span id="ventas-mostradas">0</span> ventas</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles de venta -->
+<div id="modal-detalle" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Detalle de Venta</h3>
+                <button onclick="cerrarModal()" class="text-gray-500 hover:text-gray-700">
+                    <span class="text-xl">&times;</span>
+                </button>
+            </div>
+            <div id="contenido-detalle"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let ventasActuales = [];
+
+// Cargar ventas
+async function cargarVentas(filtros = {}) {
+    try {
+        const params = new URLSearchParams(filtros);
+        const res = await fetch(`{% url 'ventas:ventas_api' %}?${params}`);
+        const data = await res.json();
+        
+        if (res.ok) {
+            ventasActuales = data.ventas;
+            mostrarVentas(data.ventas);
+            actualizarEstadisticas(data.resumen);
+        }
+    } catch (error) {
+        console.error("Error cargando ventas:", error);
+    }
+}
+
+// Mostrar ventas en tabla
+function mostrarVentas(ventas) {
+    const tabla = document.getElementById("tabla-ventas");
+    tabla.innerHTML = "";
+    
+    ventas.forEach(venta => {
+        tabla.innerHTML += `
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 text-sm">${venta.fecha_formato}</td>
+                <td class="px-6 py-4 text-sm">${venta.vendedor}</td>
+                <td class="px-6 py-4 text-sm font-semibold text-green-600">$${venta.total_venta.toFixed(2)}</td>
+                <td class="px-6 py-4 text-sm">${venta.numero_productos} productos</td>
+                <td class="px-6 py-4 text-sm">
+                    <button onclick="verDetalle(${venta.id})" class="text-blue-600 hover:text-blue-800">
+                        Ver detalle
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    document.getElementById("ventas-mostradas").textContent = ventas.length;
+}
+
+// Actualizar estadísticas
+function actualizarEstadisticas(resumen) {
+    document.getElementById("stat-total").textContent = `$${resumen.total_ventas.toFixed(2)}`;
+    document.getElementById("stat-numero").textContent = resumen.numero_ventas;
+    document.getElementById("stat-promedio").textContent = `$${resumen.venta_promedio.toFixed(2)}`;
+}
+
+// Ver detalle de venta
+function verDetalle(ventaId) {
+    const venta = ventasActuales.find(v => v.id === ventaId);
+    if (!venta) return;
+    
+    let contenido = `
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600">Fecha</p>
+                    <p class="font-semibold">${venta.fecha_formato}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Vendedor</p>
+                    <p class="font-semibold">${venta.vendedor}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Total</p>
+                    <p class="font-semibold text-green-600">$${venta.total_venta.toFixed(2)}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Cambio</p>
+                    <p class="font-semibold">$${venta.cambio.toFixed(2)}</p>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="font-semibold mb-2">Productos vendidos:</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Producto</th>
+                                <th class="px-3 py-2 text-left">Cantidad</th>
+                                <th class="px-3 py-2 text-left">Precio</th>
+                                <th class="px-3 py-2 text-left">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    `;
+    
+    venta.productos.forEach(producto => {
+        contenido += `
+            <tr class="border-t">
+                <td class="px-3 py-2">${producto.nombre_producto}</td>
+                <td class="px-3 py-2">${producto.cantidad_vendida}</td>
+                <td class="px-3 py-2">$${producto.precio_unitario.toFixed(2)}</td>
+                <td class="px-3 py-2 font-semibold">$${producto.total.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+    
+    contenido += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById("contenido-detalle").innerHTML = contenido;
+    document.getElementById("modal-detalle").classList.remove("hidden");
+    document.getElementById("modal-detalle").classList.add("flex");
+}
+
+// Cerrar modal
+function cerrarModal() {
+    document.getElementById("modal-detalle").classList.add("hidden");
+    document.getElementById("modal-detalle").classList.remove("flex");
+}
+
+// Exportar ventas
+function exportarVentas() {
+    const fechaInicio = document.getElementById("filtro-dia").value || 
+                       (document.getElementById("filtro-mes").value ? document.getElementById("filtro-mes").value + "-01" : null);
+    const fechaFin = document.getElementById("filtro-dia").value || 
+                    (document.getElementById("filtro-mes").value ? new Date(document.getElementById("filtro-mes").value + "-01").toISOString().slice(0, 7) + "-31" : null);
+    
+    if (!fechaInicio || !fechaFin) {
+        alert("Selecciona un período para exportar");
+        return;
+    }
+    
+    const url = `{% url 'ventas:exportar_ventas' %}?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&formato=csv`;
+    window.open(url, '_blank');
+}
+
+// Enviar reporte
+async function enviarReporte() {
+    const email = prompt("Ingresa el email para enviar el reporte:");
+    if (!email) return;
+    
+    try {
+        const res = await fetch("{% url 'ventas:reporte_diario' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                fecha: new Date().toISOString().slice(0, 10),
+                email: email
+            })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            alert(data.mensaje);
+        } else {
+            alert("Error: " + data.error);
+        }
+    } catch (error) {
+        console.error("Error enviando reporte:", error);
+        alert("Error al enviar reporte");
+    }
+}
+
+// Filtrar ventas
+document.getElementById("filtro-form").addEventListener("submit", e => {
+    e.preventDefault();
+    
+    const dia = document.getElementById("filtro-dia").value;
+    const mes = document.getElementById("filtro-mes").value;
+    const anio = document.getElementById("filtro-anio").value;
+    
+    const filtros = {};
+    if (dia) filtros.dia = dia;
+    if (mes) filtros.mes = mes;
+    if (anio) filtros.anio = anio;
+    
+    cargarVentas(filtros);
+});
+
+// Cargar total del día
+async function cargarTotalDia() {
+    try {
+        const res = await fetch("{% url 'pos:total_hoy' %}");
+        const data = await res.json();
+        
+        if (res.ok) {
+            document.getElementById("total-dia").textContent = `$${data.total_hoy.toFixed(2)}`;
+        }
+    } catch (error) {
+        console.error("Error cargando total del día:", error);
+    }
+}
+
+// Cargar datos al iniciar
+document.addEventListener("DOMContentLoaded", () => {
+    cargarVentas();
+    cargarTotalDia();
+});
+
+// Cerrar modal con ESC
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+        cerrarModal();
+    }
+});
+</script>
+{% endblock %}
+
+
+<!--

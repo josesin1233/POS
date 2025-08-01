@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventario - Dulcería</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+  <header class="bg-blue-600 text-white p-6 shadow">
+    <div class="flex justify-between items-center">
+      <h1 class="text-3xl font-bold">Inventario</h1>
+      <a href="/" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-100 font-semibold">
+        Guardar y salir
+      </a>
+    </div>
+  </header>
+
+  <main class="p-6 max-w-3xl mx-auto space-y-10">
+
+    <!-- Agregar nuevo producto -->
+    <section class="bg-white shadow p-6 rounded-xl">
+      <h2 class="text-xl font-semibold text-blue-700 mb-4">Agregar producto al inventario</h2>
+      <form id="formulario-inventario" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Código:</label>
+          <input type="text" id="inv-codigo" class="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Nombre:</label>
+          <input type="text" id="inv-nombre" class="w-full p-2 border rounded" required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Precio:</label>
+          <input type="number" id="inv-precio" class="w-full p-2 border rounded" required min="0" step="0.01" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Stock:</label>
+          <input type="number" id="inv-stock" class="w-full p-2 border rounded" required min="0" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Stock mínimo:</label>
+          <input type="number" id="inv-stock-minimo" class="w-full p-2 border rounded" required min="0" />
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+          Agregar al Inventario
+        </button>
+      </form>
+    </section>
+
+    <!-- Actualizar producto -->
+    <section class="bg-blue-50 shadow p-6 rounded-xl">
+      <h2 class="text-xl font-semibold text-blue-900 mb-4">Actualizar stock de producto existente</h2>
+      <form id="formulario-stock" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Código:</label>
+            <input type="text" id="stock-codigo" class="w-full p-2 border rounded" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Nombre:</label>
+            <input type="text" id="stock-nombre" class="w-full p-2 border rounded" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Precio actual:</label>
+            <input type="text" id="stock-precio" class="w-full p-2 border rounded bg-white" readonly />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Stock actual:</label>
+            <input type="text" id="stock-actual" class="w-full p-2 border rounded bg-white" readonly />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Nuevo precio (opcional):</label>
+            <input type="number" id="nuevo-precio" class="w-full p-2 border rounded" step="0.01" min="0" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Stock a agregar:</label>
+            <input type="number" id="stock-agregar" class="w-full p-2 border rounded" min="1" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Stock mínimo:</label>
+          <input type="number" id="stock-minimo" class="w-full p-2 border rounded" min="0" />
+        </div>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full mt-4">
+          Actualizar producto
+        </button>
+      </form>
+    </section>
+    <section class="bg-red-50 shadow p-6 rounded-xl">
+  <h2 class="text-xl font-semibold text-red-600 mb-4">⚠️ Productos con poco stock</h2>
+  <table class="w-full text-sm text-left">
+    <thead class="border-b text-gray-600">
+      <tr>
+        <th class="pb-2">Código</th>
+        <th class="pb-2">Nombre</th>
+        <th class="pb-2">Stock</th>
+        <th class="pb-2">Stock Mínimo</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-poco-stock"></tbody>
+  </table>
+</section>
+
+    <!-- Inventario actual -->
+    <section class="bg-white shadow p-6 rounded-xl">
+      <h2 class="text-xl font-semibold text-blue-700 mb-4">Inventario actual</h2>
+      <table class="w-full text-sm text-left">
+        <thead class="border-b text-gray-600">
+          <tr>
+            <th class="pb-2">Código</th>
+            <th class="pb-2">Nombre</th>
+            <th class="pb-2">Precio</th>
+            <th class="pb-2">Stock</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-inventario"></tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <script>
+    const form = document.getElementById("formulario-inventario");
+    const tabla = document.getElementById("tabla-inventario");
+
+    async function cargarInventario() {
+      const res = await fetch("/inventario/api");
+      if (!res.ok) return alert("Error al cargar el inventario.");
+      const productos = await res.json();
+      tabla.innerHTML = "";
+      productos.forEach(prod => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${prod.codigo}</td>
+            <td>${prod.nombre}</td>
+            <td>$${prod.precio.toFixed(2)}</td>
+            <td>${prod.stock}</td>
+          </tr>
+        `;
+      });
+    }
+    async function cargarPocoStock() {
+      const res = await fetch("/inventario/poco-stock");
+      if (!res.ok) {
+        alert("Error al cargar productos con poco stock");
+        return;
+      }
+      const productos = await res.json();
+      const tabla = document.getElementById("tabla-poco-stock");
+      tabla.innerHTML = "";
+
+      productos.forEach(p => {
+        tabla.innerHTML += `
+          <tr>
+            <td>${p.codigo}</td>
+            <td>${p.nombre}</td>
+            <td>${p.stock}</td>
+            <td>${p.stock_minimo}</td>
+          </tr>
+        `;
+      });
+    }
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const datos = {
+        codigo: document.getElementById("inv-codigo").value.trim(),
+        nombre: document.getElementById("inv-nombre").value.trim(),
+        precio: parseFloat(document.getElementById("inv-precio").value),
+        stock: parseInt(document.getElementById("inv-stock").value),
+        stock_minimo: parseInt(document.getElementById("inv-stock-minimo").value)
+      };
+
+        const res = await fetch("/inventario/agregar/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datos)
+      });
+
+      if (res.ok) {
+        await cargarInventario();
+        form.reset();
+        alert("Producto agregado correctamente.");
+      } else {
+        const err = await res.json();
+        alert("Error: " + (err.error || "No se pudo agregar el producto"));
+      }
+    });
+
+    cargarInventario();
+    cargarPocoStock();
+
+    const formStock = document.getElementById("formulario-stock");
+    
+    // Variables para controlar el autocompletado
+    let autocompletadoActivo = true;
+    let ultimoProductoEncontrado = null;
+
+    function limpiarCamposProducto() {
+      document.getElementById("stock-precio").value = "";
+      document.getElementById("stock-actual").value = "";
+      document.getElementById("stock-minimo").value = "";
+      autocompletadoActivo = true;
+      ultimoProductoEncontrado = null;
+    }
+
+    function llenarDatosProducto(producto) {
+      document.getElementById("stock-codigo").value = producto.codigo;
+      document.getElementById("stock-nombre").value = producto.nombre;
+      document.getElementById("stock-precio").value = producto.precio;
+      document.getElementById("stock-actual").value = producto.stock;
+      document.getElementById("stock-minimo").value = producto.stock_minimo ?? 0;
+      
+      // Desactivar autocompletado hasta que se cambie el input
+      autocompletadoActivo = false;
+      ultimoProductoEncontrado = producto;
+    }
+
+    async function buscarProducto(query) {
+      if (!autocompletadoActivo) return;
+      
+      try {
+        const res = await fetch("/producto/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({query: query})
+        });
+
+        if (res.ok) {
+          const producto = await res.json();
+          llenarDatosProducto(producto);
+        }
+      } catch (error) {
+        console.log("Producto no encontrado");
+      }
+    }
+
+    // Autocompletado para código
+    document.getElementById("stock-codigo").addEventListener("input", async (e) => {
+      const codigo = e.target.value.trim();
+      
+      // Si está vacío, limpiar todo y reactivar
+      if (codigo.length === 0) {
+        limpiarCamposProducto();
+        document.getElementById("stock-nombre").disabled = false;
+        return;
+      }
+      
+      // Si hay código, deshabilitar campo nombre
+      document.getElementById("stock-nombre").disabled = true;
+      document.getElementById("stock-nombre").value = "";
+      
+      // Si el código cambió del producto encontrado, reactivar autocompletado
+      if (ultimoProductoEncontrado && codigo !== ultimoProductoEncontrado.codigo) {
+        autocompletadoActivo = true;
+      }
+      
+      // Buscar por código si tiene al menos 2 caracteres
+      if (codigo.length >= 2) {
+        await buscarProducto(codigo);
+      }
+    });
+
+    // Autocompletado para nombre
+    document.getElementById("stock-nombre").addEventListener("input", async (e) => {
+      const nombre = e.target.value.trim();
+      
+      // Si está vacío, limpiar todo y reactivar
+      if (nombre.length === 0) {
+        limpiarCamposProducto();
+        document.getElementById("stock-codigo").disabled = false;
+        return;
+      }
+      
+      // Si hay nombre, deshabilitar campo código
+      document.getElementById("stock-codigo").disabled = true;
+      document.getElementById("stock-codigo").value = "";
+      
+      // Si el nombre cambió del producto encontrado, reactivar autocompletado
+      if (ultimoProductoEncontrado && nombre !== ultimoProductoEncontrado.nombre) {
+        autocompletadoActivo = true;
+      }
+      
+      // Buscar por nombre si tiene al menos 4 caracteres
+      if (nombre.length >= 4) {
+        await buscarProducto(nombre);
+      }
+    });
+
+    formStock.addEventListener("submit", async e => {
+      e.preventDefault();
+      const codigo = document.getElementById("stock-codigo").value.trim();
+      const stockAgregar = parseInt(document.getElementById("stock-agregar").value);
+      const nuevoPrecio = parseFloat(document.getElementById("nuevo-precio").value);
+      const stockMinimo = parseInt(document.getElementById("stock-minimo").value);
+
+      if (!codigo || isNaN(stockAgregar) || stockAgregar <= 0) {
+        alert("Verifica el código y el stock a agregar.");
+        return;
+      }
+
+          
+        const res = await fetch("/inventario/actualizar/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+          codigo,
+          stock_agregar: stockAgregar,
+          nuevo_precio: isNaN(nuevoPrecio) ? null : nuevoPrecio,
+          stock_minimo: isNaN(stockMinimo) ? null : stockMinimo
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.mensaje || "Producto actualizado.");
+        formStock.reset();
+        cargarInventario();
+      } else {
+        alert(data.error || "No se pudo actualizar el producto.");
+      }
+    });
+  </script>
+</body>
+</html>

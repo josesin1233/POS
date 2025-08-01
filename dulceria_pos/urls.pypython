@@ -1,0 +1,1 @@
+urlpatterns = urlpatterns + [path('', include('pos.urls'))]  manage.py runserver
