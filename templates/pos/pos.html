@@ -311,14 +311,16 @@
       .flex.overflow-hidden.flex-row {
         flex-direction: column !important;
         height: auto !important;
-        min-height: auto !important;
+        min-height: 100vh !important;
+        overflow: visible !important;
       }
       
-      /* Cart container takes full width and reduced height on mobile */
+      /* Cart container takes full width and better height on mobile */
       .cart-container {
         width: 100% !important;
         min-width: auto !important;
-        height: 50vh !important;
+        height: 60vh !important;
+        min-height: 400px !important;
         order: 2 !important;
       }
       
@@ -333,7 +335,8 @@
       
       /* Adjust cart items scroll area for mobile */
       .cart-container .overflow-y-auto {
-        max-height: 30vh !important;
+        max-height: 40vh !important;
+        min-height: 250px !important;
       }
       
       /* Make buttons more touch-friendly on mobile */
@@ -351,6 +354,26 @@
         flex: 1 1 auto;
         text-align: center;
         min-width: 120px;
+      }
+      
+      /* Improve cart header and totals visibility */
+      .cart-header {
+        padding: 1rem !important;
+      }
+      
+      /* Better spacing for total section */
+      .cart-container > div:last-child {
+        padding: 1rem !important;
+      }
+      
+      /* Ensure proper viewport usage */
+      body {
+        overflow-x: hidden !important;
+      }
+      
+      /* Better spacing between sections */
+      .flex.flex-col.rounded-xl.border-2 {
+        margin-bottom: 1rem !important;
       }
     }
     
