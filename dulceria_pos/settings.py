@@ -22,42 +22,69 @@ DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'web-production-11df5.up.railway.app').split(',')] 
 
 # 🗄️ Database configuration
-# Railway PostgreSQL connection with fallbacks
+# Auto-adaptive Railway PostgreSQL connection
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL:
-    db_config = dj_database_url.config(
-        default=DATABASE_URL,
-        conn_max_age=600,
-        ssl_require=True
-    )
-    # Add PostgreSQL specific options
-    db_config['OPTIONS'] = {
-        'sslmode': 'require',
-        'connect_timeout': 60,
-        'application_name': 'dulceria_pos',
-    }
-    DATABASES = {
-        'default': db_config
-    }
-elif not DEBUG:  # Production fallback
-    # Use Railway internal PostgreSQL directly
+if DATABASE_URL and 'railway' in DATABASE_URL:
+    # Railway PostgreSQL detected - use with SSL and error handling
+    try:
+        db_config = dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+        # Add PostgreSQL specific options for Railway
+        db_config['OPTIONS'] = {
+            'sslmode': 'require',
+            'connect_timeout': 30,
+            'application_name': 'dulceria_pos',
+            'options': '-c default_transaction_isolation=read_committed'
+        }
+        DATABASES = {'default': db_config}
+    except Exception as e:
+        print(f"⚠️ DATABASE_URL parsing failed: {e}")
+        # Fallback to manual parsing
+        import re
+        match = re.match(r'postgresql://(.+):(.+)@(.+):(\d+)/(.+)', DATABASE_URL)
+        if match:
+            user, password, host, port, name = match.groups()
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql',
+                    'NAME': name,
+                    'USER': user,
+                    'PASSWORD': password,
+                    'HOST': host,
+                    'PORT': port,
+                    'OPTIONS': {
+                        'sslmode': 'require',
+                        'connect_timeout': 30,
+                        'application_name': 'dulceria_pos',
+                    },
+                }
+            }
+        else:
+            raise Exception("Could not parse DATABASE_URL")
+            
+elif not DEBUG:
+    # Production without DATABASE_URL - use environment variables
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'railway',
-            'USER': 'postgres',
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'AcQdOdIGuniWbAlhUMQBuHUyPYQghDMt'),
-            'HOST': os.getenv('POSTGRES_HOST', 'postgres-b2-_.railway.internal'),
-            'PORT': '5432',
+            'NAME': os.getenv('POSTGRES_DATABASE', 'railway'),
+            'USER': os.getenv('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+            'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+            'PORT': os.getenv('POSTGRES_PORT', '5432'),
             'OPTIONS': {
-                'connect_timeout': 60,
+                'sslmode': 'prefer',
+                'connect_timeout': 30,
                 'application_name': 'dulceria_pos',
             },
         }
     }
 else:
-    # Local development fallback
+    # Local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
