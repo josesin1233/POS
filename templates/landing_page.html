@@ -232,6 +232,128 @@
       background: linear-gradient(135deg, #7c3aed, #6d28d9);
       transform: translateY(-1px);
     }
+    
+    /* Mobile Responsive Styles for Demo */
+    @media (max-width: 768px) {
+      /* Make main container stack vertically on mobile */
+      .flex.overflow-hidden.flex-row {
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow: visible !important;
+      }
+      
+      /* Cart container takes full width and better height on mobile */
+      .cart-container[style*="width: 72%"], .cart-container {
+        width: 100% !important;
+        min-width: auto !important;
+        height: 60vh !important;
+        min-height: 400px !important;
+        order: 2 !important;
+      }
+      
+      /* Product form takes full width on mobile */
+      .flex.flex-col.rounded-xl.border-2[style*="width: 28%"], 
+      .flex-col[style*="min-width: 280px"] {
+        width: 100% !important;
+        min-width: auto !important;
+        height: auto !important;
+        order: 1 !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      /* Adjust cart items scroll area for mobile */
+      .cart-container .overflow-y-auto {
+        max-height: 40vh !important;
+        min-height: 250px !important;
+      }
+      
+      /* Make buttons more touch-friendly on mobile */
+      .grid.grid-cols-3.gap-2 button,
+      .grid-cols-3 button {
+        padding: 0.75rem 0.5rem !important;
+        font-size: 0.75rem !important;
+      }
+      
+      /* Stack navigation tabs on smaller screens */
+      .flex.flex-wrap.gap-2 {
+        justify-content: center;
+      }
+      
+      .tab-active, .tab-inactive {
+        flex: 1 1 auto;
+        text-align: center;
+        min-width: 120px;
+      }
+      
+      /* Improve cart header and totals visibility */
+      .cart-header {
+        padding: 1rem !important;
+      }
+      
+      /* Better spacing for total section */
+      .cart-container > div:last-child {
+        padding: 1rem !important;
+      }
+      
+      /* Ensure proper viewport usage */
+      body {
+        overflow-x: hidden !important;
+      }
+      
+      /* Better spacing between sections */
+      .flex.flex-col.rounded-xl.border-2 {
+        margin-bottom: 1rem !important;
+      }
+      
+      /* Demo specific adjustments */
+      .p-2.gap-2 {
+        padding: 0.5rem !important;
+        gap: 1rem !important;
+      }
+      
+      /* Make demo layout more compact */
+      .min-h-screen .flex.overflow-hidden {
+        min-height: auto !important;
+        height: auto !important;
+      }
+    }
+    
+    /* Extra small screens (phones in portrait) */
+    @media (max-width: 480px) {
+      /* Make navigation more compact */
+      .w-full.px-4.py-1\\.5 {
+        padding: 0.5rem 1rem !important;
+      }
+      
+      /* Reduce font sizes */
+      .text-lg.font-bold {
+        font-size: 1rem !important;
+      }
+      
+      /* Make tabs smaller */
+      .tab-active, .tab-inactive {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
+        min-width: 100px;
+      }
+      
+      /* Reduce padding in main content */
+      .p-2.gap-2 {
+        padding: 0.25rem !important;
+      }
+      
+      /* Make cart more compact on very small screens */
+      .cart-container {
+        height: 55vh !important;
+        min-height: 350px !important;
+      }
+      
+      .cart-container .overflow-y-auto {
+        max-height: 35vh !important;
+        min-height: 200px !important;
+      }
+    }
   </style>
 </head>
 <body data-theme="dark">
