@@ -480,9 +480,9 @@
 let todosLosProductos = [];
 let productosFiltrados = [];
 
-// Initialize everything when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize barcode scanner exactly like POS
+// Initialize everything when page loads - EXACT COPY FROM POS
+document.addEventListener("DOMContentLoaded", () => {
+    // Inicializar Scanner con auto-enter y auto-add - EXACT SAME AS POS
     if (typeof BarCodeScanner !== 'undefined') {
         BarCodeScanner.init({
             onScan: async (codigo) => {
@@ -491,71 +491,38 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // GLOBAL BARCODE EVENT LISTENER - Same as POS
+    // GLOBAL BARCODE EVENT LISTENER - EXACT COPY FROM POS
     document.addEventListener('barcodeScanned', async (event) => {
         const { code, source } = event.detail;
         console.log(`Barcode scanned from ${source}:`, code);
         
-        // Determine which field to fill based on visible inputs
+        // Determine which field to fill based on which is more likely to be active
         const nuevoCodigo = document.getElementById('nuevo-codigo');
         const stockCodigo = document.getElementById('stock-codigo');
         
-        // Priority: stock-codigo if it's focused or has recent activity
-        if (stockCodigo && (document.activeElement === stockCodigo || stockCodigo.offsetParent !== null)) {
+        // Fill the most appropriate field
+        if (stockCodigo && stockCodigo.offsetParent !== null) {
             stockCodigo.value = code;
             stockCodigo.focus();
-            // Auto-search product for updating
+            // Auto-search product
             setTimeout(() => {
                 buscarProductoParaActualizar(code);
             }, 100);
-            console.log('Code put in stock update field');
-            return;
-        }
-        
-        // Default: nuevo-codigo for adding new products
-        if (nuevoCodigo) {
+        } else if (nuevoCodigo) {
             nuevoCodigo.value = code;
             nuevoCodigo.focus();
-            console.log('Code put in new product field');
         }
+        
+        console.log(`Barcode ${code} processed in inventory`);
     });
     
-    // Load all products for search
+    // Load inventory data
     cargarTodosLosProductos();
-    
-    // Load low stock products
     actualizarPocoStock();
-    
-    // Setup search functionality
     setupBuscador();
-    
-    // Setup product lookup for updates
     setupProductLookup();
 });
 
-// Global variable to track current scanner context
-let currentScannerContext = 'nuevo';
-
-function abrirScannerInventario(context) {
-    currentScannerContext = context;
-    if (typeof BarCodeScanner !== 'undefined') {
-        BarCodeScanner.open();
-    } else {
-        alert('Scanner no disponible');
-    }
-}
-
-function manejarCodigoEscaneado(codigo) {
-    if (currentScannerContext === 'nuevo') {
-        document.getElementById('nuevo-codigo').value = codigo;
-    } else if (currentScannerContext === 'stock') {
-        document.getElementById('stock-codigo').value = codigo;
-        buscarProductoParaActualizar(codigo);
-    } else if (currentScannerContext === 'buscar') {
-        document.getElementById('buscar-inventario').value = codigo;
-        filtrarProductos(codigo);
-    }
-}
 
 // Load all products for search functionality
 async function cargarTodosLosProductos() {
