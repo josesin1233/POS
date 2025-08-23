@@ -1,1 +1,1 @@
-web: gunicorn dulceria_pos.wsgi --config gunicorn.conf.py
+web: chmod +x start.sh && ./start.sh

@@ -53,8 +53,13 @@ def setup_staticfiles():
     except Exception as e:
         print(f"⚠️ Static files setup error (continuing): {e}")
 
-# Run staticfiles setup if in production
-if not os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on'):
-    setup_staticfiles()
+# ALWAYS run staticfiles setup (force debug logging)
+print("🚨 WSGI.PY LOADING - About to run staticfiles setup")
+print(f"DEBUG = {os.getenv('DEBUG', 'Not Set')}")
+print(f"Current working directory: {os.getcwd()}")
+
+# Force run regardless of DEBUG
+setup_staticfiles()
+print("🚨 WSGI.PY - staticfiles setup completed")
 
 application = get_wsgi_application()

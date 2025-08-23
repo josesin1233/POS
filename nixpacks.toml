@@ -1,0 +1,8 @@
+[phases.build]
+cmds = [
+    "chmod +x build.sh",
+    "./build.sh"
+]
+
+[phases.start]
+cmd = "gunicorn dulceria_pos.wsgi --config gunicorn.conf.py"
