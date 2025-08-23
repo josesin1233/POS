@@ -209,7 +209,7 @@ def navigation_context(request):
             },
             {
                 'nombre': 'Iniciar Sesión',
-                'url': '/login/',
+                'url': '/accounts/login/',
                 'icono': 'log-in',
                 'activo': seccion_activa == 'login',
                 'permiso': True
