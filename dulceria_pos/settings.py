@@ -37,8 +37,7 @@ if DATABASE_URL and 'railway' in DATABASE_URL:
         db_config['OPTIONS'] = {
             'sslmode': 'require',
             'connect_timeout': 30,
-            'application_name': 'dulceria_pos',
-            'options': '-c default_transaction_isolation="read committed"'
+            'application_name': 'dulceria_pos'
         }
         DATABASES = {'default': db_config}
     except Exception as e:
