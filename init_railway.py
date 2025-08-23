@@ -12,7 +12,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dulceria_pos.settings')
 django.setup()
 
 from django.contrib.auth import get_user_model
-from accounts.models import Business, UserBusiness
+from accounts.models import Business, UserPermissions
 from pos.models import Producto
 
 User = get_user_model()
@@ -68,15 +68,21 @@ def create_demo_user(business):
     else:
         print(f"ℹ️ Usuario demo ya existe")
     
-    # Asignar negocio al usuario
-    user_business, created = UserBusiness.objects.get_or_create(
+    # Asignar negocio al usuario y crear permisos
+    demo_user.business = business
+    demo_user.is_business_owner = True
+    demo_user.save()
+    
+    # Crear permisos de administrador
+    permissions, created = UserPermissions.objects.get_or_create(
         user=demo_user,
         business=business,
-        defaults={'role': 'admin'}
+        defaults={}
     )
     
     if created:
-        print(f"✅ Usuario demo asignado al negocio")
+        UserPermissions.create_default_permissions(demo_user, business, is_owner=True)
+        print(f"✅ Usuario demo asignado al negocio con permisos de administrador")
     
     return demo_user
 
