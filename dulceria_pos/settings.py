@@ -30,8 +30,13 @@ if DATABASE_URL:
         'default': dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=False,  # Disable SSL requirement temporarily
+            ssl_require=True,  # Railway requires SSL
             conn_health_checks=True,
+            options={
+                'sslmode': 'require',
+                'connect_timeout': 60,
+                'application_name': 'dulceria_pos',
+            }
         )
     }
 elif not DEBUG:  # Production fallback
