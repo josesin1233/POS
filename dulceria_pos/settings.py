@@ -26,18 +26,19 @@ ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'web-produc
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
+    db_config = dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=True
+    )
+    # Add PostgreSQL specific options
+    db_config['OPTIONS'] = {
+        'sslmode': 'require',
+        'connect_timeout': 60,
+        'application_name': 'dulceria_pos',
+    }
     DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True,  # Railway requires SSL
-            conn_health_checks=True,
-            options={
-                'sslmode': 'require',
-                'connect_timeout': 60,
-                'application_name': 'dulceria_pos',
-            }
-        )
+        'default': db_config
     }
 elif not DEBUG:  # Production fallback
     # Use Railway internal PostgreSQL directly
