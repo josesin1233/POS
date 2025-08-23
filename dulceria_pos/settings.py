@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-pro
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
 
 # Allowed hosts - specify your domain names
-ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'web-production-11df5.up.railway.app').split(',')] 
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,*.railway.app,web-production-11df5.up.railway.app').split(',')] 
 
 # 🗄️ Database configuration
 # Auto-adaptive Railway PostgreSQL connection
