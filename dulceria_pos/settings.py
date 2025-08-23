@@ -123,13 +123,22 @@ TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# Static files - Force serving from source directory
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-# Use /app/staticfiles in production (Railway)
-STATIC_ROOT = "/app/staticfiles" if not DEBUG else BASE_DIR / "staticfiles"
+
+# In production, use STATICFILES_DIRS to serve directly from source
+if not DEBUG:
+    # Serve directly from static source directory - bypass staticfiles completely
+    STATICFILES_DIRS = [
+        "/app/static",  # Railway path
+        BASE_DIR / "static",  # Fallback
+    ]
+    STATIC_ROOT = None  # Disable collectstatic requirement
+else:
+    STATICFILES_DIRS = [
+        BASE_DIR / "static",
+    ]
+    STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Media files
 MEDIA_URL = '/media/'
@@ -227,11 +236,17 @@ LOGGING = {
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
 
-# WhiteNoise configuration for better static file serving
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-WHITENOISE_USE_FINDERS = True
-WHITENOISE_AUTOREFRESH = DEBUG
-WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz']
+# WhiteNoise configuration - Force use finders in production
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+    WHITENOISE_USE_FINDERS = True  # Force use finders to serve from STATICFILES_DIRS
+    WHITENOISE_AUTOREFRESH = True  # Force refresh in production
+    WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz']
+    WHITENOISE_ROOT = "/app/static"  # Override root directory
+else:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+    WHITENOISE_USE_FINDERS = True
+    WHITENOISE_AUTOREFRESH = DEBUG
 
 # Cache configuration (use Redis in production if available)
 if os.getenv('REDIS_URL'):
