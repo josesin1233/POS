@@ -21,18 +21,18 @@
 }
 
 .stat-card {
-    background: var(--pos-bg-secondary);
-    border: 1px solid var(--pos-border);
+    background: #ffffff;
+    border: 1px solid #e1e5e9;
     border-radius: 12px;
     padding: 24px;
-    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
-    border-left: 4px solid var(--pos-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #0088cc;
     transition: transform 0.2s;
 }
 
 .stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 212, 255, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 136, 204, 0.2);
 }
 
 .stat-icon {
@@ -44,31 +44,36 @@
 .stat-number {
     font-size: 28px;
     font-weight: 700;
-    color: var(--pos-primary);
+    color: #0088cc;
     margin-bottom: 8px;
 }
 
 .stat-label {
-    color: var(--pos-text-secondary);
+    color: #666;
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .welcome-message {
-    background: linear-gradient(135deg, var(--pos-bg-secondary), var(--pos-bg-tertiary));
-    border: 1px solid var(--pos-border);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 1px solid #e1e5e9;
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 30px;
-    border-left: 4px solid var(--pos-primary);
+    border-left: 4px solid #0088cc;
 }
 
 .welcome-message h2 {
-    color: var(--pos-primary);
+    color: #0088cc;
     font-size: 24px;
     margin-bottom: 12px;
     font-weight: 600;
+}
+
+.welcome-message p {
+    color: #495057;
+    margin-bottom: 8px;
 }
 
 .quick-actions {
@@ -79,28 +84,55 @@
 }
 
 .quick-action {
-    background: var(--pos-bg-secondary);
-    border: 2px solid var(--pos-border);
+    background: #ffffff;
+    border: 2px solid #e1e5e9;
     border-radius: 8px;
     padding: 16px;
     text-align: center;
     text-decoration: none;
-    color: var(--pos-text-primary);
+    color: #495057;
     transition: all 0.2s;
 }
 
 .quick-action:hover {
-    border-color: var(--pos-primary);
+    border-color: #0088cc;
     transform: translateY(-1px);
     text-decoration: none;
-    color: var(--pos-primary);
-    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2);
+    color: #0088cc;
+    box-shadow: 0 4px 12px rgba(0, 136, 204, 0.2);
+}
+
+.quick-action strong {
+    color: #212529;
+    font-size: 16px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.quick-action:hover strong {
+    color: #0088cc;
 }
 
 .quick-action-icon {
     font-size: 24px;
     margin-bottom: 8px;
     display: block;
+}
+
+/* Mejorar legibilidad general */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#content {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+#site-name a {
+    color: #0088cc !important;
+    text-decoration: none;
 }
 </style>
 
@@ -117,9 +149,9 @@
     {% if user.business %}
         <p style="margin-top: 16px;">
             <strong>Negocio activo:</strong> 
-            <span style="color: var(--pos-primary); font-weight: 600;">{{ user.business.name }}</span>
-            <span style="margin-left: 12px; padding: 4px 8px; background: white; border-radius: 4px; font-size: 12px;">
-                Plan {{ user.business.get_plan_display }}
+            <span style="color: #0088cc; font-weight: 600;">{{ user.business.name }}</span>
+            <span style="margin-left: 12px; padding: 4px 8px; background: #ffffff; border-radius: 4px; font-size: 12px; border: 1px solid #e1e5e9;">
+                {{ user.business.get_plan_display }}
             </span>
         </p>
     {% endif %}
