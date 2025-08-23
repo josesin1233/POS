@@ -128,7 +128,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
-STATIC_ROOT = BASE_DIR / "staticfiles"
+# Use /app/staticfiles in production (Railway)
+STATIC_ROOT = "/app/staticfiles" if not DEBUG else BASE_DIR / "staticfiles"
 
 # Media files
 MEDIA_URL = '/media/'

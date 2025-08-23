@@ -5,14 +5,14 @@ import os
 bind = f"0.0.0.0:{os.environ.get('PORT', '8000')}"
 backlog = 2048
 
-# Worker processes - Reduced for Railway memory limits
+# Worker processes - Minimal for memory optimization  
 workers = 1
 worker_class = "sync"
-worker_connections = 500
-timeout = 300
+worker_connections = 200
+timeout = 600
 keepalive = 2
-max_requests = 1000
-max_requests_jitter = 100
+max_requests = 500
+max_requests_jitter = 50
 
 # Restart workers after this many requests, with up to this much jitter added
 preload_app = True

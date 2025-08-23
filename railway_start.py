@@ -29,10 +29,17 @@ def main():
     # Set Django settings
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dulceria_pos.settings')
     
+    # Ensure staticfiles directory exists
+    import os
+    staticfiles_dir = "/app/staticfiles"
+    if not os.path.exists(staticfiles_dir):
+        os.makedirs(staticfiles_dir, exist_ok=True)
+        print(f"✅ Created directory: {staticfiles_dir}")
+    
     # Commands to run in order
     commands = [
         "python manage.py migrate --noinput",
-        "python manage.py collectstatic --noinput --clear",
+        "python manage.py collectstatic --noinput --clear --verbosity=2",
         "python init_railway.py",
     ]
     
