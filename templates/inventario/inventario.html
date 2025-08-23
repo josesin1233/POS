@@ -979,6 +979,15 @@ async function eliminarProducto(id) {
 // Sistema de alertas deshabilitado en inventario (ya tiene su propia sección)
 console.log('📦 Inventario: Las alertas se muestran en la sección dedicada');
 
+// Función para abrir scanner (igual que en POS)
+function openScanner() {
+  if (typeof BarCodeScanner !== 'undefined') {
+    BarCodeScanner.open();
+  } else {
+    alert('Scanner no disponible. Ingresa el código manualmente.');
+  }
+}
+
 // BARCODE EVENT LISTENER for inventory - Works with scanner from POS
 window.addEventListener('barcodeScanned', function(event) {
     const code = event.detail.code;
