@@ -265,9 +265,9 @@
               <input type="text" id="nuevo-codigo" required
                      class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
                      placeholder="Código de barras">
-              <button type="button" onclick="abrirScannerInventario('nuevo')" 
+              <button type="button" onclick="openScanner()" 
                       class="px-3 py-2 bg-green-700 hover:bg-green-600 rounded font-medium text-sm transition">
-                Scan
+                📱 SCAN
               </button>
             </div>
           </div>
@@ -325,9 +325,9 @@
               <input type="text" id="stock-codigo" required
                      class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
                      placeholder="Código del producto">
-              <button type="button" onclick="abrirScannerInventario('stock')" 
+              <button type="button" onclick="openScanner()" 
                       class="px-3 py-2 bg-green-700 hover:bg-green-600 rounded font-medium text-sm transition">
-                Scan
+                📱 SCAN
               </button>
             </div>
           </div>
@@ -978,6 +978,90 @@ async function eliminarProducto(id) {
 
 // Sistema de alertas deshabilitado en inventario (ya tiene su propia sección)
 console.log('📦 Inventario: Las alertas se muestran en la sección dedicada');
+
+// BARCODE EVENT LISTENER for inventory - Works with scanner from POS
+window.addEventListener('barcodeScanned', function(event) {
+    const code = event.detail.code;
+    console.log(`Código escaneado en inventario: ${code}`);
+    
+    // Determinar en qué campo poner el código
+    // Priorizar el campo que esté visible y activo
+    const nuevoCodigo = document.getElementById('nuevo-codigo');
+    const stockCodigo = document.getElementById('stock-codigo');
+    
+    // Si el usuario está en la sección de agregar producto nuevo
+    if (nuevoCodigo && nuevoCodigo.offsetParent !== null) {
+        nuevoCodigo.value = code;
+        nuevoCodigo.focus();
+        
+        // Auto-buscar información del producto si existe
+        setTimeout(() => {
+            const nombreField = document.getElementById('nuevo-nombre');
+            if (nombreField && !nombreField.value) {
+                buscarInfoProductoPorCodigo(code, 'nuevo');
+            }
+        }, 100);
+        
+        console.log('Código escaneado puesto en campo agregar producto');
+        return;
+    }
+    
+    // Si el usuario está en la sección de actualizar producto
+    if (stockCodigo && stockCodigo.offsetParent !== null) {
+        stockCodigo.value = code;
+        stockCodigo.focus();
+        
+        // Auto-buscar producto para actualizar
+        setTimeout(() => {
+            buscarProductoParaActualizar(code);
+        }, 100);
+        
+        console.log('Código escaneado puesto en campo actualizar producto');
+        return;
+    }
+    
+    // Por defecto, ponerlo en agregar producto nuevo
+    if (nuevoCodigo) {
+        nuevoCodigo.value = code;
+        nuevoCodigo.focus();
+        console.log('Código escaneado puesto en campo agregar producto (por defecto)');
+    }
+});
+
+// Función auxiliar para buscar información de producto por código
+async function buscarInfoProductoPorCodigo(codigo, tipo) {
+    try {
+        const response = await fetch('/producto/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ query: codigo })
+        });
+        
+        if (response.ok) {
+            const producto = await response.json();
+            
+            if (tipo === 'nuevo' && producto.nombre) {
+                // Si el producto existe, llenar el nombre automáticamente
+                const nombreField = document.getElementById('nuevo-nombre');
+                const precioField = document.getElementById('nuevo-precio');
+                
+                if (nombreField && !nombreField.value) {
+                    nombreField.value = producto.nombre;
+                }
+                if (precioField && !precioField.value && producto.precio) {
+                    precioField.value = producto.precio;
+                }
+                
+                console.log('Información del producto encontrada y rellenada');
+            }
+        }
+    } catch (error) {
+        console.log('Producto no encontrado, continuando con código escaneado');
+    }
+}
 </script>
 
 {% csrf_token %}
