@@ -7,7 +7,6 @@
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10,
-    "releaseCommand": "python init_railway.py"
+    "restartPolicyMaxRetries": 10
   }
 }

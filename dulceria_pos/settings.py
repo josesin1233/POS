@@ -19,16 +19,31 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-pro
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
 
 # Allowed hosts - specify your domain names
-ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')] 
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'web-production-11df5.up.railway.app').split(',')] 
 
 # 🗄️ Database configuration
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+# Railway provides DATABASE_URL automatically
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    # Fallback for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'dulceria_pos',
+            'USER': 'postgres',
+            'PASSWORD': '',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -50,7 +65,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [ 
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware', 
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware', 
     'django.middleware.common.CommonMiddleware', 
@@ -82,24 +96,7 @@ TEMPLATES = [
     }, 
 ] 
 
-# Database configuration
-# Railway provides DATABASE_URL, fallback to individual env vars for local development
-DATABASE_URL = os.getenv('DATABASE_URL')
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    }
-else:
-    DATABASES = { 
-        'default': { 
-            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'), 
-            'NAME': os.getenv('DB_NAME', 'dulceria_pos'), 
-            'USER': os.getenv('DB_USER', 'postgres'), 
-            'PASSWORD': os.getenv('DB_PASSWORD', ''),  # No default password for security
-            'HOST': os.getenv('DB_HOST', 'localhost'), 
-            'PORT': os.getenv('DB_PORT', '5432'), 
-        } 
-    } 
+# Database configuration is above 
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -231,6 +228,8 @@ LOGS_DIR.mkdir(exist_ok=True)
 
 # WhiteNoise configuration for better static file serving
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = DEBUG
 
 # Cache configuration (use Redis in production if available)
 if os.getenv('REDIS_URL'):
@@ -268,7 +267,4 @@ if not DEBUG:
     SERVER_EMAIL = os.getenv('SERVER_EMAIL', 'server@example.com')
     EMAIL_SUBJECT_PREFIX = '[POS Mexico] '
 
-    STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 WSGI_APPLICATION = 'dulceria_pos.wsgi.application'
