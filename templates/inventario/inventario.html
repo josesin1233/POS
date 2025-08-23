@@ -128,6 +128,97 @@
     background-color: #1f2937;
     color: #f9fafb;
   }
+  
+  /* Mobile Responsive Styles for Inventory */
+  @media (max-width: 768px) {
+    /* Make forms stack better on mobile */
+    .grid.grid-cols-1.md\\:grid-cols-2.gap-3 {
+      grid-template-columns: 1fr !important;
+    }
+    
+    /* Fix scan button positioning on mobile */
+    .flex.gap-2 {
+      flex-direction: column !important;
+      gap: 0.5rem !important;
+    }
+    
+    .flex.gap-2 input {
+      width: 100% !important;
+      flex: none !important;
+    }
+    
+    .flex.gap-2 button {
+      width: 100% !important;
+      padding: 0.75rem 1rem !important;
+      margin-top: 0.5rem !important;
+    }
+    
+    /* Make product forms more compact */
+    .bg-gray-900\\/80.border.border-gray-700.rounded-lg.shadow.p-4.mb-4 {
+      padding: 1rem !important;
+      margin-bottom: 1rem !important;
+    }
+    
+    /* Adjust table for mobile */
+    .overflow-x-auto {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Make buttons more touch-friendly */
+    .btn-edit, .btn-delete, .btn-update, .btn-clear, .btn-refresh {
+      padding: 0.75rem 1rem !important;
+      font-size: 0.875rem !important;
+      min-height: 44px !important;
+    }
+    
+    /* Stack action buttons vertically */
+    .flex.items-center.space-x-2 {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 0.5rem !important;
+    }
+    
+    .flex.items-center.space-x-2 > * {
+      margin: 0 !important;
+    }
+    
+    /* Make navigation tabs stack on mobile */
+    .flex.items-center.space-x-3 {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 0.5rem !important;
+      width: 100% !important;
+    }
+    
+    .flex.items-center.space-x-3 > * {
+      margin: 0 !important;
+      text-align: center !important;
+    }
+  }
+  
+  /* Extra small screens adjustments */
+  @media (max-width: 480px) {
+    /* Reduce padding further */
+    .max-w-full.mx-auto.px-4.py-2 {
+      padding: 0.5rem 1rem !important;
+    }
+    
+    /* Smaller headers */
+    .text-xl.font-bold {
+      font-size: 1.125rem !important;
+    }
+    
+    .text-lg.font-semibold {
+      font-size: 1rem !important;
+    }
+    
+    /* More compact inputs */
+    input, select {
+      padding: 0.625rem 0.75rem !important;
+      font-size: 0.875rem !important;
+    }
+  }
 </style>
 {% endblock %}
 

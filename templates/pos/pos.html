@@ -299,6 +299,85 @@
       box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
       transform: translateY(-1px);
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      /* Hide stock alert banner on mobile to save space */
+      .max-w-full .flex .space-x-4 > div:first-child {
+        display: none !important;
+      }
+      
+      /* Make main container stack vertically on mobile */
+      .flex.overflow-hidden.flex-row {
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: auto !important;
+      }
+      
+      /* Cart container takes full width and reduced height on mobile */
+      .cart-container {
+        width: 100% !important;
+        min-width: auto !important;
+        height: 50vh !important;
+        order: 2 !important;
+      }
+      
+      /* Product form takes full width on mobile */
+      .flex.flex-col.rounded-xl.border-2[style*="width: 28%"] {
+        width: 100% !important;
+        min-width: auto !important;
+        height: auto !important;
+        order: 1 !important;
+        margin-bottom: 1rem !important;
+      }
+      
+      /* Adjust cart items scroll area for mobile */
+      .cart-container .overflow-y-auto {
+        max-height: 30vh !important;
+      }
+      
+      /* Make buttons more touch-friendly on mobile */
+      .grid.grid-cols-3.gap-2 button {
+        padding: 0.75rem 0.5rem !important;
+        font-size: 0.75rem !important;
+      }
+      
+      /* Stack navigation tabs on smaller screens */
+      .flex.flex-wrap.gap-2 {
+        justify-content: center;
+      }
+      
+      .tab-button, .tab-button-active {
+        flex: 1 1 auto;
+        text-align: center;
+        min-width: 120px;
+      }
+    }
+    
+    /* Extra small screens (phones in portrait) */
+    @media (max-width: 480px) {
+      /* Make navigation more compact */
+      .mx-auto.px-4.py-1\.5 {
+        padding: 0.5rem 1rem !important;
+      }
+      
+      /* Reduce font sizes */
+      .text-lg.font-bold {
+        font-size: 1rem !important;
+      }
+      
+      /* Make tabs smaller */
+      .tab-button, .tab-button-active {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
+        min-width: 100px;
+      }
+      
+      /* Reduce padding in main content */
+      .flex.overflow-hidden.flex-row.p-2 {
+        padding: 0.5rem !important;
+      }
+    }
   </style>
 </head>
 <body>
