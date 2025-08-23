@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página no encontrada - DulcePOS</title>
+    <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .error-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-black min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-lg w-full text-center">
+        <!-- Error Icon -->
+        <div class="error-animation mb-8">
+            <div class="text-8xl mb-4">🍭</div>
+            <h1 class="text-6xl font-bold text-white mb-2">404</h1>
+        </div>
+        
+        <!-- Error Message -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-white mb-4">
+                ¡Oops! Esta página se perdió
+            </h2>
+            <p class="text-gray-300 leading-relaxed">
+                La página que buscas no existe o ha sido movida. 
+                No te preocupes, puedes regresar a tu punto de venta.
+            </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="space-y-4">
+            <a href="/punto_de_venta/" 
+               class="inline-block w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all font-semibold">
+                🏪 Ir al Punto de Venta
+            </a>
+            <a href="/" 
+               class="inline-block w-full bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all">
+                🏠 Página de Inicio
+            </a>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-12 text-gray-500 text-sm">
+            <p>¿Necesitas ayuda? Contacta: <span class="text-blue-400">+52 56 3809 7287</span></p>
+        </div>
+    </div>
+</body>
+</html>

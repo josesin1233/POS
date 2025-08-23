@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes de Suscripción - POS México</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .plan-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .plan-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-100 min-h-screen">
+    
+    <!-- Navigation Header -->
+    <header class="bg-white/90 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">P</span>
+                    </div>
+                    <span class="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                        POS México
+                    </span>
+                </div>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="/" class="text-gray-700 hover:text-pink-600 transition-colors font-medium">Inicio</a>
+                    <a href="/#demo" class="text-gray-700 hover:text-pink-600 transition-colors font-medium">Demo</a>
+                    <a href="/accounts/login/" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all">Iniciar Sesión</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <!-- Hero Section -->
+        <div class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-6">
+                Elige tu Plan Ideal
+            </h1>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Moderniza tu negocio con nuestro sistema POS. Sin compromisos a largo plazo, cancela cuando quieras.
+            </p>
+            <div class="mt-8 inline-flex items-center bg-green-100 text-green-800 px-4 py-2 rounded-full">
+                <span class="text-sm font-medium">✨ Todos los planes incluyen soporte técnico</span>
+            </div>
+        </div>
+
+        <!-- Payment Notice -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-6 mb-12 max-w-4xl mx-auto">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <span class="text-3xl">📞</span>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-blue-900 mb-2">
+                        Información de Pago
+                    </h3>
+                    <p class="text-blue-800 leading-relaxed">
+                        <strong>El pago en línea no está disponible temporalmente.</strong><br>
+                        Para realizar tu pago y completar tu registro, por favor contacta a:
+                    </p>
+                    <div class="mt-3 flex items-center">
+                        <span class="text-2xl font-bold text-blue-900">📱 +52 56 3809 7287</span>
+                    </div>
+                    <p class="text-sm text-blue-700 mt-2">
+                        Nuestro equipo te ayudará con el proceso de pago y activación de tu cuenta.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plans Grid -->
+        <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
+            {% for plan_key, plan in planes.items %}
+            <div class="plan-card bg-white rounded-2xl shadow-lg overflow-hidden border-2 {% if plan.nombre == 'Intermedio' %}border-pink-300 relative{% else %}border-gray-100{% endif %}">
+                {% if plan.nombre == 'Intermedio' %}
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                        Más Popular
+                    </div>
+                {% endif %}
+                
+                <div class="p-8">
+                    <!-- Plan Header -->
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2">{{ plan.nombre }}</h3>
+                        <div class="flex justify-center items-baseline">
+                            <span class="text-4xl font-bold text-gray-900">${{ plan.precio }}</span>
+                            <span class="text-gray-600 ml-2">MXN/mes</span>
+                        </div>
+                    </div>
+
+                    <!-- Plan Stats -->
+                    <div class="grid grid-cols-2 gap-4 mb-6 text-center">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-2xl font-bold text-pink-600">{{ plan.usuarios }}</div>
+                            <div class="text-xs text-gray-600">Usuario{{ plan.usuarios|pluralize }}</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="text-2xl font-bold text-purple-600">{{ plan.productos }}</div>
+                            <div class="text-xs text-gray-600">Productos</div>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <ul class="space-y-3 mb-8">
+                        {% for caracteristica in plan.caracteristicas %}
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-3">✓</span>
+                            <span class="text-gray-700 text-sm">{{ caracteristica }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <!-- CTA Button -->
+                    <button 
+                        onclick="seleccionarPlan('{{ plan_key }}', '{{ plan.nombre }}', {{ plan.precio }})"
+                        class="w-full py-3 px-4 rounded-lg font-semibold transition-all {% if plan.nombre == 'Intermedio' %}bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:shadow-lg transform hover:scale-[1.02]{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}"
+                    >
+                        Seleccionar {{ plan.nombre }}
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 max-w-4xl mx-auto">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-8">Preguntas Frecuentes</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">¿Puedo cambiar de plan después?</h4>
+                    <p class="text-gray-600 text-sm">Sí, puedes cambiar de plan en cualquier momento desde tu cuenta.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">¿Hay compromisos a largo plazo?</h4>
+                    <p class="text-gray-600 text-sm">No, todos los planes son mensuales y puedes cancelar cuando quieras.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">¿Incluye soporte técnico?</h4>
+                    <p class="text-gray-600 text-sm">Sí, todos los planes incluyen soporte por chat y email.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 mb-2">¿Hay descuentos por pago anual?</h4>
+                    <p class="text-gray-600 text-sm">Sí, ofrecemos 2 meses gratis con el pago anual adelantado.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="text-center mt-16">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">¿Necesitas un plan personalizado?</h3>
+            <p class="text-gray-600 mb-6">Contáctanos para empresas con necesidades especiales</p>
+            <a 
+                href="mailto:ventas@posmexico.com" 
+                class="inline-flex items-center bg-white border-2 border-pink-300 text-pink-600 px-6 py-3 rounded-lg hover:bg-pink-50 transition-all font-medium"
+            >
+                <span class="mr-2">📧</span>
+                Contactar Ventas
+            </a>
+        </div>
+    </main>
+
+    <!-- Selection Modal -->
+    <div id="selectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 relative">
+            <button onclick="cerrarModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
+                <span class="text-2xl">&times;</span>
+            </button>
+            
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-white text-2xl">🎉</span>
+                </div>
+                
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">¡Excelente Elección!</h3>
+                <p class="text-gray-600 mb-2">Has seleccionado el plan:</p>
+                <div class="bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg p-4 mb-6">
+                    <div class="text-xl font-bold text-pink-600" id="selectedPlan">Plan Básico</div>
+                    <div class="text-2xl font-bold text-gray-800" id="selectedPrice">$299/mes</div>
+                </div>
+                
+                <div class="space-y-3">
+                    <a 
+                        href="/#suscripcion" 
+                        class="block w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-4 rounded-lg hover:shadow-lg transition-all font-semibold"
+                    >
+                        Continuar con Suscripción
+                    </a>
+                    <button 
+                        onclick="cerrarModal()"
+                        class="block w-full bg-gray-100 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-200 transition-all"
+                    >
+                        Ver más planes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function seleccionarPlan(planKey, planNombre, planPrecio) {
+            document.getElementById('selectedPlan').textContent = `Plan ${planNombre}`;
+            document.getElementById('selectedPrice').textContent = `$${planPrecio}/mes`;
+            
+            // Store selection in sessionStorage for subscription form
+            sessionStorage.setItem('selectedPlan', JSON.stringify({
+                key: planKey,
+                nombre: planNombre,
+                precio: planPrecio
+            }));
+            
+            // Show modal
+            document.getElementById('selectionModal').classList.remove('hidden');
+            document.getElementById('selectionModal').classList.add('flex');
+        }
+
+        function cerrarModal() {
+            document.getElementById('selectionModal').classList.add('hidden');
+            document.getElementById('selectionModal').classList.remove('flex');
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('selectionModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                cerrarModal();
+            }
+        });
+
+        // Check if plan was pre-selected from landing page
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const preselectedPlan = urlParams.get('plan');
+            
+            if (preselectedPlan) {
+                const plans = {
+                    {% for plan_key, plan in planes.items %}
+                    '{{ plan_key }}': { nombre: '{{ plan.nombre }}', precio: {{ plan.precio }} },
+                    {% endfor %}
+                };
+                
+                if (plans[preselectedPlan]) {
+                    seleccionarPlan(
+                        preselectedPlan, 
+                        plans[preselectedPlan].nombre, 
+                        plans[preselectedPlan].precio
+                    );
+                }
+            }
+        });
+    </script>
+</body>
+</html>

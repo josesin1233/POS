@@ -1,12 +1,260 @@
-<!DOCTYPE html> 
-<html> 
-<head><title>Login - POS</title></head> 
-<body> 
-<h2>Iniciar Sesion</h2> 
-<form method="post"> 
-<input type="text" name="username" placeholder="Usuario" required> 
-<input type="password" name="password" placeholder="Contrase�a" required> 
-<button type="submit">Entrar</button> 
-</form> 
-</body> 
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - DulcePOS</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    <link rel="alternate icon" href="{% static 'favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Dark theme variables */
+        :root {
+          --bg-primary: #111111;
+          --bg-secondary: #000000;
+          --bg-tertiary: #1a1a1a;
+          --text-primary: #ffffff;
+          --text-secondary: #a0a0a0;
+          --border-color: #333333;
+          --accent-blue: #00d4ff;
+          --accent-green: #00ff88;
+        }
+        
+        body {
+          background-color: #000000;
+          color: var(--text-primary);
+        }
+        
+        .cart-container {
+          background: #0a0a0a;
+          border: 2px solid #333333;
+          box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
+        }
+        
+        .btn-add-v1 {
+          background: var(--bg-tertiary);
+          color: var(--accent-blue);
+          border: 1px solid var(--accent-blue);
+          box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
+          font-family: 'JetBrains Mono', monospace;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+        
+        .btn-add-v1:hover {
+          background: var(--accent-blue);
+          color: white;
+          box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+          transform: translateY(-1px);
+        }
+        
+        .btn-cart-v1 {
+          background: var(--bg-tertiary);
+          color: #ff4444;
+          border: 1px solid #ff4444;
+          box-shadow: 0 2px 8px rgba(255, 68, 68, 0.2);
+          font-family: 'JetBrains Mono', monospace;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+        
+        .btn-cart-v1:hover {
+          background: #ff4444;
+          color: white;
+          box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+          transform: translateY(-1px);
+        }
+        
+        input:focus {
+          outline: none !important;
+          border-color: var(--accent-blue) !important;
+          box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2) !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center">
+    
+
+    <!-- Main Login Card -->
+    <div class="w-full max-w-md mx-4">
+        <div class="cart-container rounded-2xl shadow-xl p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);">
+                    <span class="text-black font-bold text-2xl">🔐</span>
+                </div>
+                <h1 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Iniciar Sesión</h1>
+                <p style="color: var(--text-secondary);">Accede a tu punto de venta</p>
+            </div>
+
+            <!-- Error Messages -->
+            {% if form.errors %}
+                <div class="px-4 py-3 rounded-lg mb-6" style="background: rgba(255, 68, 68, 0.1); border: 1px solid #ff4444; color: #ff4444;">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <p class="text-sm">{{ error }}</p>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="px-4 py-3 rounded-lg mb-6" style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue);">
+                        <p class="text-sm">{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Username Field -->
+                <div>
+                    <label for="id_username" class="block text-sm font-medium mb-2" style="color: var(--text-primary);">
+                        Usuario o Email
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            name="username" 
+                            id="id_username"
+                            class="w-full px-4 py-3 border rounded-lg transition-all"
+                            style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                            placeholder="Ingresa tu usuario"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="id_password" class="block text-sm font-medium mb-2" style="color: var(--text-primary);">
+                        Contraseña
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            name="password" 
+                            id="id_password"
+                            class="w-full px-4 py-3 border rounded-lg transition-all"
+                            style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                            placeholder="Ingresa tu contraseña"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input 
+                            type="checkbox" 
+                            id="remember_me" 
+                            name="remember_me"
+                            class="h-4 w-4 rounded" 
+                            style="accent-color: var(--accent-blue);"
+                        >
+                        <label for="remember_me" class="ml-2 block text-sm" style="color: var(--text-primary);">
+                            Recordarme
+                        </label>
+                    </div>
+                    <a href="#" class="text-sm font-medium hover:underline" style="color: var(--accent-blue);">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    class="btn-add-v1 w-full py-3 px-4 rounded-lg font-semibold"
+                >
+                    🔐 Iniciar Sesión
+                </button>
+            </form>
+
+            <!-- Navigation Buttons -->
+            <div class="mt-8 pt-6 border-t" style="border-color: var(--border-color);">
+                <div class="text-center">
+                    <p class="text-sm mb-4" style="color: var(--text-secondary);">¿No tienes una cuenta?</p>
+                    <a 
+                        href="/#suscripcion" 
+                        class="btn-cart-v1 block w-full py-2 px-4 rounded-lg font-semibold transition-all"
+                    >
+                        💰 Ver Planes de Suscripción
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6">
+            <p class="text-xs" style="color: var(--text-secondary);">
+                Al iniciar sesión, aceptas nuestros 
+                <a href="#" class="hover:underline" style="color: var(--accent-blue);">Términos de Servicio</a> y 
+                <a href="#" class="hover:underline" style="color: var(--accent-blue);">Política de Privacidad</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-login function for demo
+        function autoLogin() {
+            document.getElementById('id_username').value = 'demo';
+            document.getElementById('id_password').value = 'demo123';
+            
+            // Add visual feedback
+            const button = event.target;
+            button.textContent = 'Accediendo...';
+            button.disabled = true;
+            
+            // Submit form after short delay for better UX
+            setTimeout(() => {
+                document.querySelector('form').submit();
+            }, 500);
+        }
+
+        // Form validation and UX improvements
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const inputs = form.querySelectorAll('input[required]');
+            
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.value.trim() === '') {
+                        this.classList.add('border-red-300', 'bg-red-50');
+                        this.classList.remove('border-gray-200', 'bg-gray-50');
+                    } else {
+                        this.classList.remove('border-red-300', 'bg-red-50');
+                        this.classList.add('border-green-300', 'bg-green-50');
+                    }
+                });
+                
+                input.addEventListener('input', function() {
+                    if (this.value.trim() !== '') {
+                        this.classList.remove('border-red-300', 'bg-red-50');
+                        this.classList.add('border-green-300', 'bg-green-50');
+                    }
+                });
+            });
+            
+            // Form submission loading state
+            form.addEventListener('submit', function() {
+                const submitButton = this.querySelector('button[type="submit"]');
+                submitButton.textContent = 'Iniciando sesión...';
+                submitButton.disabled = true;
+            });
+        });
+    </script>
+</body>
 </html> 

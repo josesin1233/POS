@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Suscripción - POS México</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .success-animation {
+            animation: slideInUp 0.8s ease-out;
+        }
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .checkmark {
+            animation: scaleIn 0.6s ease-out 0.3s both;
+        }
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100 min-h-screen flex items-center justify-center">
+    
+    <div class="w-full max-w-2xl mx-4">
+        <!-- Main Success Card -->
+        <div class="success-animation bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center">
+            <!-- Success Icon -->
+            <div class="checkmark w-24 h-24 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8">
+                <span class="text-white text-4xl">✓</span>
+            </div>
+            
+            <!-- Success Message -->
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+                ¡Suscripción Confirmada!
+            </h1>
+            
+            <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+                Tu suscripción ha sido procesada exitosamente. Ya puedes comenzar a usar tu punto de venta.
+            </p>
+            
+            <!-- Session Details -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 mb-8 text-left">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalles de tu suscripción</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">ID de sesión:</span>
+                        <span class="font-mono text-gray-800">{{ session_id|default:"POSMEXICO-2024" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Estado:</span>
+                        <span class="text-green-600 font-semibold">Confirmado ✓</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Fecha:</span>
+                        <span class="text-gray-800">{{ fecha|default:"8 de agosto, 2025" }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Next Steps -->
+            <div class="bg-blue-50 rounded-xl p-6 mb-8 text-left">
+                <h3 class="text-lg font-semibold text-blue-800 mb-4">Próximos pasos</h3>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start">
+                        <span class="text-blue-500 mr-3 mt-0.5">1️⃣</span>
+                        <span class="text-gray-700">Revisa tu email para las credenciales de acceso</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-blue-500 mr-3 mt-0.5">2️⃣</span>
+                        <span class="text-gray-700">Configura tu negocio y agrega tus productos</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-blue-500 mr-3 mt-0.5">3️⃣</span>
+                        <span class="text-gray-700">Comienza a usar tu sistema POS</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="space-y-4">
+                <a 
+                    href="/accounts/login/" 
+                    class="block w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] text-lg"
+                >
+                    Acceder al Sistema
+                </a>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <a 
+                        href="/#demo" 
+                        class="flex-1 bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 font-medium py-3 px-4 rounded-lg transition-all"
+                    >
+                        Ver Demo
+                    </a>
+                    <a 
+                        href="mailto:soporte@posmexico.com" 
+                        class="flex-1 bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 font-medium py-3 px-4 rounded-lg transition-all"
+                    >
+                        Contactar Soporte
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Info Cards -->
+        <div class="grid md:grid-cols-2 gap-6 mt-8">
+            <!-- Support Card -->
+            <div class="bg-white/80 backdrop-blur-sm rounded-xl p-6">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-blue-600 text-xl">🎧</span>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 mb-2">Soporte 24/7</h4>
+                    <p class="text-gray-600 text-sm mb-4">Nuestro equipo está aquí para ayudarte</p>
+                    <a href="mailto:soporte@posmexico.com" class="text-blue-600 text-sm font-medium hover:underline">
+                        soporte@posmexico.com
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Training Card -->
+            <div class="bg-white/80 backdrop-blur-sm rounded-xl p-6">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-purple-600 text-xl">🎓</span>
+                    </div>
+                    <h4 class="font-semibold text-gray-800 mb-2">Capacitación</h4>
+                    <p class="text-gray-600 text-sm mb-4">Aprende a usar todas las funciones</p>
+                    <a href="#" class="text-purple-600 text-sm font-medium hover:underline">
+                        Ver tutoriales
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-8">
+            <p class="text-sm text-gray-500">
+                <a href="/" class="hover:text-gray-700 font-medium">POS México</a> - 
+                El sistema punto de venta más completo
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-redirect after 30 seconds (optional)
+        setTimeout(function() {
+            // You could add a countdown here
+            console.log('Auto-redirect available');
+        }, 30000);
+        
+        // Celebration effect (optional)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add some confetti or celebration effect here if desired
+            console.log('Subscription confirmed successfully!');
+        });
+    </script>
+</body>
+</html>

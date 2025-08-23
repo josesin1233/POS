@@ -1,0 +1,345 @@
+/* Tema personalizado para Django Admin - POS México */
+
+/* Variables de color para tema mexicano */
+:root {
+    --pos-primary: #e11d48;      /* Rosa mexicano */
+    --pos-primary-dark: #be185d;  /* Rosa oscuro */
+    --pos-success: #059669;       /* Verde */
+    --pos-warning: #d97706;       /* Naranja */
+    --pos-danger: #dc2626;        /* Rojo */
+    --pos-info: #0284c7;          /* Azul */
+    --pos-bg-light: #f8fafc;      /* Fondo claro */
+    --pos-text-dark: #374151;     /* Texto oscuro */
+}
+
+/* Encabezado del admin personalizado */
+#header {
+    background: linear-gradient(135deg, var(--pos-primary), var(--pos-primary-dark)) !important;
+    color: white !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#header h1,
+#header h1 a,
+#site-name,
+#site-name a {
+    color: white !important;
+    font-weight: 700;
+    font-size: 24px;
+    text-decoration: none;
+}
+
+/* Botones de usuario en header */
+#user-tools a {
+    color: white !important;
+    background: rgba(255,255,255,0.2);
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-left: 8px;
+    transition: all 0.2s;
+}
+
+#user-tools a:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-1px);
+}
+
+/* Sidebar de navegación */
+.module h2,
+.module caption {
+    background: var(--pos-primary) !important;
+    color: white !important;
+    font-weight: 600;
+    border-radius: 6px 6px 0 0;
+}
+
+.module {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: none;
+    overflow: hidden;
+}
+
+/* Tablas */
+.results table {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.results th {
+    background: var(--pos-primary) !important;
+    color: white !important;
+    font-weight: 600;
+    border: none !important;
+    padding: 12px 8px;
+}
+
+.results td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.results tbody tr:hover {
+    background: #fef3f4 !important;
+}
+
+.results tbody tr:nth-child(odd) {
+    background: #fafafa;
+}
+
+/* Botones principales */
+.button,
+input[type="submit"],
+button,
+.submit-row input {
+    background: var(--pos-primary) !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+.button:hover,
+input[type="submit"]:hover,
+button:hover {
+    background: var(--pos-primary-dark) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(225,29,72,0.3) !important;
+}
+
+.button.default,
+.default {
+    background: var(--pos-success) !important;
+}
+
+.button.default:hover {
+    background: #047857 !important;
+    box-shadow: 0 4px 12px rgba(5,150,105,0.3) !important;
+}
+
+/* Botones de eliminación */
+.deletelink {
+    background: var(--pos-danger) !important;
+}
+
+.deletelink:hover {
+    background: #b91c1c !important;
+    box-shadow: 0 4px 12px rgba(220,38,38,0.3) !important;
+}
+
+/* Campos de formulario */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="url"],
+textarea,
+select {
+    border: 2px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+    transition: border-color 0.2s !important;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="url"]:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--pos-primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(225,29,72,0.1) !important;
+}
+
+/* Filtros laterales */
+.changelist-filter {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.changelist-filter h3 {
+    color: var(--pos-primary);
+    font-weight: 600;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.changelist-filter li a {
+    color: var(--pos-text-dark);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: block;
+    margin-bottom: 3px;
+    transition: all 0.2s;
+}
+
+.changelist-filter li a:hover,
+.changelist-filter li.selected a {
+    background: var(--pos-primary);
+    color: white;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    background: var(--pos-bg-light) !important;
+    border-radius: 6px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+}
+
+.breadcrumbs a {
+    color: var(--pos-primary) !important;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+/* Paginación */
+.paginator {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.paginator a,
+.paginator .this-page {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 3px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--pos-text-dark);
+    border: 1px solid #e5e7eb;
+}
+
+.paginator a:hover {
+    background: var(--pos-primary);
+    color: white;
+    border-color: var(--pos-primary);
+}
+
+.paginator .this-page {
+    background: var(--pos-primary);
+    color: white;
+    border-color: var(--pos-primary);
+}
+
+/* Mensajes de éxito/error */
+.success,
+.messagelist .success {
+    background: #dcfce7 !important;
+    border-left: 4px solid var(--pos-success) !important;
+    color: #166534 !important;
+    border-radius: 0 6px 6px 0 !important;
+}
+
+.warning,
+.messagelist .warning {
+    background: #fef3c7 !important;
+    border-left: 4px solid var(--pos-warning) !important;
+    color: #92400e !important;
+    border-radius: 0 6px 6px 0 !important;
+}
+
+.error,
+.messagelist .error {
+    background: #fef2f2 !important;
+    border-left: 4px solid var(--pos-danger) !important;
+    color: #991b1b !important;
+    border-radius: 0 6px 6px 0 !important;
+}
+
+/* Iconos de acciones */
+.addlink::before {
+    content: "➕ ";
+    font-size: 12px;
+}
+
+.changelink::before {
+    content: "✏️ ";
+    font-size: 12px;
+}
+
+.deletelink::before {
+    content: "🗑️ ";
+    font-size: 12px;
+}
+
+/* Tabs/Fieldsets */
+fieldset {
+    border: none !important;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+fieldset h2 {
+    background: var(--pos-primary);
+    color: white !important;
+    padding: 10px 15px;
+    margin: -20px -20px 20px -20px;
+    border-radius: 8px 8px 0 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Responsive mejoras */
+@media (max-width: 768px) {
+    .results table {
+        font-size: 12px;
+    }
+    
+    .results th,
+    .results td {
+        padding: 6px 4px;
+    }
+    
+    .changelist-filter {
+        margin-top: 20px;
+    }
+}
+
+/* Dashboard mejoras */
+.dashboard .module {
+    background: white;
+    margin-bottom: 20px;
+}
+
+.dashboard .module table {
+    width: 100%;
+}
+
+.dashboard .module th {
+    background: var(--pos-primary);
+    color: white;
+    padding: 10px;
+}
+
+.dashboard .module td {
+    padding: 8px 10px;
+}
+
+/* Footer personalizado */
+#footer {
+    background: var(--pos-bg-light);
+    border-top: 2px solid var(--pos-primary);
+    color: var(--pos-text-dark);
+    text-align: center;
+    padding: 15px;
+    margin-top: 40px;
+}

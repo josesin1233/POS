@@ -1,1 +1,0 @@
-    return render(request, 'pos/index.html', {'user': request.user})  pos\views.py

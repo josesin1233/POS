@@ -24,7 +24,7 @@ class LoginView(View):
     
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('pos:index')
+            return redirect('pos:punto_de_venta')
         
         form = LoginForm()
         return render(request, 'accounts/login.html', {'form': form})
@@ -48,7 +48,7 @@ class LoginView(View):
                 if self._verificar_limite_usuarios(user):
                     login(request, user)
                     messages.success(request, f'Bienvenido, {user.get_full_name() or user.username}!')
-                    return redirect('pos:index')
+                    return redirect('pos:punto_de_venta')
                 else:
                     messages.error(
                         request, 
@@ -147,7 +147,7 @@ class RegisterBusinessView(View):
                         'Tienes acceso al plan básico.'
                     )
                     
-                    return redirect('pos:index')
+                    return redirect('pos:punto_de_venta')
                     
             except Exception as e:
                 logger.error(f"Error registrando negocio: {e}")
@@ -212,7 +212,7 @@ class ConfiguracionView(View):
         # Solo el propietario puede ver configuraciones
         if not request.user.is_business_owner:
             messages.error(request, 'No tienes permisos para acceder a la configuración.')
-            return redirect('pos:index')
+            return redirect('pos:punto_de_venta')
         
         context = {
             'business': business,
@@ -224,7 +224,7 @@ class ConfiguracionView(View):
     def post(self, request):
         if not request.user.is_business_owner:
             messages.error(request, 'No tienes permisos para modificar la configuración.')
-            return redirect('pos:index')
+            return redirect('pos:punto_de_venta')
         
         business = request.user.business
         

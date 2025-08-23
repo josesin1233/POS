@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error del servidor - DulcePOS</title>
+    <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .error-animation {
+            animation: shake 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes shake {
+            from { transform: translateX(-2px); }
+            to { transform: translateX(2px); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-red-900 via-gray-800 to-black min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-lg w-full text-center">
+        <!-- Error Icon -->
+        <div class="error-animation mb-8">
+            <div class="text-8xl mb-4">⚠️</div>
+            <h1 class="text-6xl font-bold text-white mb-2">500</h1>
+        </div>
+        
+        <!-- Error Message -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold text-white mb-4">
+                Error interno del servidor
+            </h2>
+            <p class="text-gray-300 leading-relaxed">
+                Ha ocurrido un error inesperado en nuestros servidores. 
+                Nuestro equipo ha sido notificado automáticamente y está trabajando para solucionarlo.
+            </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="space-y-4">
+            <button onclick="window.location.reload()" 
+                    class="inline-block w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all font-semibold">
+                🔄 Intentar de nuevo
+            </button>
+            <a href="/punto_de_venta/" 
+               class="inline-block w-full bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all">
+                🏪 Ir al Punto de Venta
+            </a>
+            <a href="/" 
+               class="inline-block w-full bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-500 transition-all">
+                🏠 Página de Inicio
+            </a>
+        </div>
+        
+        <!-- Support Info -->
+        <div class="mt-12 bg-red-900/30 border border-red-500/50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-white mb-2">¿Necesitas ayuda inmediata?</h3>
+            <p class="text-gray-300 text-sm mb-3">
+                Si el problema persiste, contáctanos directamente:
+            </p>
+            <div class="text-blue-400 font-semibold">
+                📱 +52 56 3809 7287<br>
+                📧 soporte@posmexico.com
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-8 text-gray-500 text-xs">
+            <p>Error ID: {{ request.id|default:"N/A" }} | Hora: {{ now|date:"Y-m-d H:i:s" }}</p>
+        </div>
+    </div>
+</body>
+</html>

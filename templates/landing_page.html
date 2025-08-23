@@ -1,0 +1,1209 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>POS Dulcería México - Demo Gratuito</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link rel="alternate icon" href="{% static 'favicon.ico' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/scanner.css' %}">
+  <script src="{% static 'js/barcode-scanner.js' %}"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw !important; max-width: 100vw !important; overflow-x: hidden; }
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Dark/Light mode variables */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --bg-tertiary: #f3f4f6;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --border-color: #e5e7eb;
+      --accent-blue: #2563eb;
+      --accent-green: #22c55e;
+    }
+    
+    [data-theme="dark"] {
+      --bg-primary: #111111;
+      --bg-secondary: #000000;
+      --bg-tertiary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --border-color: #333333;
+      --accent-blue: #00d4ff;
+      --accent-green: #00ff88;
+    }
+    
+    body {
+      background-color: #000000;
+      color: var(--text-primary);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    
+    body[data-theme="light"] {
+      background-color: var(--bg-secondary);
+    }
+    
+    body[data-theme="dark"] {
+      background-color: #000000;
+    }
+    
+    .bg-primary { background-color: var(--bg-primary); }
+    .bg-secondary { background-color: var(--bg-secondary); }
+    .bg-tertiary { background-color: var(--bg-tertiary); }
+    .text-primary { color: var(--text-primary); }
+    .text-secondary { color: var(--text-secondary); }
+    .border-primary { border-color: var(--border-color); }
+    
+    /* Theme toggle */
+    .theme-toggle {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .theme-toggle:hover {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    /* Demo styles adapted to dark theme */
+    .tab-active { 
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
+      color: #000000;
+      border: 2px solid var(--accent-blue);
+      box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+    }
+    
+    .tab-inactive { 
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
+    }
+    
+    .tab-inactive:hover {
+      border-color: var(--accent-blue);
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2);
+      transform: translateY(-1px) scale(1.02);
+    }
+    
+    .demo-limitation { 
+      animation: pulseRed 2s infinite;
+      border: 2px dashed #ff4444;
+      background: #0a0a0a;
+    }
+    
+    @keyframes pulseRed {
+      0%, 100% { border-color: #ff4444; background-color: rgba(255, 68, 68, 0.1); }
+      50% { border-color: #dc2626; background-color: rgba(255, 68, 68, 0.2); }
+    }
+    
+    .producto-demo-item {
+      background: #1a1a1a;
+      border: 1px solid #333333;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 4px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .producto-demo-item:hover {
+      border-color: var(--accent-blue);
+      background: #222222;
+      box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
+      transform: translateY(-1px);
+    }
+    
+    .producto-demo-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .intentos-restantes {
+      animation: urgencia 1.5s ease-in-out infinite;
+      color: #ff4444;
+    }
+    
+    @keyframes urgencia {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .producto-encontrado {
+      animation: foundPulse 0.8s ease-out;
+    }
+    
+    @keyframes foundPulse {
+      0% { background-color: #1a1a1a; border-color: var(--accent-blue); }
+      100% { background-color: var(--bg-tertiary); border-color: var(--border-color); }
+    }
+    
+    .autocompletar-dropdown {
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      background-color: #1a1a1a;
+      border: 1px solid #333333;
+    }
+    
+    /* Button styles adapted */
+    .btn-scan {
+      background: linear-gradient(145deg, #1f2937, #111827);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-scan:hover {
+      background: linear-gradient(145deg, #374151, #1f2937);
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.7);
+      transform: translateY(-2px) scale(1.05);
+    }
+
+    /* Cart container styling */
+    .cart-container {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Button variants */
+    .btn-cart-v1 {
+      background: linear-gradient(135deg, #ff4499, #cc3377);
+      color: white;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-cart-v1:hover {
+      background: linear-gradient(135deg, #cc3377, #aa2255);
+      transform: translateY(-1px);
+    }
+
+    .btn-add-v1 {
+      background: linear-gradient(135deg, var(--accent-blue), #0088cc);
+      color: white;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-add-v1:hover {
+      background: linear-gradient(135deg, #0088cc, #0066aa);
+      transform: translateY(-1px);
+    }
+
+    .process-btn {
+      background: linear-gradient(135deg, var(--accent-green), #00cc66);
+      color: white;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .process-btn:hover {
+      background: linear-gradient(135deg, #00cc66, #00aa55);
+      transform: translateY(-1px);
+    }
+
+    .ticket-btn {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .ticket-btn:hover {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- Navigation -->
+  <nav class="border-b shadow-sm" style="background-color: #111111; border-color: #333333;">
+    <div class="w-full px-4 py-1.5">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-bold text-primary">DulcePOS - DEMO GRATUITO</div>
+        
+        <div class="flex items-center space-x-2">
+          <!-- Dark/Light Mode Toggle -->
+          <button onclick="toggleTheme()" class="theme-toggle">
+            <svg id="sun-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <svg id="moon-icon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+          </button>
+          <span class="text-secondary text-xs font-medium">¡Pruébalo YA!</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Tabs Navigation -->
+  <div class="border-b" style="background-color: #111111; border-color: #333333;">
+    <div class="w-full px-4 py-2">
+      <div class="flex flex-wrap gap-2">
+        <button onclick="mostrarTab('demo')" id="tab-demo" 
+                class="tab-active px-4 py-2 rounded-lg font-semibold text-sm transition-all">
+          🏪 DEMO
+        </button>
+        <button onclick="mostrarTab('planes')" id="tab-planes"
+                class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
+          💰 PLANES
+        </button>
+        <button onclick="mostrarTab('suscripcion')" id="tab-suscripcion"
+                class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
+          📋 SUSCRIBIRSE
+        </button>
+        <button onclick="window.location.href='/accounts/login/'" id="tab-login"
+                class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
+          🔐 INICIAR SESIÓN
+        </button>
+        <button onclick="mostrarTab('updates')" id="tab-updates"
+                class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
+          ⚡ UPGRADES
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <main class="w-screen p-0 m-0" style="background-color: #000000;">
+
+    <!-- TAB DEMO -->
+    <div id="content-demo" class="tab-content w-screen p-0 m-0">
+      
+      <!-- Alerta de demo limitado -->
+      <div class="demo-limitation text-primary px-6 py-4 mb-6 w-screen">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">⚠️</span>
+            <div>
+              <h3 class="font-bold text-lg" style="color: #ff4444;">Demo Limitado - Solo 3 Productos Total</h3>
+              <p class="text-sm text-secondary">Intentos restantes: <span id="intentos-restantes" class="font-bold text-xl intentos-restantes">5</span></p>
+            </div>
+          </div>
+          <div class="text-right">
+            <button onclick="mostrarTab('suscripcion')" class="btn-cart-v1 px-4 py-2 rounded-lg font-bold transition-all">
+              💳 ¡SUSCRÍBETE AHORA!
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout principal: Formulario y Carrito lado a lado -->
+      <div class="flex gap-4 p-4">
+        
+        <!-- Formulario de búsqueda (Izquierda - 30%) -->
+        <div class="w-full max-w-sm">
+          <div class="cart-container shadow-lg p-4 rounded-lg">
+            <h3 class="text-lg font-bold text-primary mb-3">Buscar Producto</h3>
+            
+            <form id="form-demo" class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Nombre:</label>
+                <div class="relative">
+                  <input type="text" id="buscar-producto" 
+                         class="w-full p-2 border-2 rounded"
+                         style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                         placeholder="Buscar producto..." 
+                         autocomplete="off" />
+                  
+                  <!-- Dropdown de autocompletado -->
+                  <div id="autocompletar-dropdown" 
+                       class="autocompletar-dropdown absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg mt-1 hidden z-50">
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Código:</label>
+                <div class="flex gap-2">
+                  <input type="text" id="codigo-producto" 
+                         class="flex-1 p-2 border-2 rounded font-mono"
+                         style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                         placeholder="Código de barras" 
+                         autocomplete="off" />
+                  <button type="button" onclick="abrirScanner()" 
+                          class="btn-scan px-3 py-2 rounded transition-all text-sm">
+                    Scan
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Precio:</label>
+                  <input type="text" id="precio-producto" 
+                         class="w-full p-2 border-2 rounded font-mono text-sm" 
+                         style="background-color: #2a2a2a; border-color: #333333; color: var(--text-secondary);" readonly />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Stock:</label>
+                  <input type="text" id="stock-producto" 
+                         class="w-full p-2 border-2 rounded text-sm" 
+                         style="background-color: #2a2a2a; border-color: #333333; color: var(--text-secondary);" readonly />
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Cantidad:</label>
+                <input type="number" id="cantidad-producto" 
+                       class="w-full p-2 border-2 rounded text-center" 
+                       style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);" min="1" value="1" />
+              </div>
+
+              <button type="submit" 
+                      class="btn-add-v1 w-full py-2 rounded font-bold text-sm transition-all">
+                Agregar al Carrito
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Carrito (Derecha - 70%) -->
+        <div class="flex-1">
+          <div class="cart-container shadow-lg p-4 rounded-lg">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-bold text-primary">Carrito de Compras</h3>
+              <button onclick="limpiarCarrito()" 
+                      class="btn-cart-v1 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+                Limpiar
+              </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="sticky top-0" style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color);">
+                  <tr>
+                    <th class="px-3 py-2 text-left font-semibold text-sm text-primary">Producto</th>
+                    <th class="px-3 py-2 text-center font-semibold text-sm text-primary">Cant.</th>
+                    <th class="px-3 py-2 text-right font-semibold text-sm text-primary">Precio</th>
+                    <th class="px-3 py-2 text-right font-semibold text-sm text-primary">Total</th>
+                    <th class="px-3 py-2 text-center font-semibold text-sm text-primary">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-carrito">
+                  <tr>
+                    <td colspan="5" class="text-center py-8 text-secondary">
+                      <div class="text-2xl mb-2">🛒</div>
+                      <div class="text-sm">Carrito vacío - ¡Agrega productos!</div>
+                      <div class="text-xs mt-1">Busca productos o usa el scanner</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-6 pt-4 border-t-2" style="border-color: var(--border-color);">
+              <div class="flex justify-between items-center text-2xl font-bold mb-4">
+                <span class="text-primary">Total:</span>
+                <span style="color: var(--accent-blue);" id="total-carrito">$0.00</span>
+              </div>
+              
+              <div class="flex gap-3">
+                <button onclick="simularCobro()" 
+                        class="flex-1 process-btn py-3 rounded-lg font-bold text-sm transition-all">
+                  Simular Cobro
+                </button>
+                <button onclick="mostrarTab('suscripcion')" 
+                        class="ticket-btn px-6 py-3 rounded-lg font-bold text-sm transition-all">
+                  ¡Comprar Ahora!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Lista de productos demo (abajo, en formato compacto) -->
+      <div class="p-4 pt-0">
+        <div class="cart-container shadow-lg p-4 rounded-lg">
+          <div class="flex justify-between items-center mb-3">
+            <h4 class="text-lg font-bold text-primary">Productos Disponibles (Demo)</h4>
+            <div class="text-xs p-2 rounded border" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
+              <span style="color: var(--accent-green);" class="font-semibold">Max: 3 productos total, 5 intentos</span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-64 overflow-y-auto" id="productos-demo">
+            <!-- Se llenan con JavaScript -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB PLANES -->
+    <div id="content-planes" class="tab-content hidden">
+      <div class="text-center mb-8">
+        <h2 class="text-4xl font-bold mb-4" style="color: var(--text-primary);">Planes POS México</h2>
+        <p class="text-xl" style="color: var(--text-secondary);">Elige el plan perfecto para tu negocio</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Plan Básico -->
+        <div class="cart-container rounded-2xl shadow-xl p-8 relative">
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">BÁSICO</h3>
+            <div class="text-4xl font-bold mb-1" style="color: var(--accent-blue);">$299</div>
+            <div style="color: var(--text-secondary);">/mes</div>
+          </div>
+          
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 1 usuario
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 100 productos
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 1 sucursal
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> Carrito + inventario
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> Ventas (30 días)
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> Búsqueda inteligente
+            </li>
+          </ul>
+          
+          <button onclick="seleccionarPlan('basico', 299)" 
+                  class="btn-add-v1 w-full py-3 rounded-lg font-bold">
+            Seleccionar Plan
+          </button>
+        </div>
+
+        <!-- Plan Intermedio -->
+        <div class="cart-container rounded-2xl shadow-xl p-8 relative border-4" style="border-color: #ff4499;">
+          <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 text-white px-6 py-1 rounded-full text-sm font-bold" style="background: #ff4499;">
+            MÁS POPULAR
+          </div>
+          
+          <div class="text-center mb-6 mt-4">
+            <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">INTERMEDIO</h3>
+            <div class="text-4xl font-bold mb-1" style="color: #ff4499;">$449</div>
+            <div style="color: var(--text-secondary);">/mes</div>
+          </div>
+          
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 1 usuario
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 300 productos
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 1 sucursal
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> Todo lo anterior +
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: #ff4499;">★</span> Lector códigos
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: #ff4499;">★</span> Alertas stock
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: #ff4499;">★</span> Ventas (90 días)
+            </li>
+          </ul>
+          
+          <button onclick="seleccionarPlan('intermedio', 449)" 
+                  class="btn-cart-v1 w-full py-3 rounded-lg font-bold">
+            Seleccionar Plan
+          </button>
+        </div>
+
+        <!-- Plan Profesional -->
+        <div class="cart-container rounded-2xl shadow-xl p-8 relative">
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">PROFESIONAL</h3>
+            <div class="text-4xl font-bold mb-1" style="color: #8b5cf6;">$699</div>
+            <div style="color: var(--text-secondary);">/mes</div>
+          </div>
+          
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 2 usuarios
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 500 productos
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> 2 sucursales
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: var(--accent-green);">✓</span> Todo lo anterior +
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: #8b5cf6;">★</span> Tickets profesionales
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: #8b5cf6;">★</span> Control de cajas
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: #8b5cf6;">★</span> Dashboard completo
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: #8b5cf6;">★</span> Soporte prioritario
+            </li>
+            <li class="flex items-center gap-2" style="color: var(--text-primary);">
+              <span style="color: #8b5cf6;">★</span> Ventas ilimitadas
+            </li>
+          </ul>
+          
+          <button onclick="seleccionarPlan('profesional', 699)" 
+                  class="process-btn w-full py-3 rounded-lg font-bold">
+            Seleccionar Plan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB SUSCRIPCIÓN -->
+    <div id="content-suscripcion" class="tab-content hidden">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+          <h2 class="text-4xl font-bold mb-4" style="color: var(--text-primary);">Suscribirse Ahora</h2>
+          <p class="text-xl" style="color: var(--text-secondary);">Activa tu plan y empieza a vender</p>
+        </div>
+
+        <div class="cart-container rounded-2xl shadow-xl p-12 text-center">
+          <div id="plan-seleccionado" class="mb-8 p-6 rounded-lg border" style="background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent-blue);">
+            <h3 class="font-bold text-2xl mb-2" style="color: var(--accent-blue);">Plan seleccionado: Ninguno</h3>
+            <p style="color: var(--text-secondary);">Selecciona un plan desde la pestaña "Planes"</p>
+          </div>
+
+          <div class="mb-8">
+            <h3 class="text-3xl font-bold mb-6" style="color: var(--text-primary);">Pago desde página web no disponible</h3>
+            <p class="text-xl mb-8" style="color: var(--text-secondary);">Para suscribirse, envíe mensaje al siguiente número</p>
+            
+            <div class="cart-container p-6 rounded-xl mb-8" style="background: rgba(34, 197, 94, 0.1); border: 2px solid var(--accent-green);">
+              <div class="text-4xl font-bold mb-4" style="color: var(--accent-green);">56 3809 7287</div>
+              <a href="https://wa.me/5256380907287?text=Hola,%20quiero%20suscribirme%20al%20POS" 
+                 target="_blank"
+                 class="process-btn inline-block px-8 py-4 rounded-lg font-bold text-lg transition-all">
+                Enviar mensaje de WhatsApp
+              </a>
+            </div>
+            
+            <p class="text-sm" style="color: var(--text-secondary);">
+              Nuestro equipo te contactará para activar tu suscripción y configurar tu cuenta
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB UPDATES -->
+    <div id="content-updates" class="tab-content hidden">
+      <div class="text-center mb-8">
+        <h2 class="text-4xl font-bold text-gray-800 mb-4">Upgrades Disponibles</h2>
+        <p class="text-xl text-gray-600">Mejora tu plan actual</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+          <div class="text-4xl mb-4">👤</div>
+          <h3 class="font-bold text-lg mb-2">Usuario Extra</h3>
+          <div class="text-2xl font-bold text-blue-600 mb-2">+$149/mes</div>
+          <p class="text-sm text-gray-600 mb-4">Agrega otro usuario a tu plan actual</p>
+          <button class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+            Agregar
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+          <div class="text-4xl mb-4">📦</div>
+          <h3 class="font-bold text-lg mb-2">Más Inventario</h3>
+          <div class="text-2xl font-bold text-green-600 mb-2">+$49/mes</div>
+          <p class="text-sm text-gray-600 mb-4">+100 productos adicionales</p>
+          <button class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+            Agregar
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+          <div class="text-4xl mb-4">🏪</div>
+          <h3 class="font-bold text-lg mb-2">Sucursal Extra</h3>
+          <div class="text-2xl font-bold text-purple-600 mb-2">+$199/mes</div>
+          <p class="text-sm text-gray-600 mb-4">Conecta otra sucursal</p>
+          <button class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+            Agregar
+          </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+          <div class="text-4xl mb-4">👥</div>
+          <h3 class="font-bold text-lg mb-2">Gestión Empleados</h3>
+          <div class="text-2xl font-bold text-orange-600 mb-2">+$99/mes</div>
+          <p class="text-sm text-gray-600 mb-4">Módulo completo de empleados</p>
+          <button class="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700">
+            Agregar
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SCRIPTS -->
+  <script>
+    // PRODUCTOS DEMO CON TUS PRODUCTOS REALES
+    const productosDemo = [
+      { codigo: '7501055332175', nombre: 'Coca 355 ml', precio: 15, stock: 6 },
+      { codigo: '75007614', nombre: 'Coca 600 ml', precio: 20, stock: 44 },
+      { codigo: '758104005796', nombre: 'Bonafont 1L', precio: 12, stock: 26 },
+      { codigo: '7500533001091', nombre: 'Agua 500 ml', precio: 5, stock: 34 },
+      { codigo: '7500810015315', nombre: 'Gansito', precio: 8, stock: 10 },
+      { codigo: '074323077667', nombre: 'Panditas 15g', precio: 5, stock: 20 },
+      { codigo: '7501000630363', nombre: 'Mini Mamut', precio: 3, stock: 10 },
+      { codigo: '7891000248362', nombre: 'Kit Kat', precio: 25, stock: 5 },
+      { codigo: '75039394', nombre: 'Chicle Orbit', precio: 3, stock: 38 },
+      { codigo: '097339000054', nombre: 'Valentina', precio: 22, stock: 13 },
+      { codigo: '725181369011', nombre: 'Skwinkles', precio: 10, stock: 12 },
+      { codigo: '7501011145566', nombre: 'Rocka Leta', precio: 9, stock: 14 },
+      { codigo: '75003104', nombre: 'Boing Mango', precio: 18, stock: 3 },
+      { codigo: '738545020015', nombre: 'Chamoy 500', precio: 25, stock: 8 },
+      { codigo: '7501073830509', nombre: 'Peñafiel 600ml', precio: 18, stock: 5 }
+    ];
+
+    // VARIABLES GLOBALES - PERSISTENCIA POR SESSIONSTORAGE
+    let carritoDemo = JSON.parse(sessionStorage.getItem('carritoDemo') || '[]');
+    let intentosRestantes = parseInt(sessionStorage.getItem('intentosDemo') || '5');
+    let planSeleccionado = null;
+    let precioMensual = 0;
+    const MAX_PRODUCTOS_CARRITO = 3;
+    const MAX_INTENTOS = 5;
+
+    // BarCodeScanner se carga desde /static/js/barcode-scanner.js
+
+    // FUNCIONES DE NAVEGACIÓN
+    function mostrarTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+      });
+      
+      document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+        tab.className = tab.className.replace('tab-active', 'tab-inactive');
+      });
+      
+      document.getElementById(`content-${tabName}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabName}`).className = 
+        document.getElementById(`tab-${tabName}`).className.replace('tab-inactive', 'tab-active');
+    }
+
+    // FUNCIONES DEMO
+    function inicializarDemo() {
+      if (intentosRestantes <= 0) {
+        mostrarDemoAgotado();
+        return;
+      }
+
+      const containerDemo = document.getElementById('productos-demo');
+      containerDemo.innerHTML = '';
+      
+      productosDemo.forEach(producto => {
+        const div = document.createElement('div');
+        div.className = 'producto-demo-item cursor-pointer bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg p-3 transition-all';
+        div.innerHTML = `
+          <div class="text-center">
+            <h4 class="font-medium text-sm truncate mb-1" style="color: var(--text-primary);">${producto.nombre}</h4>
+            <p class="text-xs font-mono opacity-70 mb-2" style="color: var(--text-secondary);">${producto.codigo}</p>
+            <div class="space-y-1">
+              <div class="font-bold text-lg" style="color: var(--accent-green);">$${producto.precio.toFixed(2)}</div>
+              <div class="text-xs px-2 py-1 rounded" style="background: rgba(34, 197, 94, 0.1); color: var(--accent-green);">
+                Stock: ${producto.stock}
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Add click handler to auto-fill form
+        div.addEventListener('click', () => {
+          llenarDatosProducto(producto);
+          div.classList.add('producto-encontrado');
+          setTimeout(() => {
+            div.classList.remove('producto-encontrado');
+          }, 1000);
+        });
+        
+        containerDemo.appendChild(div);
+      });
+
+      actualizarTablaCarrito();
+      actualizarIntentosRestantes();
+
+      BarCodeScanner.init({
+        onScan: function(codigo) {
+          manejarCodigoEscaneado(codigo);
+        }
+      });
+    }
+
+    function manejarCodigoEscaneado(codigo) {
+      const producto = buscarProductoDemo(codigo);
+      if (producto) {
+        document.getElementById('buscar-producto').value = codigo;
+        llenarDatosProducto(producto);
+        
+        document.getElementById('buscar-producto').classList.add('producto-encontrado');
+        setTimeout(() => {
+          document.getElementById('buscar-producto').classList.remove('producto-encontrado');
+        }, 1000);
+      } else {
+        alert('Código no encontrado en demo. Prueba con los productos listados.');
+      }
+    }
+
+    function buscarProductoDemo(query) {
+      return productosDemo.find(p => 
+        p.codigo === query ||
+        p.nombre.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    function llenarDatosProducto(producto) {
+      document.getElementById('buscar-producto').value = producto.nombre;
+      document.getElementById('codigo-producto').value = producto.codigo;
+      document.getElementById('precio-producto').value = `$${producto.precio.toFixed(2)}`;
+      document.getElementById('stock-producto').value = producto.stock;
+    }
+
+    function buscarProductoInteligente(query) {
+      if (!query || query.length < 2) return [];
+      
+      return productosDemo.filter(p => 
+        p.codigo.includes(query) ||
+        p.nombre.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 8);
+    }
+
+    function mostrarAutocompletar(resultados) {
+      const dropdown = document.getElementById('autocompletar-dropdown');
+      dropdown.innerHTML = '';
+      
+      if (resultados.length === 0) {
+        dropdown.classList.add('hidden');
+        return;
+      }
+      
+      resultados.forEach(producto => {
+        const div = document.createElement('div');
+        div.className = 'p-3 hover:bg-gray-100 cursor-pointer border-b';
+        div.innerHTML = `
+          <div class="flex justify-between items-center">
+            <div>
+              <div class="font-semibold text-sm">${producto.nombre}</div>
+              <div class="text-xs text-gray-500">Código: ${producto.codigo}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-bold text-green-600">$${producto.precio.toFixed(2)}</div>
+            </div>
+          </div>
+        `;
+        
+        div.addEventListener('click', () => {
+          document.getElementById('buscar-producto').value = producto.nombre;
+          llenarDatosProducto(producto);
+          dropdown.classList.add('hidden');
+        });
+        
+        dropdown.appendChild(div);
+      });
+      
+      dropdown.classList.remove('hidden');
+    }
+
+    function agregarAlCarritoDemo(producto, cantidad) {
+      // Verificar límite de intentos ANTES de agregar
+      if (intentosRestantes <= 0) {
+        mostrarDemoAgotado();
+        return false;
+      }
+      
+      const productosActualesTotal = carritoDemo.reduce((sum, item) => sum + item.cantidad, 0);
+      
+      if (productosActualesTotal + cantidad > MAX_PRODUCTOS_CARRITO) {
+        const disponible = MAX_PRODUCTOS_CARRITO - productosActualesTotal;
+        if (disponible <= 0) {
+          alert(`Demo limitado a ${MAX_PRODUCTOS_CARRITO} productos TOTALES. ¡Suscríbete para inventario ilimitado!`);
+          return false;
+        } else {
+          alert(`Solo puedes agregar ${disponible} producto(s) más. Demo limitado.`);
+          return false;
+        }
+      }
+      
+      const existente = carritoDemo.find(item => item.codigo === producto.codigo);
+      
+      if (existente) {
+        existente.cantidad += cantidad;
+        existente.total = existente.cantidad * existente.precio;
+      } else {
+        carritoDemo.push({
+          codigo: producto.codigo,
+          nombre: producto.nombre,
+          precio: producto.precio,
+          cantidad: cantidad,
+          total: producto.precio * cantidad
+        });
+      }
+      
+      sessionStorage.setItem('carritoDemo', JSON.stringify(carritoDemo));
+      
+      actualizarTablaCarrito();
+      
+      intentosRestantes--;
+      sessionStorage.setItem('intentosDemo', intentosRestantes.toString());
+      actualizarIntentosRestantes();
+      
+      return true;
+    }
+
+    function actualizarTablaCarrito() {
+      const tabla = document.getElementById('tabla-carrito');
+      tabla.innerHTML = '';
+      
+      if (carritoDemo.length === 0) {
+        tabla.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-12 text-gray-500">
+              <div class="text-4xl mb-3">🛒</div>
+              <div class="text-lg">Carrito vacío - ¡Agrega productos!</div>
+              <div class="text-sm mt-2">Busca productos o usa el scanner</div>
+            </td>
+          </tr>
+        `;
+        document.getElementById('total-carrito').textContent = '$0.00';
+        return;
+      }
+      
+      let totalGeneral = 0;
+      
+      carritoDemo.forEach((item, index) => {
+        totalGeneral += item.total;
+        
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+          <td class="px-4 py-3 text-base">${item.nombre}</td>
+          <td class="px-4 py-3 text-center text-base">${item.cantidad}</td>
+          <td class="px-4 py-3 text-right text-base">$${item.precio.toFixed(2)}</td>
+          <td class="px-4 py-3 text-right font-bold text-base">$${item.total.toFixed(2)}</td>
+          <td class="px-4 py-3 text-center">
+            <button onclick="eliminarDelCarritoDemo(${index})" 
+                    class="text-red-600 hover:text-red-800 text-base font-medium">
+              🗑️ Eliminar
+            </button>
+          </td>
+        `;
+        tabla.appendChild(fila);
+      });
+      
+      document.getElementById('total-carrito').textContent = `$${totalGeneral.toFixed(2)}`;
+    }
+
+    function eliminarDelCarritoDemo(index) {
+      carritoDemo.splice(index, 1);
+      sessionStorage.setItem('carritoDemo', JSON.stringify(carritoDemo));
+      actualizarTablaCarrito();
+    }
+
+    function limpiarCarrito() {
+      carritoDemo = [];
+      sessionStorage.setItem('carritoDemo', JSON.stringify(carritoDemo));
+      actualizarTablaCarrito();
+    }
+
+    function actualizarIntentosRestantes() {
+      document.getElementById('intentos-restantes').textContent = intentosRestantes;
+      
+      if (intentosRestantes <= 0) {
+        mostrarDemoAgotado();
+      } else if (intentosRestantes <= 2) {
+        document.getElementById('intentos-restantes').classList.add('intentos-restantes');
+      }
+    }
+
+    function mostrarDemoAgotado() {
+      alert('Demo agotado. ¡Suscríbete para acceso ilimitado!');
+      mostrarTab('suscripcion');
+    }
+
+    function simularCobro() {
+      if (carritoDemo.length === 0) {
+        alert('Agrega productos al carrito primero');
+        return;
+      }
+      
+      const total = carritoDemo.reduce((sum, item) => sum + item.total, 0);
+      alert(`SIMULACIÓN DE COBRO\n\nTotal: $${total.toFixed(2)}\n\n¡Venta registrada exitosamente!\n\nEn la versión completa podrás:\n• Imprimir tickets\n• Control de cambio\n• Reportes de ventas\n• Y mucho más...`);
+      
+      limpiarCarrito();
+    }
+
+    function abrirScanner() {
+      if (intentosRestantes <= 0) {
+        mostrarDemoAgotado();
+        return;
+      }
+      
+      const productosActuales = carritoDemo.reduce((sum, item) => sum + item.cantidad, 0);
+      if (productosActuales >= MAX_PRODUCTOS_CARRITO) {
+        alert(`Ya tienes ${MAX_PRODUCTOS_CARRITO} productos (límite demo). ¡Suscríbete para más!`);
+        mostrarTab('suscripcion');
+        return;
+      }
+      
+      BarCodeScanner.open();
+    }
+
+    // FUNCIONES DE PLANES
+    function seleccionarPlan(plan, precio) {
+      planSeleccionado = plan;
+      precioMensual = precio;
+      
+      const planDiv = document.getElementById('plan-seleccionado');
+      planDiv.innerHTML = `
+        <h3 class="font-bold text-2xl mb-2" style="color: var(--accent-blue);">Plan seleccionado: ${plan.toUpperCase()}</h3>
+        <p style="color: var(--text-secondary);">$${precio} MXN/mes</p>
+      `;
+      
+      mostrarTab('suscripcion');
+    }
+
+    // NOTIFICACIONES
+    function mostrarNotificacion(mensaje, tipo = 'info') {
+      const colores = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        warning: 'bg-yellow-500',
+        info: 'bg-blue-500'
+      };
+      
+      // Crear notificación
+      const notificacion = document.createElement('div');
+      notificacion.className = `fixed top-4 right-4 ${colores[tipo]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
+      notificacion.textContent = mensaje;
+      
+      document.body.appendChild(notificacion);
+      
+      // Mostrar notificación
+      setTimeout(() => {
+        notificacion.classList.remove('translate-x-full');
+      }, 100);
+      
+      // Ocultar notificación después de 4 segundos
+      setTimeout(() => {
+        notificacion.classList.add('translate-x-full');
+        setTimeout(() => {
+          if (document.body.contains(notificacion)) {
+            document.body.removeChild(notificacion);
+          }
+        }, 300);
+      }, 4000);
+    }
+
+    // Theme Management
+    function toggleTheme() {
+      const body = document.body;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      
+      if (body.dataset.theme === 'dark') {
+        body.dataset.theme = 'light';
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.dataset.theme = 'dark';
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+    
+    // Load saved theme
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      const body = document.body;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      
+      body.dataset.theme = savedTheme;
+      
+      if (savedTheme === 'dark') {
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+      } else {
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+      }
+    }
+
+    // EVENT LISTENERS
+    document.addEventListener('DOMContentLoaded', function() {
+      loadTheme();
+      // Set dark mode by default
+      document.body.dataset.theme = 'dark';
+      document.getElementById('sun-icon').classList.add('hidden');
+      document.getElementById('moon-icon').classList.remove('hidden');
+      
+      inicializarDemo();
+      
+      // Inicializar BarCode Scanner real
+      if (typeof BarCodeScanner !== 'undefined') {
+        BarCodeScanner.init({
+          onScan: function(codigo) {
+            console.log('🎯 Código escaneado:', codigo);
+            
+            // Llenar el campo de búsqueda con el código escaneado
+            const inputBuscar = document.getElementById('buscar-producto');
+            inputBuscar.value = codigo;
+            
+            // Buscar el producto
+            const producto = buscarProductoDemo(codigo);
+            if (producto) {
+              llenarDatosProducto(producto);
+              inputBuscar.classList.add('producto-encontrado');
+              setTimeout(() => {
+                inputBuscar.classList.remove('producto-encontrado');
+              }, 1000);
+              
+              // Mostrar notificación de éxito
+              mostrarNotificacion(`✅ Producto encontrado: ${producto.nombre}`, 'success');
+            } else {
+              mostrarNotificacion(`❌ Producto con código ${codigo} no encontrado en el demo`, 'error');
+            }
+          },
+          onError: function(error) {
+            console.error('Error del scanner:', error);
+            mostrarNotificacion('⚠️ Error del scanner: ' + error.message, 'warning');
+          }
+        });
+      } else {
+        console.warn('BarCodeScanner no disponible');
+      }
+      
+      // Búsqueda por nombre
+      const inputBuscar = document.getElementById('buscar-producto');
+      inputBuscar.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        
+        // Limpiar código cuando se busca por nombre
+        if (query) {
+          document.getElementById('codigo-producto').value = '';
+        }
+        
+        const resultados = buscarProductoInteligente(query);
+        mostrarAutocompletar(resultados);
+        
+        if (resultados.length === 1 && resultados[0].nombre.toLowerCase() === query.toLowerCase()) {
+          llenarDatosProducto(resultados[0]);
+          document.getElementById('codigo-producto').value = resultados[0].codigo;
+          inputBuscar.classList.add('producto-encontrado');
+          setTimeout(() => {
+            inputBuscar.classList.remove('producto-encontrado');
+          }, 1000);
+        }
+      });
+      
+      // Búsqueda por código
+      const inputCodigo = document.getElementById('codigo-producto');
+      inputCodigo.addEventListener('input', function(e) {
+        const codigo = e.target.value.trim();
+        
+        // Limpiar nombre cuando se busca por código
+        if (codigo) {
+          document.getElementById('buscar-producto').value = '';
+          document.getElementById('autocompletar-dropdown').classList.add('hidden');
+        }
+        
+        if (codigo.length >= 3) {
+          const producto = buscarProductoDemo(codigo);
+          if (producto) {
+            llenarDatosProducto(producto);
+            document.getElementById('buscar-producto').value = producto.nombre;
+            inputCodigo.classList.add('producto-encontrado');
+            setTimeout(() => {
+              inputCodigo.classList.remove('producto-encontrado');
+            }, 1000);
+          }
+        }
+      });
+      
+      // Ocultar dropdown al hacer clic fuera
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('#buscar-producto') && !e.target.closest('#autocompletar-dropdown')) {
+          document.getElementById('autocompletar-dropdown').classList.add('hidden');
+        }
+      });
+      
+      // Formulario demo
+      document.getElementById('form-demo').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (intentosRestantes <= 0) {
+          mostrarDemoAgotado();
+          return;
+        }
+        
+        const buscar = document.getElementById('buscar-producto').value.trim();
+        const codigo = document.getElementById('codigo-producto').value.trim();
+        const cantidad = parseInt(document.getElementById('cantidad-producto').value) || 1;
+        
+        if (!buscar && !codigo) {
+          alert('Busca un producto primero');
+          return;
+        }
+        
+        const producto = buscarProductoDemo(buscar || codigo);
+        if (!producto) {
+          alert('Producto no encontrado en demo');
+          return;
+        }
+        
+        if (agregarAlCarritoDemo(producto, cantidad)) {
+          // Limpiar formulario
+          document.getElementById('form-demo').reset();
+          document.getElementById('precio-producto').value = '';
+          document.getElementById('stock-producto').value = '';
+          document.getElementById('cantidad-producto').value = '1';
+          document.getElementById('autocompletar-dropdown').classList.add('hidden');
+        }
+      });
+
+      // Note: Subscription handled via WhatsApp (no form submission needed)
+      
+      // Inicializar sistema de alertas de stock (sin sonido para demo público)
+      if (typeof StockAlertSystem !== 'undefined') {
+        // No inicializar alertas en la demo pública
+        console.log('Sistema de alertas disponible pero deshabilitado para demo público');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,331 +1,894 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inventario - Dulcería</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans">
+{% extends 'base_production.html' %}
+{% load static %}
 
-  <header class="bg-blue-600 text-white p-6 shadow">
-    <div class="flex justify-between items-center">
-      <h1 class="text-3xl font-bold">Inventario</h1>
-      <a href="/" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-100 font-semibold">
-        Guardar y salir
-      </a>
+{% block title %}Inventario - DulcePOS{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/scanner.css' %}">
+<script src="{% static 'js/barcode-scanner.js' %}"></script>
+<script src="{% static 'js/stock-alerts.js' %}"></script>
+<style>
+  /* Button styles for inventory */
+  .btn-update {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-update:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    transform: translateY(-1px);
+  }
+  
+  .btn-clear {
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-clear:hover {
+    background: linear-gradient(135deg, #4b5563, #374151);
+    transform: translateY(-1px);
+  }
+  
+  .btn-refresh {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-refresh:hover {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    transform: translateY(-1px);
+  }
+  
+  .btn-scan {
+    background: linear-gradient(145deg, #1f2937, #111827);
+    color: var(--accent-green);
+    border: 1px solid var(--accent-green);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-scan:hover {
+    background: linear-gradient(145deg, #374151, #1f2937);
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.7);
+    transform: translateY(-2px) scale(1.05);
+  }
+  
+  /* Search result highlighting */
+  .producto-highlight {
+    background: rgba(0, 212, 255, 0.2) !important;
+    border: 1px solid var(--accent-blue) !important;
+  }
+  
+  /* Stock status colors */
+  .stock-critico {
+    color: #ff4444 !important;
+    font-weight: bold;
+  }
+  
+  .stock-bajo {
+    color: #f59e0b !important;
+    font-weight: bold;
+  }
+  
+  .stock-normal {
+    color: var(--accent-green) !important;
+  }
+  
+  /* Nuevos estilos de botones mejorados */
+  .btn-edit {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    border: 1px solid #8b5cf6;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-edit:hover {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  }
+  
+  .btn-delete {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: 1px solid #ef4444;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-delete:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  }
+
+  /* Fix input text colors for user typing */
+  input, select {
+    color: #f9fafb !important;
+  }
+  
+  input::placeholder {
+    color: #9ca3af !important;
+  }
+  
+  input:focus, select:focus {
+    color: #f9fafb !important;
+  }
+  
+  select option {
+    background-color: #1f2937;
+    color: #f9fafb;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen" style="background-color: #000000; color: var(--text-primary);">
+  
+  <!-- Header Navigation -->
+  <div class="border-b shadow-sm" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-2">
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl font-bold" style="color: var(--text-primary);">📦 Inventario</h1>
+        
+        <div class="flex items-center space-x-3">
+          <a href="/punto_de_venta/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+            🛒 POS
+          </a>
+          <a href="/caja/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+            💰 Caja
+          </a>
+        </div>
+      </div>
     </div>
-  </header>
+  </div>
 
-  <main class="p-6 max-w-3xl mx-auto space-y-10">
-
-    <!-- Agregar nuevo producto -->
-    <section class="bg-white shadow p-6 rounded-xl">
-      <h2 class="text-xl font-semibold text-blue-700 mb-4">Agregar producto al inventario</h2>
-      <form id="formulario-inventario" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Código:</label>
-          <input type="text" id="inv-codigo" class="w-full p-2 border rounded" required />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Nombre:</label>
-          <input type="text" id="inv-nombre" class="w-full p-2 border rounded" required />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Precio:</label>
-          <input type="number" id="inv-precio" class="w-full p-2 border rounded" required min="0" step="0.01" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Stock:</label>
-          <input type="number" id="inv-stock" class="w-full p-2 border rounded" required min="0" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Stock mínimo:</label>
-          <input type="number" id="inv-stock-minimo" class="w-full p-2 border rounded" required min="0" />
-        </div>
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
-          Agregar al Inventario
-        </button>
-      </form>
-    </section>
-
-    <!-- Actualizar producto -->
-    <section class="bg-blue-50 shadow p-6 rounded-xl">
-      <h2 class="text-xl font-semibold text-blue-900 mb-4">Actualizar stock de producto existente</h2>
-      <form id="formulario-stock" class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Código:</label>
-            <input type="text" id="stock-codigo" class="w-full p-2 border rounded" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Nombre:</label>
-            <input type="text" id="stock-nombre" class="w-full p-2 border rounded" />
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Precio actual:</label>
-            <input type="text" id="stock-precio" class="w-full p-2 border rounded bg-white" readonly />
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Stock actual:</label>
-            <input type="text" id="stock-actual" class="w-full p-2 border rounded bg-white" readonly />
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Nuevo precio (opcional):</label>
-            <input type="number" id="nuevo-precio" class="w-full p-2 border rounded" step="0.01" min="0" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Stock a agregar:</label>
-            <input type="number" id="stock-agregar" class="w-full p-2 border rounded" min="1" />
-          </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Stock mínimo:</label>
-          <input type="number" id="stock-minimo" class="w-full p-2 border rounded" min="0" />
-        </div>
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full mt-4">
-          Actualizar producto
-        </button>
-      </form>
-    </section>
-    <section class="bg-red-50 shadow p-6 rounded-xl">
-  <h2 class="text-xl font-semibold text-red-600 mb-4">⚠️ Productos con poco stock</h2>
-  <table class="w-full text-sm text-left">
-    <thead class="border-b text-gray-600">
-      <tr>
-        <th class="pb-2">Código</th>
-        <th class="pb-2">Nombre</th>
-        <th class="pb-2">Stock</th>
-        <th class="pb-2">Stock Mínimo</th>
-      </tr>
-    </thead>
-    <tbody id="tabla-poco-stock"></tbody>
-  </table>
-</section>
-
-    <!-- Inventario actual -->
-    <section class="bg-white shadow p-6 rounded-xl">
-      <h2 class="text-xl font-semibold text-blue-700 mb-4">Inventario actual</h2>
-      <table class="w-full text-sm text-left">
-        <thead class="border-b text-gray-600">
-          <tr>
-            <th class="pb-2">Código</th>
-            <th class="pb-2">Nombre</th>
-            <th class="pb-2">Precio</th>
-            <th class="pb-2">Stock</th>
-          </tr>
-        </thead>
-        <tbody id="tabla-inventario"></tbody>
-      </table>
-    </section>
-
-  </main>
-
-  <script>
-    const form = document.getElementById("formulario-inventario");
-    const tabla = document.getElementById("tabla-inventario");
-
-    async function cargarInventario() {
-      const res = await fetch("/inventario/api");
-      if (!res.ok) return alert("Error al cargar el inventario.");
-      const productos = await res.json();
-      tabla.innerHTML = "";
-      productos.forEach(prod => {
-        tabla.innerHTML += `
-          <tr>
-            <td>${prod.codigo}</td>
-            <td>${prod.nombre}</td>
-            <td>$${prod.precio.toFixed(2)}</td>
-            <td>${prod.stock}</td>
-          </tr>
-        `;
-      });
-    }
-    async function cargarPocoStock() {
-      const res = await fetch("/inventario/poco-stock");
-      if (!res.ok) {
-        alert("Error al cargar productos con poco stock");
-        return;
-      }
-      const productos = await res.json();
-      const tabla = document.getElementById("tabla-poco-stock");
-      tabla.innerHTML = "";
-
-      productos.forEach(p => {
-        tabla.innerHTML += `
-          <tr>
-            <td>${p.codigo}</td>
-            <td>${p.nombre}</td>
-            <td>${p.stock}</td>
-            <td>${p.stock_minimo}</td>
-          </tr>
-        `;
-      });
-    }
-
-    form.addEventListener("submit", async e => {
-      e.preventDefault();
-      const datos = {
-        codigo: document.getElementById("inv-codigo").value.trim(),
-        nombre: document.getElementById("inv-nombre").value.trim(),
-        precio: parseFloat(document.getElementById("inv-precio").value),
-        stock: parseInt(document.getElementById("inv-stock").value),
-        stock_minimo: parseInt(document.getElementById("inv-stock-minimo").value)
-      };
-
-        const res = await fetch("/inventario/agregar/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos)
-      });
-
-      if (res.ok) {
-        await cargarInventario();
-        form.reset();
-        alert("Producto agregado correctamente.");
-      } else {
-        const err = await res.json();
-        alert("Error: " + (err.error || "No se pudo agregar el producto"));
-      }
-    });
-
-    cargarInventario();
-    cargarPocoStock();
-
-    const formStock = document.getElementById("formulario-stock");
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto p-6">
     
-    // Variables para controlar el autocompletado
-    let autocompletadoActivo = true;
-    let ultimoProductoEncontrado = null;
+    {% if error %}
+    <div class="cart-container rounded-xl p-6 mb-6" style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444;">
+      <p style="color: #ff4444;">❌ Error: {{ error }}</p>
+    </div>
+    {% endif %}
 
-    function limpiarCamposProducto() {
-      document.getElementById("stock-precio").value = "";
-      document.getElementById("stock-actual").value = "";
-      document.getElementById("stock-minimo").value = "";
-      autocompletadoActivo = true;
-      ultimoProductoEncontrado = null;
-    }
-
-    function llenarDatosProducto(producto) {
-      document.getElementById("stock-codigo").value = producto.codigo;
-      document.getElementById("stock-nombre").value = producto.nombre;
-      document.getElementById("stock-precio").value = producto.precio;
-      document.getElementById("stock-actual").value = producto.stock;
-      document.getElementById("stock-minimo").value = producto.stock_minimo ?? 0;
+    <!-- Agregar Producto -->
+    <div class="bg-gray-900/80 border border-gray-700 rounded-lg shadow p-4 mb-4">
+      <h2 class="text-lg font-semibold text-gray-200 mb-3">Agregar Producto</h2>
       
-      // Desactivar autocompletado hasta que se cambie el input
-      autocompletadoActivo = false;
-      ultimoProductoEncontrado = producto;
-    }
+      <form id="form-agregar-producto" class="space-y-3">
+        <!-- Primera fila: Código + Nombre -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Código</label>
+            <div class="flex gap-2">
+              <input type="text" id="nuevo-codigo" required
+                     class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                     placeholder="Código de barras">
+              <button type="button" onclick="abrirScannerInventario('nuevo')" 
+                      class="px-3 py-2 bg-green-700 hover:bg-green-600 rounded font-medium text-sm transition">
+                Scan
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Nombre</label>
+            <input type="text" id="nuevo-nombre" required
+                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   placeholder="Nombre del producto">
+          </div>
+        </div>
+        
+        <!-- Segunda fila: Precio + Stock Inicial -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Precio</label>
+            <input type="number" id="nuevo-precio" required step="0.01" min="0"
+                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   placeholder="0.00">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Stock Inicial</label>
+            <input type="number" id="nuevo-stock" min="0" step="1" value="0"
+                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   placeholder="Cantidad">
+          </div>
+        </div>
+        
+        <!-- Tercera fila: Stock Mínimo + Botón -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Stock Mínimo</label>
+            <input type="number" id="nuevo-stock-minimo" min="0" step="1" value="10"
+                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   placeholder="Alerta cuando quede menos">
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full py-2 px-4 bg-blue-700 hover:bg-blue-600 rounded font-semibold text-sm transition">
+              Agregar Producto
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
 
-    async function buscarProducto(query) {
-      if (!autocompletadoActivo) return;
+    <!-- Actualizar Producto Existente -->
+    <div class="bg-gray-900/80 border border-gray-700 rounded-lg shadow p-4 mb-4">
+      <h2 class="text-lg font-semibold text-gray-200 mb-3">Actualizar Producto</h2>
       
-      try {
-        const res = await fetch("/producto/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({query: query})
+      <form id="form-actualizar-producto" class="space-y-3">
+        <!-- Primera fila: Código + Agregar Stock -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Código a actualizar</label>
+            <div class="flex gap-2">
+              <input type="text" id="stock-codigo" required
+                     class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                     placeholder="Código del producto">
+              <button type="button" onclick="abrirScannerInventario('stock')" 
+                      class="px-3 py-2 bg-green-700 hover:bg-green-600 rounded font-medium text-sm transition">
+                Scan
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Agregar Stock</label>
+            <input type="number" id="stock-agregar" min="0" step="1"
+                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   placeholder="Unidades a sumar">
+          </div>
+        </div>
+        
+        <!-- Segunda fila: Nuevo Precio + Stock Mínimo -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Nuevo Precio</label>
+            <input type="number" id="nuevo-precio-update" step="0.01" min="0"
+                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   placeholder="Dejar vacío para no cambiar">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Nuevo Stock Mínimo</label>
+            <input type="number" id="stock-minimo-update" min="0" step="1"
+                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   placeholder="Opcional">
+          </div>
+        </div>
+        
+        <!-- Botón de actualizar -->
+        <div class="flex justify-end">
+          <button type="submit" class="py-2 px-6 bg-orange-700 hover:bg-orange-600 rounded font-semibold text-sm transition">
+            Actualizar Producto
+          </button>
+        </div>
+      </form>
+      
+      <!-- Información del producto seleccionado -->
+      <div id="producto-info" class="mt-3 p-3 bg-gray-800/50 border border-gray-600 rounded-lg hidden">
+        <h3 class="text-sm font-semibold text-gray-200 mb-2">Producto Encontrado</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div>
+            <span class="text-gray-400">Nombre:</span>
+            <span class="text-gray-200 font-medium ml-2" id="producto-nombre">-</span>
+          </div>
+          <div>
+            <span class="text-gray-400">Stock:</span>
+            <span class="text-blue-400 font-semibold ml-2" id="producto-stock">-</span>
+          </div>
+          <div>
+            <span class="text-gray-400">Precio:</span>
+            <span class="text-green-400 font-semibold ml-2">$<span id="producto-precio">-</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Productos con Poco Stock -->
+    <div class="cart-container rounded-xl shadow-lg p-6 mb-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold" style="color: var(--text-primary);">⚠️ Productos con Poco Stock</h2>
+        <button onclick="actualizarPocoStock()" class="btn-refresh px-3 py-1 rounded text-sm transition-all">
+          🔄 Actualizar
+        </button>
+      </div>
+      
+      <div id="productos-poco-stock">
+        <div class="text-center py-6" style="color: var(--text-secondary);">
+          <p>Cargando productos con poco stock...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Productos -->
+    <div class="cart-container rounded-xl shadow-lg p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold" style="color: var(--text-primary);">📋 Productos en Inventario</h2>
+        <span class="text-sm" style="color: var(--text-secondary);">Total: {{ productos|length }} productos</span>
+      </div>
+
+      <!-- Buscador de Productos -->
+      <div class="bg-gray-900/80 border border-gray-700 rounded-lg shadow p-4 mb-4">
+        <h3 class="text-lg font-semibold text-gray-200 mb-3">Buscar Productos</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="md:col-span-2">
+            <div class="flex gap-2">
+              <input type="text" id="buscar-inventario" 
+                     class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                     placeholder="Buscar por nombre o código...">
+              <button type="button" onclick="abrirScannerInventario('buscar')" 
+                      class="px-3 py-2 bg-green-700 hover:bg-green-600 rounded font-medium text-sm transition">
+                Scan
+              </button>
+            </div>
+          </div>
+          <div>
+            <button onclick="limpiarBusqueda()" class="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded font-medium text-sm transition">
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {% if productos %}
+      <div class="overflow-x-auto">
+        <table id="productos-table" class="w-full text-sm">
+          <thead class="sticky top-0" style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color);">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold" style="color: #f9fafb;">Código</th>
+              <th class="px-4 py-3 text-left font-semibold" style="color: #f9fafb;">Nombre</th>
+              <th class="px-4 py-3 text-right font-semibold" style="color: #f9fafb;">Precio</th>
+              <th class="px-4 py-3 text-right font-semibold" style="color: #f9fafb;">Stock</th>
+              <th class="px-4 py-3 text-right font-semibold" style="color: #f9fafb;">Stock Mín.</th>
+              <th class="px-4 py-3 text-center font-semibold" style="color: #f9fafb;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for producto in productos %}
+            <tr class="border-b hover:bg-opacity-50" style="border-color: var(--border-color);">
+              <td class="px-4 py-3 font-mono text-xs" style="color: #d1d5db;">{{ producto.codigo }}</td>
+              <td class="px-4 py-3 font-medium" style="color: #f9fafb;">{{ producto.nombre }}</td>
+              <td class="px-4 py-3 text-right font-mono" style="color: var(--accent-green);">${{ producto.precio|floatformat:2 }}</td>
+              <td class="px-4 py-3 text-right" style="color: #f9fafb;">{{ producto.stock|default:0 }}</td>
+              <td class="px-4 py-3 text-right" style="color: #d1d5db;">{{ producto.stock_minimo|default:10 }}</td>
+              <td class="px-4 py-3 text-center">
+                <button onclick="editarProducto('{{ producto.id }}')" 
+                        class="btn-edit px-3 py-1.5 rounded text-xs font-medium transition-all mr-2">
+                  ✏️ Editar
+                </button>
+                <button onclick="eliminarProducto('{{ producto.id }}')" 
+                        class="btn-delete px-3 py-1.5 rounded text-xs font-medium transition-all">
+                  🗑️ Eliminar
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-12" style="color: var(--text-secondary);">
+        <p class="text-lg mb-2">📦 No hay productos en el inventario</p>
+        <p class="text-sm">Agrega tu primer producto usando el formulario de arriba</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+let todosLosProductos = [];
+let productosFiltrados = [];
+
+// Initialize everything when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize barcode scanner
+    if (typeof BarCodeScanner !== 'undefined') {
+        BarCodeScanner.init({
+            onScan: function(codigo) {
+                manejarCodigoEscaneado(codigo);
+            }
         });
-
-        if (res.ok) {
-          const producto = await res.json();
-          llenarDatosProducto(producto);
-        }
-      } catch (error) {
-        console.log("Producto no encontrado");
-      }
     }
+    
+    // Load all products for search
+    cargarTodosLosProductos();
+    
+    // Load low stock products
+    actualizarPocoStock();
+    
+    // Setup search functionality
+    setupBuscador();
+    
+    // Setup product lookup for updates
+    setupProductLookup();
+});
 
-    // Autocompletado para código
-    document.getElementById("stock-codigo").addEventListener("input", async (e) => {
-      const codigo = e.target.value.trim();
-      
-      // Si está vacío, limpiar todo y reactivar
-      if (codigo.length === 0) {
-        limpiarCamposProducto();
-        document.getElementById("stock-nombre").disabled = false;
+// Global variable to track current scanner context
+let currentScannerContext = 'nuevo';
+
+function abrirScannerInventario(context) {
+    currentScannerContext = context;
+    if (typeof BarCodeScanner !== 'undefined') {
+        BarCodeScanner.open();
+    } else {
+        alert('Scanner no disponible');
+    }
+}
+
+function manejarCodigoEscaneado(codigo) {
+    if (currentScannerContext === 'nuevo') {
+        document.getElementById('nuevo-codigo').value = codigo;
+    } else if (currentScannerContext === 'stock') {
+        document.getElementById('stock-codigo').value = codigo;
+        buscarProductoParaActualizar(codigo);
+    } else if (currentScannerContext === 'buscar') {
+        document.getElementById('buscar-inventario').value = codigo;
+        filtrarProductos(codigo);
+    }
+}
+
+// Load all products for search functionality
+async function cargarTodosLosProductos() {
+    try {
+        const response = await fetch('/inventario/api/');
+        if (response.ok) {
+            todosLosProductos = await response.json();
+            productosFiltrados = [...todosLosProductos];
+        }
+    } catch (error) {
+        console.error('Error cargando productos:', error);
+    }
+}
+
+// Setup search functionality
+function setupBuscador() {
+    const searchInput = document.getElementById('buscar-inventario');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim().toLowerCase();
+            filtrarProductos(query);
+        });
+    }
+}
+
+// Filter products based on search query with improved real-time search
+function filtrarProductos(query) {
+    const productRows = document.querySelectorAll('#productos-table tbody tr');
+    let visibleCount = 0;
+    
+    if (!query) {
+        // Show all products
+        productRows.forEach(row => {
+            row.style.display = '';
+            row.classList.remove('producto-highlight');
+            visibleCount++;
+        });
+        actualizarContadorProductos(visibleCount);
         return;
-      }
-      
-      // Si hay código, deshabilitar campo nombre
-      document.getElementById("stock-nombre").disabled = true;
-      document.getElementById("stock-nombre").value = "";
-      
-      // Si el código cambió del producto encontrado, reactivar autocompletado
-      if (ultimoProductoEncontrado && codigo !== ultimoProductoEncontrado.codigo) {
-        autocompletadoActivo = true;
-      }
-      
-      // Buscar por código si tiene al menos 2 caracteres
-      if (codigo.length >= 2) {
-        await buscarProducto(codigo);
-      }
+    }
+    
+    const queryLower = query.toLowerCase();
+    
+    productRows.forEach(row => {
+        const codigo = row.cells[0]?.textContent.toLowerCase() || '';
+        const nombre = row.cells[1]?.textContent.toLowerCase() || '';
+        
+        // More intelligent search: includes partial matches and exact matches
+        const codigoMatch = codigo.includes(queryLower);
+        const nombreMatch = nombre.includes(queryLower);
+        const exactCodeMatch = codigo === queryLower;
+        const exactNameMatch = nombre === queryLower;
+        
+        if (codigoMatch || nombreMatch) {
+            row.style.display = '';
+            row.classList.add('producto-highlight');
+            
+            // Highlight exact matches differently
+            if (exactCodeMatch || exactNameMatch) {
+                row.style.backgroundColor = 'rgba(0, 212, 255, 0.3)';
+            } else {
+                row.style.backgroundColor = 'rgba(0, 212, 255, 0.1)';
+            }
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+            row.classList.remove('producto-highlight');
+            row.style.backgroundColor = '';
+        }
     });
+    
+    actualizarContadorProductos(visibleCount);
+}
 
-    // Autocompletado para nombre
-    document.getElementById("stock-nombre").addEventListener("input", async (e) => {
-      const nombre = e.target.value.trim();
-      
-      // Si está vacío, limpiar todo y reactivar
-      if (nombre.length === 0) {
-        limpiarCamposProducto();
-        document.getElementById("stock-codigo").disabled = false;
+// Update product counter
+function actualizarContadorProductos(count) {
+    const totalSpan = document.querySelector('.text-secondary');
+    if (totalSpan) {
+        totalSpan.textContent = `Mostrando: ${count} productos`;
+    }
+}
+
+// Clear search
+function limpiarBusqueda() {
+    document.getElementById('buscar-inventario').value = '';
+    filtrarProductos('');
+}
+
+// Setup product lookup for updates
+function setupProductLookup() {
+    const stockCodigo = document.getElementById('stock-codigo');
+    if (stockCodigo) {
+        stockCodigo.addEventListener('input', function(e) {
+            const codigo = e.target.value.trim();
+            if (codigo.length >= 3) {
+                buscarProductoParaActualizar(codigo);
+            } else {
+                ocultarInfoProducto();
+            }
+        });
+    }
+}
+
+// Search product for updating
+async function buscarProductoParaActualizar(codigo) {
+    try {
+        const response = await fetch('/producto/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ query: codigo })
+        });
+        
+        if (response.ok) {
+            const producto = await response.json();
+            mostrarInfoProducto(producto);
+        } else {
+            ocultarInfoProducto();
+        }
+    } catch (error) {
+        console.error('Error buscando producto:', error);
+        ocultarInfoProducto();
+    }
+}
+
+// Show product info
+function mostrarInfoProducto(producto) {
+    document.getElementById('producto-nombre').textContent = producto.nombre;
+    document.getElementById('producto-stock').textContent = producto.stock;
+    document.getElementById('producto-precio').textContent = producto.precio.toFixed(2);
+    document.getElementById('producto-info').classList.remove('hidden');
+}
+
+// Hide product info
+function ocultarInfoProducto() {
+    document.getElementById('producto-info').classList.add('hidden');
+}
+
+// Update low stock products
+async function actualizarPocoStock() {
+    const container = document.getElementById('productos-poco-stock');
+    
+    try {
+        container.innerHTML = '<div class="text-center py-6" style="color: var(--text-secondary);"><p>Cargando productos con poco stock...</p></div>';
+        
+        const response = await fetch('/inventario/poco-stock/');
+        if (response.ok) {
+            const data = await response.json();
+            mostrarProductosPocoStock(data.productos_bajo_stock);
+        } else {
+            container.innerHTML = '<div class="text-center py-6" style="color: #ff4444;"><p>Error cargando productos con poco stock</p></div>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        container.innerHTML = '<div class="text-center py-6" style="color: #ff4444;"><p>Error de conexión</p></div>';
+    }
+}
+
+// Display low stock products with improved design
+function mostrarProductosPocoStock(productos) {
+    const container = document.getElementById('productos-poco-stock');
+    
+    if (!productos || productos.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 rounded-lg" style="background: rgba(34, 197, 94, 0.1); border: 2px dashed var(--accent-green);">
+                <div class="text-4xl mb-3">✅</div>
+                <p class="text-lg font-semibold" style="color: var(--accent-green);">¡Excelente!</p>
+                <p class="text-sm" style="color: var(--text-secondary);">Todos los productos tienen stock suficiente</p>
+            </div>
+        `;
         return;
-      }
-      
-      // Si hay nombre, deshabilitar campo código
-      document.getElementById("stock-codigo").disabled = true;
-      document.getElementById("stock-codigo").value = "";
-      
-      // Si el nombre cambió del producto encontrado, reactivar autocompletado
-      if (ultimoProductoEncontrado && nombre !== ultimoProductoEncontrado.nombre) {
-        autocompletadoActivo = true;
-      }
-      
-      // Buscar por nombre si tiene al menos 4 caracteres
-      if (nombre.length >= 4) {
-        await buscarProducto(nombre);
-      }
+    }
+    
+    let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">';
+    
+    productos.forEach(producto => {
+        const stockClass = producto.stock <= 0 ? 'stock-critico' : 
+                          producto.stock <= 5 ? 'stock-bajo' : 'stock-normal';
+        
+        const statusIcon = producto.stock <= 0 ? '🚨' : 
+                          producto.stock <= 5 ? '⚠️' : '📊';
+        
+        const statusBg = producto.stock <= 0 ? 'rgba(239, 68, 68, 0.1)' : 
+                        producto.stock <= 5 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(34, 197, 94, 0.1)';
+        
+        const statusBorder = producto.stock <= 0 ? '#ef4444' : 
+                            producto.stock <= 5 ? '#f59e0b' : '#22c55e';
+        
+        const urgencyClass = producto.stock <= 0 ? 'animate-pulse' : '';
+        
+        html += `
+        <div class="rounded-xl shadow-lg p-5 border-2 transition-all hover:scale-105 hover:shadow-xl ${urgencyClass}" 
+             style="background: ${statusBg}; border-color: ${statusBorder};">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex-1">
+                    <h4 class="font-bold text-base mb-1" style="color: var(--text-primary);">${producto.nombre}</h4>
+                    <p class="text-xs font-mono opacity-75" style="color: var(--text-secondary);">${producto.codigo}</p>
+                </div>
+                <div class="text-2xl ml-3">${statusIcon}</div>
+            </div>
+            
+            <div class="bg-white/10 rounded-lg p-3 mb-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium" style="color: var(--text-primary);">Stock Actual:</span>
+                    <span class="text-lg font-bold ${stockClass}">${producto.stock}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium" style="color: var(--text-primary);">Stock Mínimo:</span>
+                    <span class="text-sm" style="color: var(--text-secondary);">${producto.stock_minimo}</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-bold" style="color: var(--accent-green);">$${producto.precio.toFixed(2)}</span>
+                    <span class="text-xs px-2 py-1 rounded-full" style="background: rgba(255,255,255,0.2); color: var(--text-primary);">
+                        ${producto.categoria || 'Sin categoría'}
+                    </span>
+                </div>
+                <button onclick="reabastecer('${producto.codigo}')" 
+                        class="btn-update w-full py-2.5 px-4 text-sm rounded-lg font-semibold transition-all">
+                    🔄 Reabastecer Ahora
+                </button>
+            </div>
+        </div>
+        `;
     });
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
 
-    formStock.addEventListener("submit", async e => {
-      e.preventDefault();
-      const codigo = document.getElementById("stock-codigo").value.trim();
-      const stockAgregar = parseInt(document.getElementById("stock-agregar").value);
-      const nuevoPrecio = parseFloat(document.getElementById("nuevo-precio").value);
-      const stockMinimo = parseInt(document.getElementById("stock-minimo").value);
+// Quick restock function
+function reabastecer(codigo) {
+    document.getElementById('stock-codigo').value = codigo;
+    buscarProductoParaActualizar(codigo);
+    
+    // Scroll to update form
+    document.getElementById('form-actualizar-producto').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+    });
+    
+    // Focus on stock input
+    setTimeout(() => {
+        document.getElementById('stock-agregar').focus();
+    }, 500);
+}
 
-      if (!codigo || isNaN(stockAgregar) || stockAgregar <= 0) {
-        alert("Verifica el código y el stock a agregar.");
+// Form submissions
+document.getElementById('form-agregar-producto').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const codigo = document.getElementById('nuevo-codigo').value;
+    const nombre = document.getElementById('nuevo-nombre').value;
+    const precio = document.getElementById('nuevo-precio').value;
+    const stock = document.getElementById('nuevo-stock').value;
+    const stockMinimo = document.getElementById('nuevo-stock-minimo').value;
+    
+    try {
+        const response = await fetch('/inventario/agregar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                codigo: codigo,
+                nombre: nombre,
+                precio: parseFloat(precio),
+                stock: parseInt(stock) || 0,
+                stock_minimo: parseInt(stockMinimo) || 10
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Producto agregado exitosamente');
+            this.reset();
+            cargarTodosLosProductos();
+            actualizarPocoStock();
+            
+            // Trigger verificación de alertas después de agregar producto
+            if (window.stockAlerts) {
+                setTimeout(() => window.stockAlerts.checkLowStock(), 2000);
+            }
+        } else {
+            alert('❌ Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('❌ Error de conexión');
+    }
+});
+
+document.getElementById('form-actualizar-producto').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const codigo = document.getElementById('stock-codigo').value;
+    const stockAgregar = document.getElementById('stock-agregar').value;
+    const nuevoPrecio = document.getElementById('nuevo-precio-update').value;
+    const stockMinimo = document.getElementById('stock-minimo-update').value;
+    
+    if (!codigo) {
+        alert('Introduce un código de producto primero');
         return;
-      }
+    }
+    
+    const updateData = { codigo };
+    
+    if (stockAgregar) updateData.stock_agregar = parseInt(stockAgregar);
+    if (nuevoPrecio) updateData.nuevo_precio = parseFloat(nuevoPrecio);
+    if (stockMinimo) updateData.stock_minimo = parseInt(stockMinimo);
+    
+    try {
+        const response = await fetch('/inventario/actualizar/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Producto actualizado exitosamente');
+            this.reset();
+            ocultarInfoProducto();
+            cargarTodosLosProductos();
+            actualizarPocoStock();
+            
+            // Trigger verificación de alertas después de actualizar stock
+            if (window.stockAlerts) {
+                setTimeout(() => window.stockAlerts.checkLowStock(), 2000);
+            }
+        } else {
+            alert('❌ Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('❌ Error de conexión');
+    }
+});
 
-          
-        const res = await fetch("/inventario/actualizar/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-          codigo,
-          stock_agregar: stockAgregar,
-          nuevo_precio: isNaN(nuevoPrecio) ? null : nuevoPrecio,
-          stock_minimo: isNaN(stockMinimo) ? null : stockMinimo
-        })
-      });
+// Edit product function - fills the update form and scrolls to it
+async function editarProducto(id) {
+    try {
+        // Get product data by ID
+        const response = await fetch(`/inventario/producto/${id}/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        if (response.ok) {
+            const producto = await response.json();
+            
+            // Fill the update form with product data
+            document.getElementById('stock-codigo').value = producto.codigo;
+            document.getElementById('nuevo-precio-update').value = producto.precio;
+            document.getElementById('stock-minimo-update').value = producto.stock_minimo || 10;
+            
+            // Show product info
+            mostrarInfoProducto(producto);
+            
+            // Scroll to update form
+            document.getElementById('form-actualizar-producto').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            // Highlight the form briefly
+            const formContainer = document.getElementById('form-actualizar-producto').closest('.cart-container') || 
+                                document.querySelector('.bg-gray-900\\/80');
+            if (formContainer) {
+                formContainer.style.border = '3px solid var(--accent-blue)';
+                formContainer.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.5)';
+                
+                setTimeout(() => {
+                    formContainer.style.border = '';
+                    formContainer.style.boxShadow = '';
+                }, 2000);
+            }
+            
+        } else {
+            alert('❌ Error al cargar los datos del producto');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión al cargar el producto');
+    }
+}
 
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.mensaje || "Producto actualizado.");
-        formStock.reset();
-        cargarInventario();
-      } else {
-        alert(data.error || "No se pudo actualizar el producto.");
-      }
-    });
-  </script>
-</body>
-</html>
+// Delete product function
+async function eliminarProducto(id) {
+    // Get product name from the table row for confirmation
+    const row = event.target.closest('tr');
+    const productName = row.cells[1]?.textContent || 'este producto';
+    
+    if (!confirm(`¿Estás seguro de eliminar "${productName}"?\n\nEsta acción no se puede deshacer.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/inventario/eliminar/${id}/`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Remove row from table with animation
+            row.style.transition = 'all 0.3s ease';
+            row.style.backgroundColor = '#ef4444';
+            row.style.transform = 'scale(0.95)';
+            row.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                row.remove();
+                
+                // Update product counter
+                const remainingRows = document.querySelectorAll('#productos-table tbody tr').length;
+                const totalSpan = document.querySelector('.text-secondary');
+                if (totalSpan) {
+                    totalSpan.textContent = `Total: ${remainingRows} productos`;
+                }
+                
+                // Refresh low stock products and product list
+                actualizarPocoStock();
+                cargarTodosLosProductos();
+            }, 300);
+            
+            alert('✅ Producto eliminado exitosamente');
+        } else {
+            alert('❌ Error: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error de conexión al eliminar el producto');
+    }
+}
+
+// Sistema de alertas deshabilitado en inventario (ya tiene su propia sección)
+console.log('📦 Inventario: Las alertas se muestran en la sección dedicada');
+</script>
+
+{% csrf_token %}
+{% endblock %}

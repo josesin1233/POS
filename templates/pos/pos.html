@@ -1,0 +1,1538 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% if business %}{{ business.name }} - {% endif %}Punto de Venta</title>
+  {% if business %}<meta name="business-id" content="{{ business.id }}">{% endif %}
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link rel="alternate icon" href="{% static 'favicon.ico' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/scanner.css' %}">
+  <script src="{% static 'js/barcode-scanner.js' %}"></script>
+  <script src="{% static 'js/stock-alerts.js' %}"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Dark/Light mode variables */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --bg-tertiary: #f3f4f6;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --border-color: #e5e7eb;
+      --accent-blue: #2563eb;
+      --accent-green: #22c55e;
+    }
+    
+    [data-theme="dark"] {
+      --bg-primary: #111111;
+      --bg-secondary: #000000;
+      --bg-tertiary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --border-color: #333333;
+      --accent-blue: #00d4ff;
+      --accent-green: #00ff88;
+    }
+    
+    body {
+      background-color: #000000;
+      color: var(--text-primary);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    
+    body[data-theme="light"] {
+      background-color: var(--bg-secondary);
+    }
+    
+    body[data-theme="dark"] {
+      background-color: #000000;
+    }
+    
+    .bg-primary { background-color: var(--bg-primary); }
+    .bg-secondary { background-color: var(--bg-secondary); }
+    .bg-tertiary { background-color: var(--bg-tertiary); }
+    .text-primary { color: var(--text-primary); }
+    .text-secondary { color: var(--text-secondary); }
+    .border-primary { border-color: var(--border-color); }
+    
+    /* Status indicator animations */
+    @keyframes pulse-green {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .status-active {
+      animation: pulse-green 2s infinite;
+    }
+
+    .tab-button {
+      transition: all 0.2s ease;
+    }
+    
+    .tab-button.active {
+      color: var(--accent-blue);
+      border-bottom: 2px solid var(--accent-blue);
+    }
+    
+    /* Button Variations */
+    /* Scan Button Style (Base) */
+    .btn-scan {
+      background: linear-gradient(145deg, #1f2937, #111827);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      z-index: 1;
+    }
+    
+    .btn-scan::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    
+    .btn-scan:hover {
+      background: linear-gradient(145deg, #374151, #1f2937);
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.7);
+      transform: translateY(-2px) scale(1.05);
+    }
+    
+    .btn-scan:hover::before {
+      left: 100%;
+    }
+    
+    /* Cart Button Variations - Chill */
+    .btn-cart-v1 {
+      background: var(--bg-tertiary);
+      color: #ff4444;
+      border: 1px solid #ff4444;
+      box-shadow: 0 2px 8px rgba(255, 68, 68, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-cart-v1:hover {
+      background: #ff4444;
+      color: white;
+      box-shadow: 0 4px 12px rgba(255, 68, 68, 0.4);
+      transform: translateY(-1px);
+    }
+    
+    /* Add Product Button Variations - Chill */
+    .btn-add-v1 {
+      background: var(--bg-tertiary);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-add-v1:hover {
+      background: var(--accent-blue);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+      transform: translateY(-1px);
+    }
+    
+    /* Status Indicator Variations */
+    .status-v1 {
+      background: linear-gradient(145deg, #10b981, #059669);
+      padding: 0.5rem 1rem;
+      border-radius: 0.75rem;
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Dark mode toggle */
+    .theme-toggle {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .theme-toggle:hover {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    /* Cart styling - Chill Tech */
+    .cart-container {
+      background: #0a0a0a;
+      border: 2px solid #333333;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
+      position: relative;
+      max-height: 85vh;
+      flex-grow: 1;
+      flex-shrink: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .flex[style*="height: calc(100vh - 120px)"] {
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: auto !important;
+        gap: 1rem !important;
+      }
+      
+      .cart-container[style*="width: 68%"] {
+        width: 100% !important;
+        min-width: auto !important;
+        max-height: 60vh !important;
+        min-height: 40vh !important;
+      }
+      
+      div[style*="width: 32%"] {
+        width: 100% !important;
+        min-width: auto !important;
+        max-height: 40vh !important;
+        min-height: 30vh !important;
+      }
+      
+      .cart-footer {
+        min-height: 80px !important;
+        padding: 0.75rem !important;
+      }
+      
+      .cart-header {
+        padding: 0.75rem !important;
+      }
+    }
+    
+    .cart-header {
+      background: #1a1a1a;
+      border-bottom: 1px solid #333333;
+    }
+    
+    .cart-footer {
+      background: #1a1a1a;
+      border-top: 1px solid #333333;
+      min-height: 120px;
+    }
+    
+    /* Tab Buttons Styling */
+    .tab-button:hover {
+      border-color: var(--accent-blue) !important;
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%) !important;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2) !important;
+      transform: translateY(-1px) scale(1.02);
+    }
+    
+    .tab-button-active {
+      box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4) !important;
+    }
+    
+    /* Fix input text colors for user typing */
+    input, select {
+      color: #f9fafb !important;
+    }
+    
+    input::placeholder {
+      color: #9ca3af !important;
+    }
+    
+    input:focus, select:focus {
+      color: #f9fafb !important;
+    }
+    
+    select option {
+      background-color: #1f2937;
+      color: #f9fafb;
+    }
+    
+    .process-btn {
+      background: var(--bg-tertiary);
+      color: #10b981;
+      border: 1px solid #10b981;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .process-btn:hover {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+    
+    .ticket-btn {
+      background: var(--bg-tertiary);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .ticket-btn:hover {
+      background: var(--accent-blue);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="border-b shadow-sm" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-1.5">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-bold text-primary">{{ business.name|default:"DulcePOS" }}</div>
+        
+        <div class="flex items-center space-x-4">
+          <!-- Stock Alert Banner in Header - RIGHT ALIGNED & MORE VISIBLE -->
+          <div class="flex items-center space-x-3 px-4 py-2 rounded-lg border-2 shadow-lg" 
+               style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-color: #f59e0b; min-width: 280px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+            <div class="flex items-center space-x-2">
+              <span id="stock-alert-icon" class="text-xl animate-pulse">⚠️</span>
+              <div class="text-sm">
+                <div class="font-bold" style="color: #ffffff;">
+                  <span id="stock-count-display" class="text-lg">-</span>
+                  <span class="text-sm"> productos</span>
+                </div>
+                <div class="text-xs" style="color: #f59e0b;">con poco stock</div>
+              </div>
+            </div>
+            <button onclick="irAInventarioStock()" 
+                    class="px-3 py-2 rounded-lg text-sm font-bold transition-all hover:scale-110 hover:shadow-lg"
+                    style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000000; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);"
+                    id="btn-ir-inventario">
+              📦 Ver Inventario
+            </button>
+          </div>
+          
+          <div class="flex items-center space-x-2">
+          <!-- Dark/Light Mode Toggle -->
+          <button onclick="toggleTheme()" class="theme-toggle">
+            <svg id="sun-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <svg id="moon-icon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+          </button>
+          <a href="/accounts/logout/" class="text-secondary hover:text-blue-600 font-medium text-xs">Salir</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Tabs Navigation -->
+  <div class="border-b" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-2">
+      <div class="flex flex-wrap gap-2">
+        <a href="/punto_de_venta/" class="tab-button-active px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%); color: #000000;">
+          🏪 Punto de Venta
+        </a>
+        <a href="/inventario/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          📦 Inventario
+        </a>
+        <a href="/registro/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          📊 Registro
+        </a>
+        <a href="/caja/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          💰 Caja
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="max-w-7xl mx-auto px-6 mt-4">
+    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 1rem; border-radius: 8px;">
+      <p><strong>Error:</strong> {{ error }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- POS Tab Content -->
+  <div id="pos-content" class="tab-content">
+    <div class="flex overflow-hidden flex-row p-2 gap-2" style="height: calc(100vh - 110px); min-height: 600px;">
+      <!-- Shopping Cart (Left Side) -->
+      <div class="cart-container rounded-xl flex flex-col" style="width: 72%; min-width: 500px; height: 100%;">
+        <!-- Cart Header -->
+        <div class="p-2 cart-header rounded-t-xl flex-shrink-0">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-primary">Carrito de Compras</h2>
+            <div class="flex items-center space-x-2">
+              <span class="px-2 py-0.5 rounded-full text-xs font-medium border" style="background: var(--bg-tertiary); border-color: var(--accent-blue); color: var(--accent-blue);" id="cart-count">0</span>
+              <!-- Status Indicator in cart header -->
+              <div class="status-v1 text-xs">
+                <div class="w-2 h-2 bg-white rounded-full status-active mr-1 inline-block"></div>
+                caja.abierta
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart Items -->
+        <div class="p-3 overflow-y-auto" style="flex: 1 1 0; min-height: 0;">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="sticky top-0" style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color);">
+                <tr>
+                  <th class="px-3 py-2 text-left font-semibold" style="color: var(--text-primary);">Producto</th>
+                  <th class="px-3 py-2 text-center font-semibold" style="color: var(--text-primary);">Cantidad</th>
+                  <th class="px-3 py-2 text-right font-semibold" style="color: var(--text-primary);">Precio</th>
+                  <th class="px-3 py-2 text-right font-semibold" style="color: var(--text-primary);">Total</th>
+                  <th class="px-3 py-2 text-center font-semibold" style="color: var(--text-primary);">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-productos">
+                <!-- Los productos se insertan dinámicamente aquí -->
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Área vacía cuando no hay productos -->
+          <div id="carrito-vacio" class="flex flex-col items-center justify-center h-full text-center" style="color: var(--text-secondary);">
+            <div class="text-6xl mb-4">🛒</div>
+            <p class="text-lg font-medium mb-2">Tu carrito está vacío</p>
+            <p class="text-sm opacity-70">Agrega productos escaneando o buscando</p>
+          </div>
+        </div>
+
+        <!-- Cart Footer con Total y Botones - SIEMPRE AL FONDO -->
+        <div class="cart-footer border-t" style="border-color: var(--border-color); margin: 0; border-radius: 0 0 0.75rem 0.75rem; margin-top: auto;">
+          <div class="p-3">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-lg font-bold" style="color: var(--text-primary);">Total:</span>
+              <span class="text-2xl font-bold" style="color: var(--accent-blue);" id="total">$0.00</span>
+            </div>
+            <div class="flex justify-between items-center text-sm mb-4" style="color: var(--accent-green);">
+              <span>Cambio:</span>
+              <span class="font-semibold" id="cambio">$0.00</span>
+            </div>
+            
+            <!-- Botones de Acción del Carrito -->
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="cobrar()" class="process-btn py-2 rounded-lg font-semibold text-xs">
+                💳 Cobrar
+              </button>
+              <button onclick="window.location.href='/ventas/'" class="ticket-btn py-2 rounded-lg font-semibold text-xs">
+                🎫 Generar Ticket
+              </button>
+              <button onclick="limpiarCarrito()" class="btn-cart-v1 py-2 rounded-lg font-semibold text-xs">
+                🗑️ Limpiar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Product Form Panel (Right Side) -->
+      <div class="flex flex-col rounded-xl border-2" style="background-color: #0a0a0a; border-color: #333333; width: 28%; min-width: 280px; height: 100%;">
+        <div class="p-3 border-b rounded-t-xl flex-shrink-0" style="background-color: #1a1a1a; border-color: #333333;">
+          <h3 class="text-lg font-bold" style="color: var(--text-primary);">Agregar Producto</h3>
+        </div>
+
+        <div class="flex-1 p-6 overflow-y-auto min-h-0">
+          <form id="formulario-producto" class="space-y-6">
+            <!-- Campo Nombre (ancho completo) -->
+            <div>
+              <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nombre:</label>
+              <div class="relative">
+                <input type="text" id="nombre" class="w-full p-3 border-2 rounded-lg focus:border-blue-500 focus:ring-blue-500" 
+                       style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                       placeholder="Introduce nombre" autocomplete="off" autofocus />
+                <div id="search-suggestions" class="absolute z-50 w-full rounded-lg shadow-lg max-h-32 overflow-y-auto hidden mt-1"
+                     style="background-color: #1a1a1a; border: 1px solid #333333; z-index: 999 !important;">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Grid Código + Stock -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="w-full">
+                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Código:</label>
+                <div class="flex gap-2">
+                  <input type="text" id="codigo" 
+                         class="w-20 p-2 border-2 rounded-lg focus:border-blue-500 focus:ring-blue-500 font-mono text-sm"
+                         style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary); width: 80px !important;"
+                         placeholder="Código" 
+                         autocomplete="off" />
+                  <button type="button" onclick="openScanner()" 
+                          class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
+                          style="z-index: 1 !important; position: relative;">
+                    📱 SCAN
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Stock:</label>
+                <input type="text" id="stock" 
+                       class="w-full p-2 border-2 rounded-lg text-center font-mono" 
+                       style="background-color: #2a2a2a; border-color: #333333; color: var(--text-secondary);" readonly placeholder="0" />
+              </div>
+            </div>
+
+            <!-- Grid Precio + Cantidad -->
+            <div class="flex gap-4">
+  <div class="w-1/3">
+    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Precio:</label>
+    <input type="text" id="precio" class="w-full p-2 border-2 rounded-lg font-mono text-center" style="background-color: #2a2a2a; border-color: #333333; color: var(--text-secondary);" readonly placeholder="$0.00" />
+  </div>
+  <div class="flex-1">
+    <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Cantidad:</label>
+    <input type="number" id="cantidad" class="w-full p-2 border-2 rounded-lg text-center font-semibold" style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);" min="1" value="1" />
+  </div>
+</div>
+
+
+            <!-- Botón Principal -->
+            <button type="submit" class="btn-add-v1 w-full py-3 rounded-lg font-semibold transition-colors text-sm">
+              🛒 Agregar al Carrito
+            </button>
+          </form>
+        </div>
+        
+        <!-- Form Footer con Total del día -->
+        <div class="border-t flex-shrink-0 p-4" style="border-color: var(--border-color); border-radius: 0 0 0.75rem 0.75rem;">
+          <div class="p-3 rounded-lg" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
+            <h4 class="font-semibold text-sm text-center" style="color: #ffffff;">📊 Resumen del Día</h4>
+            <p class="text-lg font-bold text-center mt-1" style="color: #22c55e;" id="total-dia">$0.00</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Management
+    function toggleTheme() {
+      const body = document.body;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      
+      if (body.dataset.theme === 'dark') {
+        body.dataset.theme = 'light';
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+        localStorage.setItem('theme', 'light');
+      } else {
+        body.dataset.theme = 'dark';
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+    
+    // Load saved theme
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      const body = document.body;
+      const sunIcon = document.getElementById('sun-icon');
+      const moonIcon = document.getElementById('moon-icon');
+      
+      body.dataset.theme = savedTheme;
+      
+      if (savedTheme === 'dark') {
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+      } else {
+        sunIcon.classList.remove('hidden');
+        moonIcon.classList.add('hidden');
+      }
+    }
+
+    // Variables globales
+    let carritoLocal = [];
+    const formProducto = document.getElementById("formulario-producto");
+    const tabla = document.getElementById("tabla-productos");
+    const totalSpan = document.getElementById("total");
+    const cambioSpan = document.getElementById("cambio");
+    let businessId = null;
+    const esDemo = false; // Esta es la versión autenticada
+    
+    // Obtener businessId desde la API
+    async function initializeBusinessId() {
+        try {
+            const response = await fetch('/business/info/');
+            if (response.ok) {
+                const data = await response.json();
+                businessId = data.id;
+                console.log('Business ID loaded:', businessId);
+            } else {
+                console.error('Failed to load business info');
+                // Fallback: intentar obtener desde el meta tag
+                const metaBusinessId = document.querySelector('meta[name="business-id"]');
+                if (metaBusinessId) {
+                    businessId = parseInt(metaBusinessId.getAttribute('content'));
+                }
+            }
+        } catch (error) {
+            console.error('Error loading business info:', error);
+            // Fallback: intentar obtener desde el meta tag
+            const metaBusinessId = document.querySelector('meta[name="business-id"]');
+            if (metaBusinessId) {
+                businessId = parseInt(metaBusinessId.getAttribute('content'));
+            }
+        }
+    }
+
+    // Variables para controlar el autocompletado
+    let autocompletadoActivo = true;
+    let ultimoProductoEncontrado = null;
+    let timeoutBusqueda = null;
+    let sugerenciasActuales = [];
+    let indiceSugerenciaSeleccionada = -1;
+
+    // Función de redondeo personalizado mejorada para moneda mexicana
+    function redondear(monto) {
+      // Redondear a 2 decimales (centavos) usando redondeo bancario
+      return Math.round(monto * 100) / 100;
+    }
+    
+    // Función de redondeo para efectivo (opcional - redondea a múltiplos de 0.50)
+    function redondearEfectivo(monto) {
+      // Para pagos en efectivo, redondear a múltiplos de 0.50 centavos
+      return Math.round(monto * 2) / 2;
+    }
+    
+    // Función para formatear moneda mexicana
+    function formatearPesos(monto) {
+      return new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(monto);
+    }
+
+    // Limpiar campos del producto
+    function clearProductoInputs() {
+      document.getElementById("precio").value = "";
+      document.getElementById("stock").value = "";
+      autocompletadoActivo = true;
+      ultimoProductoEncontrado = null;
+    }
+
+    // Llenar datos del producto encontrado
+    function llenarDatosProducto(producto) {
+      document.getElementById("nombre").value = producto.nombre;
+      document.getElementById("precio").value = `$${producto.precio.toFixed(2)}`;
+      document.getElementById("stock").value = producto.stock;
+      
+      // Desactivar autocompletado hasta que se cambie el input
+      autocompletadoActivo = false;
+      ultimoProductoEncontrado = producto;
+    }
+
+    // Buscar producto por código o nombre (versión autenticada)
+    async function buscarProducto(query, tipo = 'codigo') {
+      if (!autocompletadoActivo || !query) return;
+      
+      try {
+        const res = await fetch("/producto/", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ query: query })
+        });
+
+        if (res.ok) {
+          const producto = await res.json();
+          
+          // Si estamos buscando por código, llenar el nombre
+          if (tipo === 'codigo') {
+            document.getElementById("codigo").value = producto.codigo;
+            document.getElementById("nombre").value = producto.nombre;
+          } 
+          // Si estamos buscando por nombre, llenar el código
+          else if (tipo === 'nombre') {
+            document.getElementById("codigo").value = producto.codigo;
+            document.getElementById("nombre").value = producto.nombre;
+          }
+          
+          document.getElementById("precio").value = `$${producto.precio.toFixed(2)}`;
+          document.getElementById("stock").value = producto.stock;
+          
+          // Desactivar autocompletado
+          autocompletadoActivo = false;
+          ultimoProductoEncontrado = producto;
+        } else {
+          clearProductoInputs();
+        }
+      } catch (error) {
+        console.error("Error buscando producto:", error);
+        clearProductoInputs();
+      }
+    }
+
+    // Función para búsqueda inteligente con sugerencias
+    async function buscarSugerencias(query) {
+      if (!query || query.length < 2) {
+        ocultarSugerencias();
+        return;
+      }
+      
+      try {
+        const res = await fetch("/producto/sugerencias/", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ query: query })
+        });
+
+        if (res.ok) {
+          const sugerencias = await res.json();
+          sugerenciasActuales = sugerencias;
+          mostrarSugerencias(sugerencias);
+        } else {
+          ocultarSugerencias();
+        }
+      } catch (error) {
+        console.error("Error buscando sugerencias:", error);
+        ocultarSugerencias();
+      }
+    }
+
+    // Mostrar sugerencias en dropdown
+    function mostrarSugerencias(sugerencias) {
+      const dropdown = document.getElementById("search-suggestions");
+      dropdown.innerHTML = "";
+      indiceSugerenciaSeleccionada = -1;
+      
+      if (sugerencias.length === 0) {
+        ocultarSugerencias();
+        return;
+      }
+      
+      sugerencias.forEach((producto, index) => {
+        const item = document.createElement("div");
+        item.className = "p-1 hover:bg-gray-700 cursor-pointer border-b border-gray-600 text-white";
+        item.innerHTML = `
+          <div class="flex justify-between items-center">
+            <div>
+              <div class="font-medium text-xs">${producto.nombre}</div>
+              <div class="text-xs opacity-60">Código: ${producto.codigo} | Stock: ${producto.stock}</div>
+            </div>
+            <div class="text-xs font-medium" style="color: var(--accent-blue);">$${producto.precio.toFixed(2)}</div>
+          </div>
+        `;
+        
+        item.addEventListener("click", () => seleccionarSugerencia(producto));
+        item.addEventListener("mouseenter", () => {
+          indiceSugerenciaSeleccionada = index;
+          actualizarSeleccionSugerencia();
+        });
+        
+        dropdown.appendChild(item);
+      });
+      
+      dropdown.classList.remove("hidden");
+    }
+
+    // Ocultar sugerencias
+    function ocultarSugerencias() {
+      document.getElementById("search-suggestions").classList.add("hidden");
+      sugerenciasActuales = [];
+      indiceSugerenciaSeleccionada = -1;
+    }
+
+    // Seleccionar una sugerencia
+    function seleccionarSugerencia(producto) {
+      document.getElementById("codigo").value = producto.codigo;
+      document.getElementById("nombre").value = producto.nombre;
+      document.getElementById("precio").value = `$${producto.precio.toFixed(2)}`;
+      document.getElementById("stock").value = producto.stock;
+      
+      autocompletadoActivo = false;
+      ultimoProductoEncontrado = producto;
+      ocultarSugerencias();
+    }
+
+    // Actualizar selección visual de sugerencias
+    function actualizarSeleccionSugerencia() {
+      const dropdown = document.getElementById("search-suggestions");
+      const items = dropdown.querySelectorAll("div.p-1");
+      
+      items.forEach((item, index) => {
+        if (index === indiceSugerenciaSeleccionada) {
+          item.classList.add("bg-gray-600");
+          item.classList.remove("hover:bg-gray-700");
+        } else {
+          item.classList.remove("bg-gray-600");
+          item.classList.add("hover:bg-gray-700");
+        }
+      });
+    }
+
+    // Función para obtener CSRF token
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // Event listeners para autocompletado
+    document.getElementById("codigo").addEventListener("input", async (e) => {
+      const codigo = e.target.value.trim();
+      
+      // Si está vacío, limpiar todo y reactivar
+      if (codigo.length === 0) {
+        clearProductoInputs();
+        document.getElementById("nombre").disabled = false;
+        document.getElementById("nombre").value = "";
+        return;
+      }
+      
+      // Si hay código, deshabilitar campo nombre temporalmente
+      document.getElementById("nombre").disabled = true;
+      
+      // Si el código cambió del producto encontrado, reactivar autocompletado
+      if (ultimoProductoEncontrado && codigo !== ultimoProductoEncontrado.codigo) {
+        autocompletadoActivo = true;
+      }
+      
+      // Buscar por código si tiene al menos 2 caracteres
+      if (codigo.length >= 2) {
+        await buscarProducto(codigo, 'codigo');
+      }
+    });
+
+    document.getElementById("nombre").addEventListener("input", async (e) => {
+      const nombre = e.target.value.trim();
+      
+      // Limpiar timeout anterior
+      if (timeoutBusqueda) {
+        clearTimeout(timeoutBusqueda);
+      }
+      
+      // Si está vacío, limpiar todo y reactivar
+      if (nombre.length === 0) {
+        clearProductoInputs();
+        ocultarSugerencias();
+        document.getElementById("codigo").disabled = false;
+        document.getElementById("codigo").value = "";
+        return;
+      }
+      
+      // Si hay nombre, deshabilitar campo código temporalmente
+      document.getElementById("codigo").disabled = true;
+      
+      // Si el nombre cambió del producto encontrado, reactivar autocompletado
+      if (ultimoProductoEncontrado && nombre !== ultimoProductoEncontrado.nombre) {
+        autocompletadoActivo = true;
+      }
+      
+      // Buscar con debouncing (300ms) usando sugerencias inteligentes
+      timeoutBusqueda = setTimeout(async () => {
+        if (nombre.length >= 2) {
+          await buscarSugerencias(nombre);
+        }
+      }, 300);
+    });
+
+    // Agregar navegación con teclado para sugerencias
+    document.getElementById("nombre").addEventListener("keydown", (e) => {
+      const dropdown = document.getElementById("search-suggestions");
+      
+      if (dropdown.classList.contains("hidden") || sugerenciasActuales.length === 0) {
+        return;
+      }
+      
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        indiceSugerenciaSeleccionada = Math.min(indiceSugerenciaSeleccionada + 1, sugerenciasActuales.length - 1);
+        actualizarSeleccionSugerencia();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        indiceSugerenciaSeleccionada = Math.max(indiceSugerenciaSeleccionada - 1, -1);
+        actualizarSeleccionSugerencia();
+      } else if (e.key === "Enter" && indiceSugerenciaSeleccionada >= 0) {
+        e.preventDefault();
+        seleccionarSugerencia(sugerenciasActuales[indiceSugerenciaSeleccionada]);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        ocultarSugerencias();
+      }
+    });
+
+    // Ocultar sugerencias al hacer clic fuera
+    document.addEventListener("click", (e) => {
+      const nombreInput = document.getElementById("nombre");
+      const dropdown = document.getElementById("search-suggestions");
+      
+      if (!nombreInput.contains(e.target) && !dropdown.contains(e.target)) {
+        ocultarSugerencias();
+      }
+    });
+
+    // Agregar producto rápido con Enter en código
+    document.getElementById("codigo").addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        
+        const codigo = e.target.value.trim();
+        if (!codigo) return;
+
+        try {
+          const res = await fetch("/agregar/", {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ codigo, cantidad: 1 })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            alert(data.error);
+            return;
+          }
+
+          agregarAlCarrito(data);
+          
+          // Limpiar campos
+          document.getElementById("codigo").value = "";
+          clearProductoInputs();
+          document.getElementById("nombre").disabled = false;
+          
+        } catch (error) {
+          console.error("Error agregando producto:", error);
+          alert("Error al agregar producto");
+        }
+      }
+    });
+
+    // Agregar al carrito local
+    function agregarAlCarrito(producto) {
+      const existente = carritoLocal.findIndex(p => p.codigo === producto.codigo);
+      
+      if (existente !== -1) {
+        carritoLocal[existente].cantidad += producto.cantidad;
+        const nuevoTotal = carritoLocal[existente].cantidad * carritoLocal[existente].precio_unitario;
+        carritoLocal[existente].precio_total = redondear(nuevoTotal);
+      } else {
+        carritoLocal.push({
+          codigo: producto.codigo,
+          nombre: producto.nombre,
+          cantidad: producto.cantidad,
+          precio_unitario: producto.precio_unitario,
+          precio_total: producto.precio_total
+        });
+      }
+      
+      actualizarTabla();
+    }
+
+    // Updated table with cart button variations - Chill version
+    function actualizarTabla() {
+      tabla.innerHTML = "";
+      let total = 0;
+      
+      carritoLocal.forEach((item, index) => {
+        total += item.precio_total;
+        
+        const fila = document.createElement("tr");
+        fila.className = "hover:bg-secondary transition-colors border-b border-primary";
+        fila.innerHTML = `
+          <td class="py-1">
+            <div class="font-medium text-primary text-xs">${item.nombre}</div>
+            <div class="text-xs font-mono text-secondary opacity-60">${item.codigo}</div>
+          </td>
+          <td class="py-1 text-center">
+            <div class="flex items-center justify-center space-x-1">
+              <button onclick="cambiarCantidad(${index}, -1)" class="btn-cart-v1 w-4 h-4 rounded flex items-center justify-center text-xs font-bold">
+                -
+              </button>
+              <input type="number" min="1" value="${item.cantidad}" 
+                     class="w-8 p-0.5 border border-primary rounded text-center bg-primary text-primary cantidad-input focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs" 
+                     style="background-color: #1a1a1a; border-color: #333333; color: #ffffff;" 
+                     data-index="${index}" 
+                     data-codigo="${item.codigo}" />
+              <button onclick="cambiarCantidad(${index}, 1)" class="btn-cart-v1 w-4 h-4 rounded flex items-center justify-center text-xs font-bold">
+                +
+              </button>
+            </div>
+          </td>
+          <td class="py-1 text-right font-mono text-xs text-primary">${formatearPesos(item.precio_unitario)}</td>
+          <td class="py-1 text-right precio-total font-semibold text-xs" style="color: var(--accent-blue);">${formatearPesos(item.precio_total)}</td>
+          <td class="py-1 text-center">
+            <button onclick="eliminarDelCarrito(${index})" class="p-1 rounded transition-all hover:bg-red-600 hover:scale-110" style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);" title="Eliminar producto">
+              <svg class="w-4 h-4" fill="none" stroke="#ffffff" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </td>
+        `;
+        tabla.appendChild(fila);
+      });
+      
+      document.getElementById("total").textContent = formatearPesos(total);
+      document.getElementById("cart-count").textContent = `${carritoLocal.length}`;
+      cambioSpan.textContent = formatearPesos(0);
+      
+      // Mostrar/ocultar mensaje de carrito vacío
+      const carritoVacio = document.getElementById("carrito-vacio");
+      if (carritoLocal.length === 0) {
+        carritoVacio.style.display = "block";
+      } else {
+        carritoVacio.style.display = "none";
+      }
+      
+      // Event listeners for quantity inputs
+      document.querySelectorAll(".cantidad-input").forEach(input => {
+        input.addEventListener("change", e => {
+          const index = parseInt(e.target.dataset.index);
+          const codigo = e.target.dataset.codigo;
+          actualizarCantidadItem(index, parseInt(e.target.value), codigo);
+        });
+      });
+    }
+
+    // Función para cambiar cantidad con botones +/-
+    function cambiarCantidad(index, incremento) {
+      const item = carritoLocal[index];
+      const nuevaCantidad = item.cantidad + incremento;
+      
+      if (nuevaCantidad >= 1) {
+        actualizarCantidadItem(index, nuevaCantidad, item.codigo);
+      }
+    }
+    
+    // Función centralizada para actualizar cantidad de item
+    function actualizarCantidadItem(index, nuevaCantidad, codigo) {
+      // Validar cantidad mínima
+      if (isNaN(nuevaCantidad) || nuevaCantidad <= 0) {
+        nuevaCantidad = 1;
+      }
+      
+      // TODO: Aquí se podría agregar validación de stock máximo
+      // consultando el backend si es necesario
+      
+      const item = carritoLocal[index];
+      const cantidadAnterior = item.cantidad;
+      
+      // Actualizar cantidad y precio total
+      item.cantidad = nuevaCantidad;
+      item.precio_total = redondear(item.precio_unitario * nuevaCantidad);
+      
+      // Mostrar feedback visual si la cantidad cambió significativamente
+      if (Math.abs(nuevaCantidad - cantidadAnterior) > 5) {
+        mostrarNotificacionCantidad(item.nombre, cantidadAnterior, nuevaCantidad);
+      }
+      
+      actualizarTabla();
+    }
+    
+    // Mostrar notificación de cambio de cantidad
+    function mostrarNotificacionCantidad(nombreProducto, cantidadAnterior, nuevaCantidad) {
+      const notification = document.createElement("div");
+      notification.className = "fixed top-20 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg z-50";
+      notification.innerHTML = `
+        <div class="text-sm">
+          📦 ${nombreProducto}<br>
+          Cantidad: ${cantidadAnterior} → ${nuevaCantidad}
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 2000);
+    }
+
+    // Eliminar del carrito
+    function eliminarDelCarrito(index) {
+      const item = carritoLocal[index];
+      
+      // Confirmación para cantidades grandes
+      if (item.cantidad > 10) {
+        if (!confirm(`¿Eliminar ${item.nombre} (${item.cantidad} unidades) del carrito?`)) {
+          return;
+        }
+      }
+      
+      carritoLocal.splice(index, 1);
+      actualizarTabla();
+      
+      // Mostrar notificación de eliminación
+      const notification = document.createElement("div");
+      notification.className = "fixed top-20 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50";
+      notification.textContent = `🗑️ ${item.nombre} eliminado`;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 2000);
+    }
+
+    // Limpiar carrito
+    function limpiarCarrito() {
+      if (carritoLocal.length === 0) {
+        alert("El carrito ya está vacío.");
+        return;
+      }
+      if (confirm("¿Deseas vaciar el carrito?")) {
+        carritoLocal = [];
+        actualizarTabla();
+      }
+    }
+
+    // Cobrar
+    async function cobrar() {
+      if (carritoLocal.length === 0) {
+        alert("Agrega productos antes de cobrar.");
+        return;
+      }
+      
+      let pago = prompt("Ingrese la cantidad pagada:");
+      if (!pago) return;
+      
+      pago = parseFloat(pago);
+      const total = carritoLocal.reduce((sum, item) => sum + item.precio_total, 0);
+      
+      if (isNaN(pago) || pago < total) {
+        alert("El pago es insuficiente.");
+        return;
+      }
+      
+      const cambio = redondear(pago - total);
+      cambioSpan.textContent = formatearPesos(cambio);
+      
+      // Registrar venta
+      try {
+        const productos = carritoLocal.map(p => ({
+          codigo: p.codigo,
+          cantidad: p.cantidad
+        }));
+        
+        const res = await fetch("/punto_de_venta/registrar-venta/", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ 
+            productos,
+            monto_pagado: pago
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          alert(`Venta registrada exitosamente. Cambio: ${formatearPesos(cambio)}`);
+          carritoLocal = [];
+          actualizarTabla();
+          cambioSpan.textContent = formatearPesos(0);
+          cargarTotalDia();
+          
+          // Verificar productos que han quedado con stock bajo después de la venta
+          verificarStockDespuesDeVenta(productos);
+          
+          // Actualizar el contador de productos con stock bajo
+          setTimeout(() => {
+            actualizarContadorStock();
+          }, 1000);
+        } else {
+          alert("Error: " + (data.error || "No se pudo registrar la venta"));
+        }
+        
+      } catch (error) {
+        console.error("Error registrando venta:", error);
+        alert("Error al registrar la venta");
+      }
+    }
+
+    // Cargar total del día
+    async function cargarTotalDia() {
+      try {
+        const res = await fetch("/punto_de_venta/total-hoy/", {
+          method: 'GET',
+          credentials: 'same-origin',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          }
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          document.getElementById("total-dia").textContent = formatearPesos(data.total_hoy);
+        } else {
+          console.error("Error del servidor al cargar total del día:", data);
+          document.getElementById("total-dia").textContent = "$0.00";
+        }
+      } catch (error) {
+        console.error("Error cargando total del día:", error);
+        document.getElementById("total-dia").textContent = "$0.00";
+      }
+    }
+
+    // Submit form manual
+    formProducto.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const codigo = document.getElementById("codigo").value.trim();
+      const cantidad = parseInt(document.getElementById("cantidad").value) || 1;
+      
+      if (!codigo) {
+        alert("Ingresa un código de producto.");
+        return;
+      }
+      
+      try {
+        const res = await fetch("/agregar/", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ codigo, cantidad })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          agregarAlCarrito(data);
+          formProducto.reset();
+          document.getElementById("codigo").focus();
+          clearProductoInputs();
+          document.getElementById("nombre").disabled = false;
+          document.getElementById("codigo").disabled = false;
+        } else {
+          alert(data.error);
+        }
+        
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Error al agregar producto");
+      }
+    });
+
+    // Initialize
+    document.addEventListener("DOMContentLoaded", () => {
+      loadTheme();
+      // Set dark mode by default
+      document.body.dataset.theme = 'dark';
+      document.getElementById('sun-icon').classList.add('hidden');
+      document.getElementById('moon-icon').classList.remove('hidden');
+      
+      // Inicializar Scanner con auto-enter y auto-add
+      if (typeof BarCodeScanner !== 'undefined') {
+        BarCodeScanner.init({
+          onScan: async (codigo) => {
+            console.log('Legacy scanner callback:', codigo);
+          }
+        });
+      }
+      
+      // GLOBAL BARCODE EVENT LISTENER - Works with both camera and USB scanners
+      document.addEventListener('barcodeScanned', async (event) => {
+        const { code, source } = event.detail;
+        console.log(`Barcode scanned from ${source}:`, code);
+        
+        // Fill the input field
+        document.getElementById('codigo').value = code;
+        
+        try {
+          // Buscar producto para llenar la información
+          await buscarProducto(code, 'codigo');
+          
+          // Auto-add al carrito después de 500ms (tiempo para que se llenen los datos)
+          setTimeout(async () => {
+            await autoAgregarProductoEscaneado(code);
+          }, 500);
+          
+        } catch (error) {
+          console.error("Error procesando código escaneado:", error);
+          alert("Error procesando el código escaneado");
+        }
+      });
+      
+      // Inicializar sistema de alertas de stock bajo
+      if (typeof StockAlertSystem !== 'undefined') {
+        StockAlertSystem.createGlobal({
+          checkInterval: 60000, // 1 minuto (menos frecuente en POS)
+          alertDuration: 6000,  // 6 segundos
+          sound: false,         // Sin sonido en POS para no interrumpir ventas
+          enabled: true
+        });
+        console.log('Sistema de alertas de stock inicializado para POS');
+      }
+      
+      cargarTotalDia();
+      document.getElementById("codigo").focus();
+    });
+
+    // Función para auto-agregar producto escaneado al carrito
+    async function autoAgregarProductoEscaneado(codigo) {
+      try {
+        const cantidad = parseInt(document.getElementById("cantidad").value) || 1;
+        
+        const res = await fetch("/agregar/", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ codigo, cantidad })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          agregarAlCarrito(data);
+          
+          // Mostrar notificación visual de éxito
+          mostrarNotificacionEscaneado(data.nombre, cantidad);
+          
+          // Limpiar campos para siguiente escaneo
+          document.getElementById("codigo").value = "";
+          clearProductoInputs();
+          document.getElementById("nombre").disabled = false;
+          document.getElementById("codigo").disabled = false;
+          document.getElementById("cantidad").value = "1"; // Reset cantidad
+          
+          // Enfocar código para siguiente escaneo
+          document.getElementById("codigo").focus();
+        } else {
+          alert(data.error);
+        }
+        
+      } catch (error) {
+        console.error("Error agregando producto escaneado:", error);
+        alert("Error al agregar producto al carrito");
+      }
+    }
+
+    // Mostrar notificación de éxito para productos escaneados
+    function mostrarNotificacionEscaneado(nombreProducto, cantidad) {
+      // Crear notificación temporal
+      const notification = document.createElement("div");
+      notification.className = "fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300";
+      notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">✅</span>
+          <div>
+            <div class="font-semibold">Producto agregado</div>
+            <div class="text-sm opacity-90">${nombreProducto} (${cantidad}x)</div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Animar entrada
+      setTimeout(() => {
+        notification.style.transform = "translateX(0)";
+      }, 100);
+      
+      // Remover después de 3 segundos
+      setTimeout(() => {
+        notification.style.transform = "translateX(100%)";
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+    }
+
+    // Función para abrir scanner
+    function openScanner() {
+      if (typeof BarCodeScanner !== 'undefined') {
+        BarCodeScanner.open();
+      } else {
+        alert('Scanner no disponible. Ingresa el código manualmente.');
+      }
+    }
+
+    // Verificar stock después de venta y mostrar alertas deslizantes si es necesario
+    async function verificarStockDespuesDeVenta(productosVendidos) {
+      try {
+        // Para cada producto vendido, verificar su stock actual
+        for (const productoVendido of productosVendidos) {
+          const response = await fetch(`/inventario/producto/${productoVendido.codigo}/stock/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const { stock_actual, stock_minimo, nombre, codigo } = data;
+            
+            // Si el stock actual es menor al mínimo, mostrar alerta deslizante
+            if (stock_actual < stock_minimo) {
+              mostrarAlertaDeslizante({
+                codigo: codigo,
+                nombre: nombre,
+                stock: stock_actual,
+                stock_minimo: stock_minimo
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error verificando stock después de venta:', error);
+      }
+    }
+
+    // Mostrar alerta deslizante para producto específico con stock bajo
+    function mostrarAlertaDeslizante(producto) {
+      if (!window.stockAlerts) return;
+
+      // Activar temporalmente las alertas solo para mostrar esta notificación
+      window.stockAlerts.configure({ enabled: true });
+      
+      // Procesar este producto específico como si fuera una respuesta de la API
+      window.stockAlerts.processLowStockProducts([producto]);
+      
+      // Desactivar nuevamente las alertas automáticas después de 1 segundo
+      setTimeout(() => {
+        window.stockAlerts.configure({ enabled: false });
+      }, 1000);
+      
+      console.log(`🚨 Alerta deslizante mostrada para: ${producto.nombre} (Stock: ${producto.stock}/${producto.stock_minimo})`);
+    }
+
+    // Cargar contador de stock al inicializar la página
+    document.addEventListener("DOMContentLoaded", () => {
+      // Cargar contador de stock bajo después de 2 segundos para dar tiempo a la página
+      setTimeout(() => {
+        actualizarContadorStock();
+      }, 2000);
+    });
+
+    // Función para actualizar el contador de productos con stock bajo
+    async function actualizarContadorStock() {
+      const countDisplay = document.getElementById('stock-count-display');
+      const iconDisplay = document.getElementById('stock-alert-icon');
+      const btnInventario = document.getElementById('btn-ir-inventario');
+      
+      if (!countDisplay) return;
+
+      try {
+        // Mostrar estado de carga
+        countDisplay.textContent = '...';
+        iconDisplay.textContent = '⏳';
+
+        const response = await fetch('/inventario/poco-stock/', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const productos = data.productos_bajo_stock || [];
+        const cantidad = productos.length;
+
+        // Actualizar contador
+        countDisplay.textContent = cantidad;
+        
+        // Actualizar icono según la cantidad
+        if (cantidad === 0) {
+          iconDisplay.textContent = '✅';
+          btnInventario.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+          btnInventario.innerHTML = '✅ Todo OK';
+        } else if (cantidad >= 5) {
+          iconDisplay.textContent = '🚨';
+          btnInventario.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+          btnInventario.innerHTML = '🚨 Ver Urgente';
+        } else {
+          iconDisplay.textContent = '⚠️';
+          btnInventario.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+          btnInventario.innerHTML = '📦 Ver Inventario';
+        }
+        
+        console.log(`📊 ${cantidad} productos con stock bajo detectados`);
+
+      } catch (error) {
+        console.error('Error cargando contador de stock:', error);
+        countDisplay.textContent = '!';
+        iconDisplay.textContent = '❌';
+        btnInventario.innerHTML = '❌ Error';
+      }
+    }
+
+    // Función para ir al inventario con filtro de stock bajo
+    function irAInventarioStock() {
+      window.location.href = '/inventario/?filter=bajo-stock';
+    }
+
+    // Inicializar businessId
+    initializeBusinessId();
+    
+    // Inicializar sistema de alertas SOLO para notificaciones manuales de venta
+    if (typeof StockAlertSystem !== 'undefined' && !window.stockAlerts) {
+      try {
+        window.stockAlerts = new StockAlertSystem();
+        window.stockAlerts.init({
+          checkInterval: 0, // Sin chequeos automáticos
+          alertDuration: 10000,  // 10 segundos
+          sound: false,  // Sin sonido
+          enabled: false  // Deshabilitado por defecto
+        });
+        console.log('Sistema de alertas de stock inicializado para POS');
+      } catch (error) {
+        console.error('Error inicializando alertas de stock:', error);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
-from .models import User, Business
+from .models import User, Business, UserPermissions
 import re
 
 
@@ -399,3 +399,164 @@ class BusinessSettingsForm(forms.Form):
             raise ValidationError('El email para reportes es requerido si activas el envío automático.')
         
         return report_email
+
+
+class UserPermissionsForm(forms.ModelForm):
+    """Formulario para editar permisos de usuario"""
+    
+    class Meta:
+        model = UserPermissions
+        fields = [
+            'can_access_pos', 'can_access_inventory', 'can_access_reports', 'can_access_settings',
+            'can_add_products', 'can_edit_products', 'can_delete_products', 'can_adjust_stock',
+            'can_process_sales', 'can_apply_discounts', 'can_void_sales', 'can_access_cash_register',
+            'can_manage_users', 'can_view_financial_reports', 'can_backup_data',
+            'max_sale_amount', 'max_discount_percent', 'session_timeout_minutes', 'require_pin_for_sensitive',
+        ]
+        
+        widgets = {
+            'can_access_pos': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_access_inventory': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_access_reports': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_access_settings': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_add_products': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_edit_products': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_delete_products': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_adjust_stock': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_process_sales': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_apply_discounts': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_void_sales': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_access_cash_register': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_manage_users': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_view_financial_reports': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'can_backup_data': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'require_pin_for_sensitive': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'max_sale_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'max_discount_percent': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'session_timeout_minutes': forms.NumberInput(attrs={'class': 'form-control', 'min': '30', 'max': '1440'}),
+        }
+
+
+class CreateUserForm(UserCreationForm):
+    """Formulario para crear nuevos usuarios del negocio"""
+    
+    email = forms.EmailField(
+        required=True, 
+        label='Email',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'usuario@ejemplo.com'
+        })
+    )
+    first_name = forms.CharField(
+        max_length=30, 
+        required=True, 
+        label='Nombre',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nombre del usuario'
+        })
+    )
+    last_name = forms.CharField(
+        max_length=30, 
+        required=True, 
+        label='Apellido',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Apellido del usuario'
+        })
+    )
+    phone = forms.CharField(
+        max_length=15, 
+        required=False, 
+        label='Teléfono',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '555-123-4567'
+        })
+    )
+    is_business_owner = forms.BooleanField(
+        required=False, 
+        label='Es propietario del negocio',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
+    
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'phone', 'password1', 'password2', 'is_business_owner')
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Personalizar campos de contraseña y username
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Nombre de usuario único'
+        })
+        self.fields['username'].label = 'Nombre de usuario'
+        
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Contraseña segura'
+        })
+        self.fields['password1'].label = 'Contraseña'
+        
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Confirma la contraseña'
+        })
+        self.fields['password2'].label = 'Confirmar contraseña'
+        
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if not username:
+            raise ValidationError('El nombre de usuario es requerido.')
+        
+        username = username.strip().lower()
+        
+        # Validar formato de username
+        if not re.match(r'^[a-zA-Z0-9_]+$', username):
+            raise ValidationError('El usuario solo puede contener letras, números y guión bajo.')
+        
+        if len(username) < 3:
+            raise ValidationError('El usuario debe tener al menos 3 caracteres.')
+        
+        # Verificar que no exista
+        if User.objects.filter(username=username).exists():
+            raise ValidationError('Este nombre de usuario ya está en uso.')
+        
+        return username
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not email:
+            raise ValidationError('El email es requerido.')
+        
+        email = email.strip().lower()
+        
+        # Verificar que no exista otro usuario con el mismo email
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('Ya existe un usuario registrado con este email.')
+        
+        return email
+    
+    def clean_first_name(self):
+        name = self.cleaned_data.get('first_name')
+        if not name:
+            raise ValidationError('El nombre es requerido.')
+        return name.strip().title()
+    
+    def clean_last_name(self):
+        name = self.cleaned_data.get('last_name')
+        if not name:
+            raise ValidationError('El apellido es requerido.')
+        return name.strip().title()
+    
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '').strip()
+        if phone:
+            # Limpiar el teléfono
+            phone_clean = re.sub(r'[^\d\-\s\+\(\)]', '', phone)
+            if len(phone_clean) < 10:
+                raise ValidationError('El teléfono debe tener al menos 10 dígitos.')
+        return phone

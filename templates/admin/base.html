@@ -1,0 +1,556 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>{% block title %}{% endblock %} | {{ site_header|default:"Administración Django" }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- Django Admin CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/nav_sidebar.css' %}">
+    
+    <!-- POS México Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/pos_admin.css' %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
+    
+    <!-- Fuentes de Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Dark theme variables */
+        :root {
+            --pos-primary: #00d4ff;
+            --pos-secondary: #0099cc;
+            --pos-bg-primary: #000000;
+            --pos-bg-secondary: #111111;
+            --pos-bg-tertiary: #1a1a1a;
+            --pos-text-primary: #ffffff;
+            --pos-text-secondary: #a0a0a0;
+            --pos-border: #333333;
+            --pos-success: #22c55e;
+            --pos-warning: #f59e0b;
+            --pos-danger: #ef4444;
+        }
+        
+        /* Override Django admin styles with dark theme */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            background: var(--pos-bg-primary) !important;
+            color: var(--pos-text-primary) !important;
+        }
+        
+        input, button, select, textarea {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
+        
+        /* Container */
+        #container {
+            background: var(--pos-bg-primary);
+            color: var(--pos-text-primary);
+        }
+        
+        /* Header */
+        #header {
+            background: linear-gradient(135deg, var(--pos-bg-secondary) 0%, var(--pos-bg-tertiary) 100%) !important;
+            border-bottom: 2px solid var(--pos-border) !important;
+            box-shadow: 0 2px 8px rgba(0, 212, 255, 0.1);
+        }
+        
+        #header h1 a {
+            color: var(--pos-text-primary) !important;
+            text-decoration: none;
+        }
+        
+        #header h1 a:before {
+            content: '🏪 ';
+            font-size: 24px;
+            margin-right: 8px;
+        }
+        
+        #user-tools {
+            color: var(--pos-text-secondary) !important;
+        }
+        
+        #user-tools a {
+            color: var(--pos-primary) !important;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        #user-tools a:hover {
+            color: var(--pos-secondary) !important;
+        }
+        
+        /* Navigation sidebar */
+        #nav-sidebar {
+            background: var(--pos-bg-secondary) !important;
+            border-right: 2px solid var(--pos-border) !important;
+        }
+        
+        #nav-sidebar a {
+            color: var(--pos-text-secondary) !important;
+            transition: all 0.2s;
+        }
+        
+        #nav-sidebar a:hover,
+        #nav-sidebar a.current {
+            background: rgba(0, 212, 255, 0.1) !important;
+            color: var(--pos-primary) !important;
+            border-left: 3px solid var(--pos-primary);
+        }
+        
+        /* Content area */
+        #content {
+            background: var(--pos-bg-primary) !important;
+            color: var(--pos-text-primary) !important;
+        }
+        
+        /* Breadcrumbs */
+        .breadcrumbs {
+            background: var(--pos-bg-secondary) !important;
+            border-bottom: 1px solid var(--pos-border) !important;
+            color: var(--pos-text-secondary) !important;
+        }
+        
+        .breadcrumbs a {
+            color: var(--pos-primary) !important;
+        }
+        
+        /* Forms */
+        .form-row input,
+        .form-row select,
+        .form-row textarea {
+            background: var(--pos-bg-secondary) !important;
+            border: 1px solid var(--pos-border) !important;
+            color: var(--pos-text-primary) !important;
+            border-radius: 6px;
+        }
+        
+        .form-row input:focus,
+        .form-row select:focus,
+        .form-row textarea:focus {
+            border-color: var(--pos-primary) !important;
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2) !important;
+        }
+        
+        .form-row label {
+            color: var(--pos-text-primary) !important;
+        }
+        
+        /* Buttons */
+        .default,
+        input[type="submit"],
+        .submit-row input,
+        .button,
+        .btn {
+            background: linear-gradient(135deg, var(--pos-primary) 0%, var(--pos-secondary) 100%) !important;
+            border: none !important;
+            color: #000000 !important;
+            border-radius: 8px !important;
+            padding: 10px 20px !important;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .default:hover,
+        input[type="submit"]:hover,
+        .button:hover,
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+            color: #000000 !important;
+            text-decoration: none;
+        }
+        
+        /* Secondary buttons */
+        .cancel-link,
+        input[type="button"],
+        .btn-secondary {
+            background: var(--pos-bg-secondary) !important;
+            border: 1px solid var(--pos-border) !important;
+            color: var(--pos-text-primary) !important;
+        }
+        
+        .cancel-link:hover,
+        input[type="button"]:hover,
+        .btn-secondary:hover {
+            background: var(--pos-bg-tertiary) !important;
+            border-color: var(--pos-primary) !important;
+            color: var(--pos-primary) !important;
+        }
+        
+        /* Tables */
+        .results {
+            background: var(--pos-bg-secondary) !important;
+            border: 1px solid var(--pos-border) !important;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .results th {
+            background: var(--pos-bg-tertiary) !important;
+            color: var(--pos-text-primary) !important;
+            border-bottom: 2px solid var(--pos-border) !important;
+        }
+        
+        .results td {
+            background: var(--pos-bg-secondary) !important;
+            color: var(--pos-text-primary) !important;
+            border-bottom: 1px solid var(--pos-border) !important;
+        }
+        
+        .results tr:hover td {
+            background: rgba(0, 212, 255, 0.05) !important;
+        }
+        
+        .results a {
+            color: var(--pos-primary) !important;
+        }
+        
+        /* Messages */
+        .messagelist li {
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .messagelist .success {
+            background: rgba(34, 197, 94, 0.1) !important;
+            border: 1px solid var(--pos-success) !important;
+            color: var(--pos-success) !important;
+        }
+        
+        .messagelist .error {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border: 1px solid var(--pos-danger) !important;
+            color: var(--pos-danger) !important;
+        }
+        
+        .messagelist .warning {
+            background: rgba(245, 158, 11, 0.1) !important;
+            border: 1px solid var(--pos-warning) !important;
+            color: var(--pos-warning) !important;
+        }
+        
+        /* Module styling */
+        .module {
+            background: var(--pos-bg-secondary) !important;
+            border: 1px solid var(--pos-border) !important;
+            border-radius: 12px;
+        }
+        
+        .module h2 {
+            background: var(--pos-bg-tertiary) !important;
+            color: var(--pos-text-primary) !important;
+            border-bottom: 1px solid var(--pos-border) !important;
+        }
+        
+        .module table {
+            background: var(--pos-bg-secondary) !important;
+        }
+        
+        .module td, .module th {
+            color: var(--pos-text-primary) !important;
+            border-bottom: 1px solid var(--pos-border) !important;
+        }
+        
+        .module a {
+            color: var(--pos-primary) !important;
+        }
+        
+        /* Footer */
+        #footer {
+            background: var(--pos-bg-secondary) !important;
+            border-top: 2px solid var(--pos-border) !important;
+            color: var(--pos-text-secondary) !important;
+            margin-top: 40px;
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--pos-border);
+            border-radius: 50%;
+            border-top-color: var(--pos-primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Additional styling fixes */
+        .object-tools,
+        .object-tools li {
+            background: transparent !important;
+        }
+        
+        .object-tools a {
+            background: linear-gradient(135deg, var(--pos-primary) 0%, var(--pos-secondary) 100%) !important;
+            color: #000000 !important;
+            border-radius: 6px;
+            padding: 8px 16px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .object-tools a:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+        }
+        
+        /* Pagination */
+        .paginator {
+            color: var(--pos-text-secondary) !important;
+        }
+        
+        .paginator a {
+            background: var(--pos-bg-secondary) !important;
+            border: 1px solid var(--pos-border) !important;
+            color: var(--pos-primary) !important;
+            border-radius: 4px;
+            margin: 0 2px;
+            padding: 4px 8px;
+            text-decoration: none;
+        }
+        
+        .paginator a:hover {
+            background: var(--pos-bg-tertiary) !important;
+        }
+        
+        .paginator .this-page {
+            background: var(--pos-primary) !important;
+            color: #000000 !important;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-weight: bold;
+        }
+        
+        /* Help text */
+        .help,
+        .helptext {
+            color: var(--pos-text-secondary) !important;
+            font-size: 0.875rem;
+        }
+        
+        /* Error styling */
+        .errorlist {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border: 1px solid var(--pos-danger) !important;
+            color: var(--pos-danger) !important;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .errorlist li {
+            color: var(--pos-danger) !important;
+        }
+        
+        /* Field errors */
+        .form-row.errors {
+            background: rgba(239, 68, 68, 0.05) !important;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+        
+        /* Fieldset styling */
+        fieldset {
+            background: var(--pos-bg-secondary) !important;
+            border: 1px solid var(--pos-border) !important;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        fieldset h2 {
+            background: var(--pos-bg-tertiary) !important;
+            color: var(--pos-text-primary) !important;
+            border-bottom: 1px solid var(--pos-border) !important;
+            margin: 0 !important;
+            padding: 8px 12px !important;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        /* Inline forms */
+        .inline-group {
+            background: var(--pos-bg-secondary) !important;
+            border: 1px solid var(--pos-border) !important;
+            border-radius: 8px;
+        }
+        
+        .inline-group .inline-related {
+            background: var(--pos-bg-secondary) !important;
+        }
+        
+        /* Select styling */
+        select {
+            background: var(--pos-bg-secondary) !important;
+            border: 1px solid var(--pos-border) !important;
+            color: var(--pos-text-primary) !important;
+            border-radius: 6px !important;
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            #nav-sidebar {
+                display: none;
+            }
+            
+            #content {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+    
+    {% block extrahead %}{% endblock %}
+</head>
+
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}" data-admin-utc-offset="{% now "Z" %}">
+
+<!-- Container -->
+<div id="container">
+
+    {% if not is_popup %}
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">
+            <h1 id="site-name">
+                <a href="{% url 'admin:index' %}">
+                    {{ site_header|default:"Administración POS México" }}
+                </a>
+            </h1>
+        </div>
+        {% block usertools %}
+        {% if has_permission %}
+            <div id="user-tools">
+                Bienvenido,
+                <strong>
+                    {% if user.get_full_name %}
+                        {{ user.get_full_name }}
+                    {% else %}
+                        {{ user.username }}
+                    {% endif %}
+                </strong>
+                {% if user.business %}
+                    <span style="margin-left: 10px; padding: 4px 8px; background: rgba(255,255,255,0.2); border-radius: 4px; font-size: 12px;">
+                        📍 {{ user.business.name }}
+                    </span>
+                {% endif %}
+                -
+                <a href="{% url 'admin:password_change' %}">📝 Cambiar contraseña</a>
+                -
+                <a href="{% url 'admin:logout' %}">🚪 Cerrar sesión</a>
+            </div>
+        {% endif %}
+        {% endblock %}
+    </div>
+    {% endif %}
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="messagelist">
+                <div class="{{ message.tags }}">{{ message|capfirst }}</div>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Content -->
+    <div id="main">
+        {% if not is_popup and is_nav_sidebar_enabled %}
+            <nav id="nav-sidebar">
+                {% block nav-sidebar %}
+                    {% include "admin/nav_sidebar.html" %}
+                {% endblock %}
+            </nav>
+        {% endif %}
+        
+        <div id="content" class="{% if is_nav_sidebar_enabled %}main-content{% endif %}">
+            {% block messages %}
+                {% if messages %}
+                    <ul class="messagelist">
+                        {% for message in messages %}
+                            <li class="{{ message.tags }}">{{ message|capfirst }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endblock messages %}
+            
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs">
+                <a href="{% url 'admin:index' %}">🏠 Inicio</a>
+                {% if title %}
+                    &rsaquo; <span style="color: var(--pos-primary); font-weight: 600;">{{ title }}</span>
+                {% endif %}
+            </div>
+            
+            <!-- Main content -->
+            {% block content %}
+                {% block object-tools %}{% endblock %}
+                {{ content }}
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    {% if not is_popup %}
+    <div id="footer">
+        <p>
+            © {% now "Y" %} <strong>POS México</strong> - Sistema de Punto de Venta
+            <br>
+            <small>
+                Desarrollado con ❤️ para pequeños y medianos negocios mexicanos
+            </small>
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+<!-- END Container -->
+
+<!-- Scripts adicionales -->
+<script>
+    // Mejorar UX con loading states
+    document.addEventListener('DOMContentLoaded', function() {
+        // Agregar indicador de carga a formularios
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitBtn = form.querySelector('input[type="submit"], button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<span class="loading"></span> Procesando...';
+                    submitBtn.disabled = true;
+                }
+            });
+        });
+        
+        // Mejorar feedback visual en tablas
+        const rows = document.querySelectorAll('.results tbody tr');
+        rows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'A' && e.target.tagName !== 'INPUT') {
+                    // Highlight row temporalmente
+                    this.style.background = '#fef3f4';
+                    setTimeout(() => {
+                        this.style.background = '';
+                    }, 200);
+                }
+            });
+        });
+        
+        console.log('🏪 POS México Admin Interface loaded successfully!');
+    });
+</script>
+
+{% block extrajs %}{% endblock %}
+
+</body>
+</html>

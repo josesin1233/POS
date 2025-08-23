@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(rm:*)",
+      "Bash(python manage.py:*)",
+      "Bash(venvScripts:*)",
+      "Bash(call venvScriptsactivate.bat)",
+      "Bash(set PYTHONPATH=C:\\Users\\josem\\Documents\\dulceria-pos\\venv\\Lib\\site-packages)",
+      "Bash(set PYTHONPATH=C:UsersjosemDocumentsdulceria-posvenvLibsite-packages)",
+      "Bash(mkdir:*)",
+      "Bash(git rm:*)",
+      "Bash(curl:*)",
+      "Bash(source:*)",
+      "Bash(venv/Scripts/python.exe:*)",
+      "Bash(python:*)"
+    ],
+    "deny": [],
+    "defaultMode": "acceptEdits"
+  }
+}

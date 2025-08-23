@@ -1,0 +1,584 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Control de Caja - DulcePOS</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link rel="alternate icon" href="{% static 'favicon.ico' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Dark theme variables */
+    :root {
+      --bg-primary: #111111;
+      --bg-secondary: #000000;
+      --bg-tertiary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --border-color: #333333;
+      --accent-blue: #00d4ff;
+      --accent-green: #00ff88;
+    }
+    
+    body {
+      background-color: #000000;
+      color: var(--text-primary);
+    }
+    
+    .modern-card {
+      background: #0a0a0a;
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
+      border: 2px solid var(--accent-blue);
+      color: #000000;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+      border: 2px solid #ff4444;
+      color: #ffffff;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, var(--accent-green) 0%, #00cc66 100%);
+      border: 2px solid var(--accent-green);
+      color: #000000;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .status-badge {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    
+    .status-abierta {
+      background: rgba(0, 255, 136, 0.2);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+    
+    .status-cerrada {
+      background: rgba(255, 68, 68, 0.2);
+      color: #ff4444;
+      border: 1px solid #ff4444;
+    }
+    
+    input, select {
+      color: #f9fafb !important;
+    }
+    
+    input::placeholder {
+      color: #9ca3af !important;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-blue) !important;
+      box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2) !important;
+      color: #f9fafb !important;
+    }
+    
+    select option {
+      background-color: #1a1a1a;
+      color: #f9fafb;
+    }
+
+    /* Tab Buttons */
+    .tab-button {
+      transition: all 0.2s ease;
+    }
+    
+    .tab-button:hover {
+      border-color: var(--accent-blue) !important;
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%) !important;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2) !important;
+      transform: translateY(-1px) scale(1.02);
+    }
+    
+    .tab-button-active {
+      box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4) !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Navigation -->
+  <nav class="border-b shadow-sm" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-1.5">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-bold text-primary">{{ business.name|default:"DulcePOS" }}</div>
+        
+        <div class="flex items-center space-x-2">
+          <a href="/punto_de_venta/" class="text-secondary hover:text-blue-600 font-medium text-xs">← Volver al POS</a>
+          <a href="/accounts/logout/" class="text-secondary hover:text-blue-600 font-medium text-xs">Salir</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Tabs Navigation -->
+  <div class="border-b" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-2">
+      <div class="flex flex-wrap gap-2">
+        <a href="/punto_de_venta/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          🏪 Punto de Venta
+        </a>
+        <a href="/inventario/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          📦 Inventario
+        </a>
+        <a href="/registro/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          📊 Registro
+        </a>
+        <a href="/caja/" class="tab-button-active px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%); color: #000000;">
+          💰 Caja
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Header con Estado -->
+    <div class="modern-card p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold" style="color: var(--text-primary);">Control de Caja</h1>
+        <div class="flex items-center space-x-4">
+          <div class="text-right cursor-pointer transition-all hover:scale-105" onclick="mostrarDetallesCaja()">
+            <div class="text-sm" style="color: var(--text-secondary);">Estado de Caja</div>
+            <div class="status-badge" id="estado-caja">Cargando...</div>
+          </div>
+          <div class="text-right cursor-pointer transition-all hover:scale-105" onclick="mostrarDetallesCaja()">
+            <div class="text-sm" style="color: var(--text-secondary);">Monto en Caja</div>
+            <div class="text-2xl font-bold font-mono" style="color: var(--accent-green);" id="monto-caja">$0.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Apertura y Cierre -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Apertura de Caja -->
+      <div class="modern-card p-6">
+        <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">🔓 Apertura de Caja</h2>
+        
+        <form id="form-apertura">
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Monto inicial en billetes:</label>
+            <input type="number" id="monto-inicial-billetes" step="0.01" min="0" required
+                   class="w-full p-3 border-2 rounded-lg font-mono text-lg"
+                   style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                   placeholder="0.00">
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Monto inicial en monedas:</label>
+            <input type="number" id="monto-inicial-monedas" step="0.01" min="0" required
+                   class="w-full p-3 border-2 rounded-lg font-mono text-lg"
+                   style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                   placeholder="0.00">
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Total:</label>
+            <input type="number" id="monto-inicial-total" step="0.01" min="0" readonly
+                   class="w-full p-3 border-2 rounded-lg font-mono text-lg"
+                   style="background-color: #2a2a2a; border-color: #333333; color: var(--accent-green);"
+                   placeholder="0.00">
+          </div>
+          <button type="submit" class="btn-success w-full py-3 rounded-lg">
+            🔓 Abrir Caja
+          </button>
+        </form>
+      </div>
+
+      <!-- Cierre de Caja -->
+      <div class="modern-card p-6">
+        <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">🔒 Cierre de Caja</h2>
+        
+        <div class="mb-4">
+          <div class="text-sm" style="color: var(--text-secondary);">Efectivo esperado:</div>
+          <div class="text-lg font-bold font-mono" style="color: var(--accent-blue);" id="efectivo-esperado">$0.00</div>
+        </div>
+        
+        <form id="form-cierre">
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Efectivo real contado:</label>
+            <input type="number" id="efectivo-real" step="0.01" min="0" required
+                   class="w-full p-3 border-2 rounded-lg font-mono text-lg"
+                   style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                   placeholder="0.00">
+          </div>
+          <div class="mb-4">
+            <div class="text-sm" style="color: var(--text-secondary);">Diferencia:</div>
+            <div class="text-lg font-bold font-mono" id="diferencia">$0.00</div>
+          </div>
+          <button type="submit" class="btn-danger w-full py-3 rounded-lg">
+            🔒 Cerrar Caja
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Gastos -->
+    <div class="modern-card p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold" style="color: var(--text-primary);">💸 Gastos y Retiros</h2>
+        <button id="btn-nuevo-gasto" class="btn-primary px-4 py-2 rounded-lg">
+          + Nuevo Gasto
+        </button>
+      </div>
+
+      <!-- Formulario para nuevo gasto -->
+      <div id="form-gasto-container" class="mb-6 hidden">
+        <form id="form-gasto" class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border-2 rounded-lg" style="border-color: var(--border-color); background: var(--bg-tertiary);">
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Concepto:</label>
+            <input type="text" id="concepto-gasto" required
+                   class="w-full p-2 border-2 rounded-lg"
+                   style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                   placeholder="Descripción del gasto">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Monto:</label>
+            <input type="number" id="monto-gasto" step="0.01" min="0" required
+                   class="w-full p-2 border-2 rounded-lg font-mono"
+                   style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                   placeholder="0.00">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" style="color: var(--text-primary);">Tipo:</label>
+            <select id="tipo-gasto" required
+                    class="w-full p-2 border-2 rounded-lg"
+                    style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
+              <option value="compra">Compra</option>
+              <option value="gasto_operativo">Gasto Operativo</option>
+              <option value="retiro">Retiro</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="flex items-end space-x-2">
+            <button type="submit" class="btn-success flex-1 py-2 rounded-lg">
+              Guardar
+            </button>
+            <button type="button" id="btn-cancelar-gasto" class="btn-danger px-3 py-2 rounded-lg">
+              ✕
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de gastos del día -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color);">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold" style="color: var(--text-primary);">Hora</th>
+              <th class="px-4 py-3 text-left font-semibold" style="color: var(--text-primary);">Concepto</th>
+              <th class="px-4 py-3 text-left font-semibold" style="color: var(--text-primary);">Tipo</th>
+              <th class="px-4 py-3 text-right font-semibold" style="color: var(--text-primary);">Monto</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-gastos">
+            <!-- Los gastos se cargan aquí -->
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="mt-4 text-right">
+        <div class="text-sm" style="color: var(--text-secondary);">Total gastos del día:</div>
+        <div class="text-xl font-bold font-mono" style="color: #ff4444;" id="total-gastos">$0.00</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const estadoCaja = document.getElementById('estado-caja');
+  const montoCaja = document.getElementById('monto-caja');
+  const efectivoEsperado = document.getElementById('efectivo-esperado');
+  const totalGastos = document.getElementById('total-gastos');
+  const tablaGastos = document.getElementById('tabla-gastos');
+  
+  function formatearPesos(monto) {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(monto);
+  }
+
+  async function cargarEstadoCaja() {
+    try {
+      const response = await fetch('/caja/api/estado/');
+      const data = await response.json();
+      
+      // Actualizar estado
+      estadoCaja.textContent = data.estado === 'abierta' ? 'Abierta' : 'Cerrada';
+      estadoCaja.className = `status-badge ${data.estado === 'abierta' ? 'status-abierta' : 'status-cerrada'}`;
+      
+      // Actualizar montos
+      montoCaja.textContent = formatearPesos(data.monto_actual);
+      efectivoEsperado.textContent = formatearPesos(data.efectivo_esperado);
+      totalGastos.textContent = formatearPesos(data.total_gastos);
+      
+      // Habilitar/deshabilitar formularios
+      document.getElementById('form-apertura').style.display = data.estado === 'abierta' ? 'none' : 'block';
+      document.getElementById('form-cierre').style.display = data.estado === 'cerrada' ? 'none' : 'block';
+      
+    } catch (error) {
+      console.error('Error cargando estado de caja:', error);
+    }
+  }
+
+  async function cargarGastos() {
+    try {
+      const response = await fetch('/caja/api/gastos/');
+      const gastos = await response.json();
+      
+      tablaGastos.innerHTML = '';
+      
+      if (gastos.length > 0) {
+        gastos.forEach(gasto => {
+          const fila = document.createElement('tr');
+          fila.style.borderBottom = '1px solid var(--border-color)';
+          fila.innerHTML = `
+            <td class="px-4 py-3 font-mono text-xs" style="color: var(--text-secondary);">
+              ${new Date(gasto.fecha).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'})}
+            </td>
+            <td class="px-4 py-3" style="color: var(--text-primary);">${gasto.concepto}</td>
+            <td class="px-4 py-3" style="color: var(--text-secondary);">${gasto.tipo_display}</td>
+            <td class="px-4 py-3 text-right font-mono" style="color: #ff4444;">${formatearPesos(gasto.monto)}</td>
+          `;
+          tablaGastos.appendChild(fila);
+        });
+      } else {
+        const filaVacia = document.createElement('tr');
+        filaVacia.innerHTML = `
+          <td colspan="4" class="px-4 py-6 text-center" style="color: var(--text-secondary);">
+            No hay gastos registrados hoy
+          </td>
+        `;
+        tablaGastos.appendChild(filaVacia);
+      }
+    } catch (error) {
+      console.error('Error cargando gastos:', error);
+    }
+  }
+
+  // Auto-calculate total when input changes
+  function calcularTotal() {
+    const billetes = parseFloat(document.getElementById('monto-inicial-billetes').value) || 0;
+    const monedas = parseFloat(document.getElementById('monto-inicial-monedas').value) || 0;
+    const total = billetes + monedas;
+    document.getElementById('monto-inicial-total').value = total.toFixed(2);
+  }
+
+  document.getElementById('monto-inicial-billetes').addEventListener('input', calcularTotal);
+  document.getElementById('monto-inicial-monedas').addEventListener('input', calcularTotal);
+
+  // Event listeners
+  document.getElementById('form-apertura').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const billetes = parseFloat(document.getElementById('monto-inicial-billetes').value) || 0;
+    const monedas = parseFloat(document.getElementById('monto-inicial-monedas').value) || 0;
+    const total = billetes + monedas;
+    
+    try {
+      const response = await fetch('/caja/api/abrir/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          monto_inicial: total,
+          monto_billetes: billetes,
+          monto_monedas: monedas
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        alert('✅ Caja abierta exitosamente');
+        cargarEstadoCaja();
+        cargarGastos();
+        document.getElementById('form-apertura').reset();
+      } else {
+        alert('❌ Error: ' + result.error);
+      }
+    } catch (error) {
+      alert('❌ Error de conexión');
+    }
+  });
+
+  document.getElementById('form-cierre').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const efectivoReal = document.getElementById('efectivo-real').value;
+    
+    try {
+      const response = await fetch('/caja/api/cerrar/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({efectivo_real: parseFloat(efectivoReal)})
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        alert('✅ Caja cerrada exitosamente');
+        cargarEstadoCaja();
+      } else {
+        alert('❌ Error: ' + result.error);
+      }
+    } catch (error) {
+      alert('❌ Error de conexión');
+    }
+  });
+
+  // Mostrar/ocultar formulario de gastos
+  document.getElementById('btn-nuevo-gasto').addEventListener('click', () => {
+    document.getElementById('form-gasto-container').classList.remove('hidden');
+  });
+
+  document.getElementById('btn-cancelar-gasto').addEventListener('click', () => {
+    document.getElementById('form-gasto-container').classList.add('hidden');
+    document.getElementById('form-gasto').reset();
+  });
+
+  document.getElementById('form-gasto').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const concepto = document.getElementById('concepto-gasto').value;
+    const monto = document.getElementById('monto-gasto').value;
+    const tipo = document.getElementById('tipo-gasto').value;
+    
+    try {
+      const response = await fetch('/caja/api/gastos/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          concepto: concepto,
+          monto: parseFloat(monto),
+          tipo: tipo
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        alert('✅ Gasto registrado exitosamente');
+        document.getElementById('form-gasto-container').classList.add('hidden');
+        document.getElementById('form-gasto').reset();
+        cargarEstadoCaja();
+        cargarGastos();
+      } else {
+        alert('❌ Error: ' + result.error);
+      }
+    } catch (error) {
+      alert('❌ Error de conexión');
+    }
+  });
+
+  // Calcular diferencia en tiempo real
+  document.getElementById('efectivo-real').addEventListener('input', (e) => {
+    const esperado = parseFloat(efectivoEsperado.textContent.replace(/[^0-9.-]+/g, ''));
+    const real = parseFloat(e.target.value) || 0;
+    const diferencia = real - esperado;
+    
+    const diferenciaEl = document.getElementById('diferencia');
+    diferenciaEl.textContent = formatearPesos(diferencia);
+    diferenciaEl.style.color = diferencia >= 0 ? 'var(--accent-green)' : '#ff4444';
+  });
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Función para mostrar detalles al hacer clic en el banner
+  function mostrarDetallesCaja() {
+    const estadoCaja = document.getElementById('estado-caja').textContent;
+    const montoCaja = document.getElementById('monto-caja').textContent;
+    
+    if (estadoCaja === 'Abierta') {
+      // Scroll to the cierre section
+      document.getElementById('form-cierre').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+      
+      // Highlight the close section briefly
+      const closeContainer = document.getElementById('form-cierre').closest('.modern-card');
+      if (closeContainer) {
+        closeContainer.style.border = '3px solid var(--accent-blue)';
+        closeContainer.style.boxShadow = '0 0 20px rgba(0, 212, 255, 0.5)';
+        
+        setTimeout(() => {
+          closeContainer.style.border = '';
+          closeContainer.style.boxShadow = '';
+        }, 2000);
+      }
+    } else {
+      // Scroll to the apertura section
+      document.getElementById('form-apertura').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+      
+      // Highlight the open section briefly
+      const openContainer = document.getElementById('form-apertura').closest('.modern-card');
+      if (openContainer) {
+        openContainer.style.border = '3px solid var(--accent-green)';
+        openContainer.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.5)';
+        
+        setTimeout(() => {
+          openContainer.style.border = '';
+          openContainer.style.boxShadow = '';
+        }, 2000);
+      }
+    }
+  }
+
+  // Cargar datos al iniciar
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarEstadoCaja();
+    cargarGastos();
+  });
+</script>
+
+{% csrf_token %}
+</body>
+</html>

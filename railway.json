@@ -1,0 +1,1 @@
+{\n  \"$schema\": \"https://railway.app/railway.schema.json\",\n  \"build\": {\n    \"builder\": \"NIXPACKS\"\n  },\n  \"deploy\": {\n    \"numReplicas\": 1,\n    \"sleepApplication\": false,\n    \"restartPolicyType\": \"ON_FAILURE\",\n    \"restartPolicyMaxRetries\": 10\n  }\n}"

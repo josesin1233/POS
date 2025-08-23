@@ -1,135 +1,446 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <title>Registro de Ventas</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link rel="alternate icon" href="{% static 'favicon.ico' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Dark theme variables */
+    :root {
+      --bg-primary: #111111;
+      --bg-secondary: #000000;
+      --bg-tertiary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --border-color: #333333;
+      --accent-blue: #00d4ff;
+      --accent-green: #00ff88;
+    }
+    
     body {
-      padding: 2rem;
-      background-color: #f8f9fa;
+      background-color: #000000;
+      color: var(--text-primary);
     }
-    h1 {
-      margin-bottom: 2rem;
+    
+    .modern-button {
+      background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+      border: 2px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
     }
-    .table-container {
-      max-height: 70vh;
-      overflow-y: auto;
+    
+    .modern-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+      border-color: var(--accent-blue);
+      background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
     }
-    .ticket-header {
-      background-color: #e9ecef;
-      font-weight: bold;
+    
+    .modern-button.primary {
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
+      border-color: var(--accent-blue);
+      color: #000000;
+    }
+    
+    .modern-card {
+      background: #0a0a0a;
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
+    }
+    
+    /* Fix input text colors for user typing */
+    input, select {
+      color: #f9fafb !important;
+    }
+    
+    input::placeholder {
+      color: #9ca3af !important;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-blue) !important;
+      box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2) !important;
+      color: #f9fafb !important;
+    }
+    
+    select option {
+      background-color: #1f2937;
+      color: #f9fafb;
+    }
+
+    /* Tab Buttons Styling */
+    .tab-button {
+      transition: all 0.2s ease;
+    }
+    
+    .tab-button:hover {
+      border-color: var(--accent-blue) !important;
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%) !important;
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2) !important;
+      transform: translateY(-1px) scale(1.02);
+    }
+    
+    .tab-button-active {
+      box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4) !important;
+    }
+    
+    /* Mobile responsive fixes */
+    @media (max-width: 768px) {
+      .text-sm {
+        font-size: 1rem !important;
+      }
+      
+      .text-xs {
+        font-size: 0.875rem !important;
+      }
+      
+      .text-lg {
+        font-size: 1.25rem !important;
+      }
+      
+      .text-2xl {
+        font-size: 1.75rem !important;
+      }
+      
+      .p-3 {
+        padding: 0.875rem !important;
+      }
+      
+      .p-6 {
+        padding: 1.25rem !important;
+      }
+      
+      .mb-2 {
+        margin-bottom: 0.75rem !important;
+      }
+      
+      .mb-6 {
+        margin-bottom: 1.25rem !important;
+      }
+      
+      .modern-card {
+        padding: 1rem !important;
+        margin: 0.5rem !important;
+      }
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <h1>Registro de Ventas</h1>
-    <h4 class="text-end mb-3">
-  Total del día: <span id="total-dia" class="fw-bold text-success">$0.00</span>
-</h4>
+<body class="min-h-screen">
+  <!-- Navigation -->
+  <nav class="border-b shadow-sm" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-1.5">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-bold text-primary">{{ business.name|default:"DulcePOS" }}</div>
+        
+        <div class="flex items-center space-x-2">
+          <a href="/punto_de_venta/" class="text-secondary hover:text-blue-600 font-medium text-xs">← Volver al POS</a>
+          <a href="/accounts/logout/" class="text-secondary hover:text-blue-600 font-medium text-xs">Salir</a>
+        </div>
+      </div>
+    </div>
+  </nav>
 
-<form id="filtro-form" class="row g-3 mb-4">
-  <div class="col-md-3">
-    <label for="filtro-dia" class="form-label">Filtrar por día:</label>
-    <input type="date" id="filtro-dia" class="form-control" />
+  <!-- Tabs Navigation -->
+  <div class="border-b" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-2">
+      <div class="flex flex-wrap gap-2">
+        <a href="/punto_de_venta/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          🏪 Punto de Venta
+        </a>
+        <a href="/inventario/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          📦 Inventario
+        </a>
+        <a href="/ventas/" class="tab-button-active px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%); color: #000000;">
+          📊 Registro
+        </a>
+        <a href="/caja/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          💰 Caja
+        </a>
+      </div>
+    </div>
   </div>
-  <div class="col-md-3">
-    <label for="filtro-mes" class="form-label">Filtrar por mes:</label>
-    <input type="month" id="filtro-mes" class="form-control" />
-  </div>
-  <div class="col-md-3">
-    <label for="filtro-anio" class="form-label">Filtrar por año:</label>
-    <input type="number" id="filtro-anio" class="form-control" placeholder="Ej. 2025" min="2000" />
-  </div>
-  <div class="col-md-3 d-flex align-items-end">
-    <button type="submit" class="btn btn-primary w-100">Aplicar filtro</button>
-  </div>
-</form>
 
-    <div class="table-container">
-      <form id="filtro-form" class="mb-4 d-flex gap-3 align-items-end flex-wrap">
-  <div>
-    <label>Día:</label>
-    <input type="date" id="filtro-dia" class="form-control" />
-  </div>
-  <div>
-    <label>Mes:</label>
-    <input type="month" id="filtro-mes" class="form-control" />
-  </div>
-  <div>
-    <label>Año:</label>
-    <input type="number" id="filtro-anio" class="form-control" min="2000" max="2100" placeholder="2025" />
-  </div>
-  <button type="submit" class="btn btn-primary">Filtrar</button>
-</form>
-
-      <table class="table table-bordered table-hover table-striped" id="tabla-ventas">
-        <thead class="table-dark">
-          <tr>
-            <th>Producto</th>
-            <th>Cantidad</th>
-            <th>Precio Unitario</th>
-            <th>Total</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Header -->
+    <div class="modern-card p-6 mb-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold" style="color: var(--text-primary);">Registro de Ventas</h1>
+        <div class="text-right">
+          <div class="text-sm" style="color: var(--text-secondary);">Total del día</div>
+          <div class="text-2xl font-bold" style="color: var(--accent-green);" id="total-dia">$0.00</div>
+        </div>
+      </div>
     </div>
 
-    <a href="/" class="btn btn-secondary mt-3">Volver</a>
+    <!-- Filters -->
+    <div class="modern-card p-6 mb-6">
+      <form id="filtro-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por día:</label>
+          <input type="date" id="filtro-dia" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por mes:</label>
+          <input type="month" id="filtro-mes" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por año:</label>
+          <input type="number" id="filtro-anio" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Ej. 2025" min="2000" />
+        </div>
+        <div class="flex items-end">
+          <button type="submit" class="modern-button primary w-full">Aplicar filtro</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="modern-card">
+      <div class="p-4" style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color); border-radius: 16px 16px 0 0;">
+        <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Historial de Ventas</h3>
+      </div>
+      <div class="overflow-auto" style="max-height: 70vh;">
+        <table class="w-full text-sm text-left" id="tabla-ventas">
+          <thead style="background: var(--bg-tertiary); color: var(--text-primary); border-bottom: 2px solid var(--border-color);" class="sticky top-0">
+            <tr>
+              <th class="p-3 font-medium">Producto</th>
+              <th class="p-3 font-medium text-center">Cantidad</th>
+              <th class="p-3 font-medium text-right">Precio Unitario</th>
+              <th class="p-3 font-medium text-right">Total</th>
+              <th class="p-3 font-medium">Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-ventas-body"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
 <script>
   const formFiltro = document.getElementById("filtro-form");
-  const tabla = document.querySelector("#tabla-ventas tbody");
-  const totalSpan = document.getElementById("total-ventas");
+  const tabla = document.querySelector("#tabla-ventas-body");
+  const totalDiaSpan = document.getElementById("total-dia");
+
+  function formatearPesos(monto) {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(monto);
+  }
 
   async function cargarVentas(queryParams = "") {
     try {
-      const res = await fetch(`/ventas/api${queryParams}`);
-      const ventas = await res.json();
+      console.log('[DEBUG] Cargando ventas con queryParams:', queryParams);
+      
+      // Get CSRF token
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+      
+      // For now, we'll use the existing API structure
+      console.log('[DEBUG] Haciendo fetch a:', `/ventas/api/${queryParams}`);
+      const res = await fetch(`/ventas/api/${queryParams}`, {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': getCookie('csrftoken')
+        }
+      });
+      
+      console.log('[DEBUG] Response status:', res.status);
+      console.log('[DEBUG] Response headers:', res.headers);
+      
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('[DEBUG] Error response:', errorText);
+        throw new Error(`Error ${res.status}: ${res.statusText}`);
+      }
+      
+      const data = await res.json();
 
       tabla.innerHTML = "";
-      let sumaTotal = 0;
+      
+      // Mostrar total del día actual siempre
+      if (data.total_del_dia !== undefined) {
+        totalDiaSpan.textContent = formatearPesos(data.total_del_dia);
+      }
 
-      ventas.forEach(venta => {
-        const fecha = new Date(venta.fecha).toLocaleString();
-        sumaTotal += venta.total_venta;
+      if (data.es_agrupado) {
+        // Vista agrupada (sin filtros)
+        if (data.grupos && data.grupos.length > 0) {
+          data.grupos.forEach(grupo => {
+            // Header del grupo con total
+            const grupoHeader = document.createElement("tr");
+            grupoHeader.style.background = "linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%)";
+            grupoHeader.style.color = "#000000";
+            grupoHeader.style.cursor = "pointer";
+            grupoHeader.onclick = () => toggleGrupo(grupo.titulo);
+            grupoHeader.innerHTML = `
+              <td colspan="5" class="p-4 font-bold text-center">
+                📅 ${grupo.titulo} - Total: ${formatearPesos(grupo.total_grupo)} 
+                <span id="toggle-${grupo.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
+              </td>
+            `;
+            tabla.appendChild(grupoHeader);
 
-        // Fila resumen de venta
-        const filaHeader = document.createElement("tr");
-        filaHeader.classList.add("ticket-header");
-        filaHeader.innerHTML = `
-          <td colspan="5">Venta del ${fecha} - Total: $${venta.total_venta.toFixed(2)}</td>
-        `;
-        tabla.appendChild(filaHeader);
+            // Container del grupo (inicialmente visible solo para "Hoy")
+            const grupoContainer = document.createElement("tbody");
+            grupoContainer.id = `grupo-${grupo.titulo.replace(/\s+/g, '-')}`;
+            grupoContainer.style.display = grupo.titulo.includes('Hoy') ? 'table-row-group' : 'none';
+            
+            grupo.ventas.forEach(venta => {
+              const fecha = new Date(venta.fecha_creacion).toLocaleString('es-MX');
 
-        // Filas por producto
-        venta.productos.forEach(p => {
-          const fila = document.createElement("tr");
-          fila.innerHTML = `
-            <td>${p.nombre_producto}</td>
-            <td>${p.cantidad_vendida}</td>
-            <td>$${p.precio_unitario.toFixed(2)}</td>
-            <td>$${p.total.toFixed(2)}</td>
-            <td></td>
+              // Fila resumen de venta
+              const filaHeader = document.createElement("tr");
+              filaHeader.style.background = "var(--bg-tertiary)";
+              filaHeader.style.borderBottom = "1px solid var(--border-color)";
+              filaHeader.innerHTML = `
+                <td colspan="5" class="p-3 font-semibold" style="color: var(--accent-blue);">
+                  Venta del ${fecha} - Total: ${formatearPesos(venta.total)}
+                </td>
+              `;
+              grupoContainer.appendChild(filaHeader);
+
+              // Filas por producto
+              venta.detalles.forEach(detalle => {
+                const fila = document.createElement("tr");
+                fila.style.borderBottom = "1px solid var(--border-color)";
+                fila.style.transition = "background-color 0.2s ease";
+                fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
+                fila.onmouseleave = () => fila.style.background = "transparent";
+                fila.innerHTML = `
+                  <td class="p-3" style="color: var(--text-primary);">${detalle.producto.nombre}</td>
+                  <td class="p-3 text-center" style="color: var(--text-primary);">${detalle.cantidad}</td>
+                  <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(detalle.precio_unitario)}</td>
+                  <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(detalle.cantidad * detalle.precio_unitario)}</td>
+                  <td class="p-3"></td>
+                `;
+                grupoContainer.appendChild(fila);
+              });
+            });
+            
+            tabla.appendChild(grupoContainer);
+          });
+        } else {
+          // No hay ventas
+          const filaVacia = document.createElement("tr");
+          filaVacia.innerHTML = `
+            <td colspan="5" class="p-6 text-center" style="color: var(--text-secondary);">
+              No hay ventas registradas
+            </td>
           `;
-          tabla.appendChild(fila);
-        });
-      });
+          tabla.appendChild(filaVacia);
+        }
+      } else {
+        // Vista con filtros específicos
+        const ventas = data.ventas || [];
+        if (ventas.length > 0) {
+          ventas.forEach(venta => {
+            const fecha = new Date(venta.fecha).toLocaleString('es-MX');
 
-      totalSpan.textContent = `Total: $${sumaTotal.toFixed(2)}`;
+            // Fila resumen de venta
+            const filaHeader = document.createElement("tr");
+            filaHeader.style.background = "var(--bg-tertiary)";
+            filaHeader.style.borderBottom = "1px solid var(--border-color)";
+            filaHeader.innerHTML = `
+              <td colspan="5" class="p-3 font-semibold" style="color: var(--accent-blue);">
+                Venta del ${fecha} - Total: ${formatearPesos(venta.total_venta)}
+              </td>
+            `;
+            tabla.appendChild(filaHeader);
+
+            // Filas por producto
+            venta.productos.forEach(p => {
+              const fila = document.createElement("tr");
+              fila.style.borderBottom = "1px solid var(--border-color)";
+              fila.style.transition = "background-color 0.2s ease";
+              fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
+              fila.onmouseleave = () => fila.style.background = "transparent";
+              fila.innerHTML = `
+                <td class="p-3" style="color: var(--text-primary);">${p.nombre_producto}</td>
+                <td class="p-3 text-center" style="color: var(--text-primary);">${p.cantidad_vendida}</td>
+                <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(p.precio_unitario)}</td>
+                <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(p.total)}</td>
+                <td class="p-3"></td>
+              `;
+              tabla.appendChild(fila);
+            });
+          });
+        } else {
+          // No sales found
+          const filaVacia = document.createElement("tr");
+          filaVacia.innerHTML = `
+            <td colspan="5" class="p-6 text-center" style="color: var(--text-secondary);">
+              No se encontraron ventas para los filtros seleccionados
+            </td>
+          `;
+          tabla.appendChild(filaVacia);
+        }
+      }
     } catch (error) {
       console.error("Error al cargar ventas:", error);
+      console.error("Detalles del error:", error.message);
+      
+      // More detailed error message
+      let errorMessage = "Error al cargar las ventas.";
+      if (error.message.includes("404")) {
+        errorMessage = "API de ventas no encontrada. Verifique que esté autenticado.";
+      } else if (error.message.includes("401") || error.message.includes("403")) {
+        errorMessage = "No tiene permisos para ver las ventas. Contacte al administrador.";
+      } else if (error.message.includes("Failed to fetch")) {
+        errorMessage = "Error de conexión. Verifique su conexión a internet.";
+      }
+      
+      tabla.innerHTML = `
+        <tr>
+          <td colspan="5" class="p-6 text-center" style="color: #ef4444;">
+            ${errorMessage}<br>
+            <small style="color: var(--text-secondary);">Detalles: ${error.message}</small>
+          </td>
+        </tr>
+      `;
+      
+      if (totalDiaSpan) {
+        totalDiaSpan.textContent = "$0.00";
+      }
     }
   }
 
-  // Cargar al inicio todas las ventas
-  cargarVentas();
+  // Load sales on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    cargarVentas();
+  });
 
-  // Manejar el envío del formulario de filtros
+  // Handle filter form submission
   formFiltro.addEventListener("submit", e => {
     e.preventDefault();
 
@@ -142,8 +453,31 @@
     if (mes) params.append("mes", mes);
     if (anio) params.append("anio", anio);
 
-    cargarVentas("?" + params.toString());
+    const queryString = params.toString();
+    cargarVentas(queryString ? "?" + queryString : "");
   });
+
+  // Toggle grupos (expandir/colapsar)
+  function toggleGrupo(titulo) {
+    const grupoId = `grupo-${titulo.replace(/\s+/g, '-')}`;
+    const toggleId = `toggle-${titulo.replace(/\s+/g, '-')}`;
+    
+    const grupo = document.getElementById(grupoId);
+    const toggle = document.getElementById(toggleId);
+    
+    if (grupo && toggle) {
+      if (grupo.style.display === 'none') {
+        grupo.style.display = 'table-row-group';
+        toggle.textContent = '▼';
+      } else {
+        grupo.style.display = 'none';
+        toggle.textContent = '▶';
+      }
+    }
+  }
+
+  // Make toggleGrupo globally available
+  window.toggleGrupo = toggleGrupo;
 </script>
 
 </body>

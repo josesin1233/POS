@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Permisos - {{ target_user.get_full_name|default:target_user.username }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-6 shadow-lg">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold">⚙️ Editar Permisos</h1>
+                <p class="text-blue-100">{{ target_user.get_full_name|default:target_user.username }} - {{ business.name }}</p>
+            </div>
+            <a href="/accounts/admin/users/" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-100">
+                ← Volver a Usuarios
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto p-6">
+        
+        <!-- User Info Card -->
+        <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <div class="flex items-center">
+                <div class="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg mr-4">
+                    {{ target_user.first_name|default:target_user.username|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h2 class="text-xl font-semibold">{{ target_user.get_full_name|default:target_user.username }}</h2>
+                    <p class="text-gray-600">{{ target_user.email }}</p>
+                    <div class="flex items-center mt-1">
+                        {% if is_owner %}
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">👑 Propietario</span>
+                        {% else %}
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">👤 Empleado</span>
+                        {% endif %}
+                        {% if target_user.is_active %}
+                            <span class="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">✅ Activo</span>
+                        {% else %}
+                            <span class="ml-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">❌ Inactivo</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Form -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Access Permissions -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    🚪 Permisos de Acceso
+                    <span class="ml-2 text-sm text-gray-500 font-normal">Controla a qué secciones puede acceder</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        {{ form.can_access_pos }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">💰 Punto de Venta</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_access_inventory }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">📦 Inventario</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_access_reports }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">📊 Reportes</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_access_settings }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">⚙️ Configuración</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Permissions -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    📦 Permisos de Inventario
+                    <span class="ml-2 text-sm text-gray-500 font-normal">Gestión de productos y stock</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        {{ form.can_add_products }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">➕ Agregar Productos</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_edit_products }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">✏️ Editar Productos</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_delete_products }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">🗑️ Eliminar Productos</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_adjust_stock }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">🔄 Ajustar Stock</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Permissions -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    💳 Permisos de Ventas
+                    <span class="ml-2 text-sm text-gray-500 font-normal">Operaciones del punto de venta</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        {{ form.can_process_sales }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">💰 Procesar Ventas</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_apply_discounts }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">🏷️ Aplicar Descuentos</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_void_sales }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">❌ Cancelar Ventas</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_access_cash_register }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">💸 Acceso a Caja</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Administrative Permissions -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    👨‍💼 Permisos Administrativos
+                    <span class="ml-2 text-sm text-gray-500 font-normal">Funciones avanzadas de administración</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        {{ form.can_manage_users }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">👥 Gestionar Usuarios</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_view_financial_reports }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">💹 Ver Reportes Financieros</label>
+                    </div>
+                    <div class="flex items-center">
+                        {{ form.can_backup_data }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">💾 Respaldar Datos</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operational Limits -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    📊 Límites Operacionales
+                    <span class="ml-2 text-sm text-gray-500 font-normal">Restricciones para operaciones del usuario</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">💰 Monto Máximo de Venta</label>
+                        {{ form.max_sale_amount }}
+                        <p class="text-xs text-gray-500 mt-1">Dejar vacío para sin límite</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">🏷️ % Máximo de Descuento</label>
+                        {{ form.max_discount_percent }}
+                        <p class="text-xs text-gray-500 mt-1">Entre 0 y 100</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    🔒 Configuración de Seguridad
+                    <span class="ml-2 text-sm text-gray-500 font-normal">Ajustes de sesión y seguridad</span>
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">⏰ Timeout de Sesión (minutos)</label>
+                        {{ form.session_timeout_minutes }}
+                        <p class="text-xs text-gray-500 mt-1">Entre 30 y 1440 minutos</p>
+                    </div>
+                    <div class="flex items-center pt-6">
+                        {{ form.require_pin_for_sensitive }}
+                        <label class="ml-2 text-sm font-medium text-gray-700">🔐 Requiere PIN para operaciones sensibles</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Permission Templates -->
+            <div class="bg-gray-50 rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">⚡ Plantillas Rápidas</h3>
+                <p class="text-sm text-gray-600 mb-4">Aplica configuraciones predefinidas comunes</p>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button type="button" onclick="applyTemplate('cashier')" 
+                            class="bg-blue-100 text-blue-800 px-3 py-2 rounded text-sm hover:bg-blue-200">
+                        💰 Cajero
+                    </button>
+                    <button type="button" onclick="applyTemplate('inventory')" 
+                            class="bg-green-100 text-green-800 px-3 py-2 rounded text-sm hover:bg-green-200">
+                        📦 Inventario
+                    </button>
+                    <button type="button" onclick="applyTemplate('supervisor')" 
+                            class="bg-purple-100 text-purple-800 px-3 py-2 rounded text-sm hover:bg-purple-200">
+                        👨‍💼 Supervisor
+                    </button>
+                    <button type="button" onclick="applyTemplate('manager')" 
+                            class="bg-red-100 text-red-800 px-3 py-2 rounded text-sm hover:bg-red-200">
+                        👑 Gerente
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-4 py-6">
+                <a href="/accounts/admin/users/" 
+                   class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+                    💾 Guardar Permisos
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        function applyTemplate(template) {
+            if (!confirm('¿Aplicar la plantilla de permisos "' + template + '"? Esto sobrescribirá la configuración actual.')) {
+                return;
+            }
+            
+            const templates = {
+                cashier: {
+                    can_access_pos: true,
+                    can_process_sales: true,
+                    can_access_cash_register: true,
+                    can_access_inventory: false,
+                    can_apply_discounts: false,
+                    can_void_sales: false,
+                    max_discount_percent: 0
+                },
+                inventory: {
+                    can_access_inventory: true,
+                    can_add_products: true,
+                    can_edit_products: true,
+                    can_adjust_stock: true,
+                    can_delete_products: false,
+                    can_access_pos: true,
+                    max_discount_percent: 10
+                },
+                supervisor: {
+                    can_access_pos: true,
+                    can_access_inventory: true,
+                    can_process_sales: true,
+                    can_apply_discounts: true,
+                    can_void_sales: true,
+                    can_access_reports: true,
+                    max_discount_percent: 20
+                },
+                manager: {
+                    can_access_pos: true,
+                    can_access_inventory: true,
+                    can_access_reports: true,
+                    can_process_sales: true,
+                    can_apply_discounts: true,
+                    can_void_sales: true,
+                    can_view_financial_reports: true,
+                    max_discount_percent: 50
+                }
+            };
+            
+            const config = templates[template];
+            if (!config) return;
+            
+            // Apply template configuration
+            Object.keys(config).forEach(field => {
+                const element = document.querySelector(`[name="${field}"]`);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = config[field];
+                    } else {
+                        element.value = config[field];
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

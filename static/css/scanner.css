@@ -1,0 +1,689 @@
+/* Estilos para el Scanner de Códigos de Barras */
+
+/* Modal overlay - FIXED VISIBILITY */
+#barcode-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 9999 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+#barcode-modal.hidden {
+  display: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal content - PURE CSS */
+#barcode-modal > div {
+  background-color: #0a0a0a;
+  border: 2px solid #333333;
+  border-radius: 0.75rem;
+  max-width: 32rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  max-height: 100vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+  box-shadow: 0 25px 50px -12px rgba(0, 212, 255, 0.3);
+  position: relative;
+  z-index: 10000;
+}
+
+/* Modal header */
+#barcode-modal h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #ffffff;
+}
+
+/* Close button */
+#barcode-modal button[onclick="BarCodeScanner.close()"] {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+#barcode-modal button[onclick="BarCodeScanner.close()"]:hover {
+  color: #ff4444;
+  transform: scale(1.1);
+}
+
+#barcode-modal button[onclick="BarCodeScanner.close()"]:active {
+  transform: scale(0.95);
+}
+
+/* Form elements */
+#barcode-modal label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+}
+
+#barcode-modal select,
+#barcode-modal input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #333333;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+#barcode-modal select:focus,
+#barcode-modal input:focus {
+  outline: none;
+  border-color: #00d4ff;
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+}
+
+/* Buttons */
+#barcode-modal button:not([onclick="BarCodeScanner.close()"]) {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Button variants */
+button[onclick="BarCodeScanner.startScanning()"] {
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  color: #000000;
+  flex: 1;
+  border: 2px solid #00d4ff;
+  font-weight: bold;
+}
+
+button[onclick="BarCodeScanner.startScanning()"]:hover {
+  background: linear-gradient(135deg, #0099cc, #0077aa);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+button[onclick="BarCodeScanner.toggleTorch()"] {
+  background: linear-gradient(135deg, #00ff88, #00cc66);
+  color: #000000;
+  border: 2px solid #00ff88;
+  font-weight: bold;
+}
+
+button[onclick="BarCodeScanner.toggleTorch()"]:hover {
+  background: linear-gradient(135deg, #00cc66, #00aa55);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+/* Cancel button specific styling */
+#barcode-modal button[onclick="BarCodeScanner.close()"]:not([type="button"]) {
+  background-color: #333333;
+  color: white;
+  border: 1px solid #555555;
+}
+
+#barcode-modal button[onclick="BarCodeScanner.close()"]:not([type="button"]):hover {
+  background-color: #444444;
+  border-color: #00d4ff;
+}
+
+/* Ensure buttons are visible and properly sized */
+#barcode-modal .flex-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+#barcode-modal .flex-row button {
+  min-width: 120px;
+}
+
+/* Video element specific styles */
+#barcode-video {
+  border-radius: 0.5rem;
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+/* Pulse animation for scanning indicator */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Make sure modal content doesn't get cut off */
+#barcode-modal > div {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Layout helpers */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+/* Video container wrapper */
+.video-container {
+  position: relative;
+  margin-bottom: 1rem;
+  background-color: black;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Video container */
+#barcode-video {
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+#barcode-video.scanning {
+  box-shadow: inset 0 0 0 2px rgba(34, 197, 94, 0.6);
+}
+
+/* Scanner overlay */
+#scanner-overlay {
+  pointer-events: none;
+}
+
+#scanner-overlay > div {
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px dashed #ef4444;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scanning animation */
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(300%); }
+}
+
+#scanner-overlay.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, #ef4444, transparent);
+  animation: scanLine 2s ease-in-out infinite;
+  transform: translateX(-50%);
+}
+
+/* Success state */
+#scanner-overlay.success > div {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Botones del scanner */
+.scanner-btn {
+  transition: all 0.2s ease;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scanner-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.scanner-btn:active {
+  transform: translateY(0);
+}
+
+/* Select de cámaras */
+#camera-select {
+  background-image: none;
+  transition: border-color 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+#camera-select:focus {
+  border-color: #00d4ff;
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+}
+
+/* Status messages */
+#scanner-status {
+  min-height: 1.5rem;
+  transition: all 0.3s ease;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #333333;
+}
+
+#scanner-status.error {
+  background: rgba(255, 68, 68, 0.2);
+  color: #ff4444;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border-left: 4px solid #ff4444;
+}
+
+#scanner-status.success {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border-left: 4px solid #00ff88;
+}
+
+#scanner-status.loading {
+  background: rgba(0, 212, 255, 0.2);
+  color: #00d4ff;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border-left: 4px solid #00d4ff;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  #barcode-modal .bg-white {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+  
+  #barcode-video {
+    height: 200px;
+  }
+  
+  #scanner-overlay > div {
+    width: 200px;
+    height: 60px;
+  }
+}
+
+/* Animación de pulso para elementos activos */
+.pulse-green {
+  animation: pulseGreen 2s ease-in-out infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+}
+
+/* Botón flotante del scanner */
+.scanner-floating-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.scanner-floating-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6);
+}
+
+.scanner-floating-btn:active {
+  transform: scale(0.95);
+}
+
+/* Loading spinner */
+.scanner-loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* === SLIDING ALERTS FOR LOW STOCK === */
+
+/* Container for all alerts */
+.alerts-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  width: 350px;
+  max-width: calc(100vw - 2rem);
+  pointer-events: none;
+}
+
+/* Individual alert */
+.stock-alert {
+  background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+  transform: translateX(400px);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Alert variants */
+.stock-alert.critical {
+  background: linear-gradient(135deg, #1a0a0a, #2a1111);
+  border-color: #ef4444;
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+
+.stock-alert.warning {
+  background: linear-gradient(135deg, #1a1510, #2a2014);
+  border-color: #f59e0b;
+  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+}
+
+.stock-alert.info {
+  background: linear-gradient(135deg, #0a1520, #111a2a);
+  border-color: #00d4ff;
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+}
+
+/* Show animation */
+.stock-alert.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Hide animation */
+.stock-alert.hide {
+  transform: translateX(400px);
+  opacity: 0;
+  margin-bottom: 0;
+  max-height: 0;
+  padding: 0;
+  border-width: 0;
+}
+
+/* Alert content */
+.stock-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stock-alert-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.stock-alert-text {
+  flex: 1;
+}
+
+.stock-alert-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  color: #ffffff;
+}
+
+.stock-alert.critical .stock-alert-title {
+  color: #ff6b6b;
+}
+
+.stock-alert.info .stock-alert-title {
+  color: #00d4ff;
+}
+
+.stock-alert-message {
+  font-size: 0.8rem;
+  color: #a0a0a0;
+  margin-bottom: 0.5rem;
+}
+
+.stock-alert-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.stock-alert-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #ffffff;
+}
+
+.stock-alert-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.stock-alert-btn.primary {
+  background: #00d4ff;
+  color: #000000;
+  border-color: #00b8e6;
+}
+
+.stock-alert-btn.primary:hover {
+  background: #00b8e6;
+}
+
+/* Close button */
+.stock-alert-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #a0a0a0;
+  cursor: pointer;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.stock-alert-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Pulse animation for critical alerts */
+.stock-alert.critical {
+  animation: criticalPulse 2s ease-in-out infinite;
+}
+
+@keyframes criticalPulse {
+  0%, 100% { 
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+  }
+  50% { 
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    border-color: #dc2626;
+  }
+}
+
+/* Progress bar for auto-dismiss */
+.stock-alert-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.stock-alert-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  width: 100%;
+  transform-origin: left;
+  animation: progressBar 5s linear forwards;
+}
+
+.stock-alert.critical .stock-alert-progress-bar {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.stock-alert.info .stock-alert-progress-bar {
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+@keyframes progressBar {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+/* Responsive alerts */
+@media (max-width: 640px) {
+  .alerts-container {
+    width: calc(100vw - 2rem);
+    right: 1rem;
+    left: 1rem;
+  }
+  
+  .stock-alert {
+    font-size: 0.85rem;
+  }
+  
+  .stock-alert-icon {
+    font-size: 1.25rem;
+  }
+}
+
+/* Notification counter badge */
+.alert-counter {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  z-index: 999;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.alert-counter:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+.alert-counter.hidden {
+  display: none;
+}
