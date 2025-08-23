@@ -14,7 +14,8 @@
       "Bash(source:*)",
       "Bash(venv/Scripts/python.exe:*)",
       "Bash(python:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
