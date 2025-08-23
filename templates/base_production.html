@@ -10,8 +10,11 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
     <link rel="alternate icon" href="{% static 'favicon.ico' %}">
     
-    <!-- Production Tailwind CSS -->
-    <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+    <!-- Tailwind CSS from CDN (Railway static files fix) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Backup: Local Tailwind if CDN fails -->
+    <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}" onerror="this.remove()">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,6 +41,59 @@
             --accent-yellow: #ffaa00;
         }
         
+        /* Inline Scanner CSS - Critical for functionality */
+        #barcode-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(4px);
+          z-index: 9999 !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+          animation: fadeIn 0.3s ease-out;
+        }
+        
+        #barcode-modal.hidden {
+          display: none !important;
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        #barcode-modal > div {
+          background-color: #0a0a0a;
+          border: 2px solid #333333;
+          border-radius: 0.75rem;
+          max-width: 32rem;
+          width: 100%;
+          margin: 0 auto;
+          padding: 1.5rem;
+          max-height: 100vh;
+          overflow-y: auto;
+          animation: slideUp 0.3s ease-out;
+          box-shadow: 0 25px 50px -12px rgba(0, 212, 255, 0.3);
+          position: relative;
+          z-index: 10000;
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
         {% block extra_styles %}{% endblock %}
     </style>
 </head>
@@ -45,5 +101,196 @@
     {% block content %}{% endblock %}
     
     {% block extra_js %}{% endblock %}
+    
+    <!-- Inline Barcode Scanner JS - Critical functionality -->
+    <script>
+    // Minimal BarCodeScanner Class for Railway static files fix
+    class BarCodeScanner {
+      constructor() {
+        this.isScanning = false;
+        this.stream = null;
+        this.onScanCallback = null;
+      }
+
+      static init(options = {}) {
+        if (!window.barcodeScanner) {
+          window.barcodeScanner = new BarCodeScanner();
+        }
+        window.barcodeScanner.onScanCallback = options.onScan || function(code) {
+          console.log('Código escaneado:', code);
+        };
+        window.barcodeScanner.createModal();
+        return window.barcodeScanner;
+      }
+
+      createModal() {
+        if (document.getElementById('barcode-modal')) return;
+
+        const modalHTML = `
+          <div id="barcode-modal" class="hidden">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; color: #ffffff;">Escanear Código</h3>
+                <button onclick="BarCodeScanner.close()" type="button" style="background: none; border: none; color: #ffffff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+              </div>
+              
+              <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: #ffffff;">Cámara:</label>
+                <select id="camera-select" style="width: 100%; padding: 0.75rem; border: 2px solid #333333; border-radius: 0.5rem; background-color: #1a1a1a; color: #ffffff;">
+                  <option value="">Cargando...</option>
+                </select>
+              </div>
+
+              <div style="position: relative; margin-bottom: 1rem; background-color: black; border-radius: 0.5rem; overflow: hidden;">
+                <video id="barcode-video" style="width: 100%; height: 18rem; object-fit: cover;" autoplay playsinline muted></video>
+              </div>
+
+              <div id="scanner-status" style="text-align: center; font-size: 0.875rem; color: #a0a0a0; margin-bottom: 1rem; padding: 0.5rem; border-radius: 0.25rem; background-color: #1a1a1a;">
+                Preparando escáner...
+              </div>
+
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <button onclick="BarCodeScanner.startScanning()" type="button" style="padding: 0.75rem 1.5rem; background: #00d4ff; color: #000000; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
+                  Escanear
+                </button>
+                <button onclick="BarCodeScanner.close()" type="button" style="padding: 0.75rem 1.5rem; background: #6b7280; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+      }
+
+      static open() {
+        const modal = document.getElementById('barcode-modal');
+        if (modal) {
+          modal.classList.remove('hidden');
+          setTimeout(() => window.barcodeScanner?.loadCameras(), 200);
+        }
+      }
+
+      static close() {
+        window.barcodeScanner?.stopScanning();
+        const modal = document.getElementById('barcode-modal');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      static startScanning() {
+        window.barcodeScanner?.startScanning();
+      }
+
+      async loadCameras() {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+          
+          const select = document.getElementById('camera-select');
+          select.innerHTML = '';
+
+          if (videoDevices.length === 0) {
+            select.innerHTML = '<option value="">Sin cámaras</option>';
+            return;
+          }
+
+          videoDevices.forEach((device, index) => {
+            const option = document.createElement('option');
+            option.value = device.deviceId;
+            option.textContent = device.label || `Cámara ${index + 1}`;
+            select.appendChild(option);
+          });
+
+          if (videoDevices.length > 0) {
+            select.value = videoDevices[0].deviceId;
+          }
+        } catch (error) {
+          console.error('Error cargando cámaras:', error);
+        }
+      }
+
+      async startScanning() {
+        const select = document.getElementById('camera-select');
+        const cameraId = select.value;
+        
+        if (!cameraId) return;
+
+        try {
+          if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+          }
+
+          this.stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: cameraId } },
+            audio: false
+          });
+
+          const video = document.getElementById('barcode-video');
+          video.srcObject = this.stream;
+          this.isScanning = true;
+
+          document.getElementById('scanner-status').textContent = 'Cámara activa - Use scanner externo';
+        } catch (error) {
+          console.error('Error iniciando cámara:', error);
+          document.getElementById('scanner-status').textContent = 'Error: ' + error.message;
+        }
+      }
+
+      stopScanning() {
+        this.isScanning = false;
+        if (this.stream) {
+          this.stream.getTracks().forEach(track => track.stop());
+          this.stream = null;
+        }
+      }
+    }
+
+    // USB Scanner Support
+    class USBBarcodeScanner {
+      constructor() {
+        this.buffer = '';
+        this.lastInputTime = 0;
+        this.scanThreshold = 100;
+      }
+
+      startListening() {
+        document.addEventListener('keydown', (e) => {
+          const now = Date.now();
+          
+          if (now - this.lastInputTime > this.scanThreshold) {
+            this.buffer = '';
+          }
+          
+          this.lastInputTime = now;
+          
+          if (e.key === 'Enter' && this.buffer.length > 3) {
+            const code = this.buffer.trim();
+            this.buffer = '';
+            
+            // Fire barcode event
+            const event = new CustomEvent('barcodeScanned', {
+              detail: { code, source: 'usb', timestamp: now },
+              bubbles: true
+            });
+            document.dispatchEvent(event);
+          } else if (e.key.length === 1) {
+            this.buffer += e.key;
+          }
+        });
+      }
+    }
+
+    // Auto-initialize
+    window.BarCodeScanner = BarCodeScanner;
+    window.USBBarcodeScanner = USBBarcodeScanner;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.usbBarcodeScanner) {
+        window.usbBarcodeScanner = new USBBarcodeScanner();
+        window.usbBarcodeScanner.startListening();
+      }
+    });
+    </script>
 </body>
 </html>
