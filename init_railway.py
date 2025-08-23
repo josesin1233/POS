@@ -13,7 +13,7 @@ django.setup()
 
 from django.contrib.auth import get_user_model
 from accounts.models import Business, UserPermissions
-from pos.models import Producto
+from pos.models import Producto, Categoria
 
 User = get_user_model()
 
@@ -73,21 +73,41 @@ def create_demo_user(business):
     demo_user.is_business_owner = True
     demo_user.save()
     
-    # Crear permisos de administrador
-    permissions, created = UserPermissions.objects.get_or_create(
-        user=demo_user,
-        business=business,
-        defaults={}
-    )
-    
-    if created:
+    # Crear permisos de administrador si no existen
+    if not UserPermissions.objects.filter(user=demo_user, business=business).exists():
         UserPermissions.create_default_permissions(demo_user, business, is_owner=True)
         print(f"✅ Usuario demo asignado al negocio con permisos de administrador")
+    else:
+        print(f"ℹ️ Permisos del usuario demo ya existen")
     
     return demo_user
 
+def create_demo_categories(business):
+    """Crear categorías demo si no existen"""
+    categories = ['Chicles', 'Chocolates', 'Dulces', 'Refrescos', 'Galletas']
+    created_count = 0
+    
+    for cat_name in categories:
+        categoria, created = Categoria.objects.get_or_create(
+            nombre=cat_name,
+            business=business,
+            defaults={'descripcion': f'Categoría de {cat_name}'}
+        )
+        if created:
+            created_count += 1
+    
+    if created_count > 0:
+        print(f"✅ {created_count} categorías demo creadas")
+    else:
+        print("ℹ️ Categorías demo ya existen")
+    
+    return {cat.nombre: cat for cat in Categoria.objects.filter(business=business)}
+
 def create_demo_products(business):
     """Crear productos demo si no existen"""
+    # Primero obtener las categorías
+    categories = create_demo_categories(business)
+    
     demo_products = [
         {
             'codigo': 'CHI001',
@@ -95,7 +115,7 @@ def create_demo_products(business):
             'precio': 5.50,
             'stock': 25,
             'stock_minimo': 10,
-            'categoria': 'Chicles'
+            'categoria': categories.get('Chicles')
         },
         {
             'codigo': 'CHO001', 
@@ -103,7 +123,7 @@ def create_demo_products(business):
             'precio': 12.00,
             'stock': 5,  # Bajo stock para probar alertas
             'stock_minimo': 15,
-            'categoria': 'Chocolates'
+            'categoria': categories.get('Chocolates')
         },
         {
             'codigo': 'DUL001',
@@ -111,7 +131,7 @@ def create_demo_products(business):
             'precio': 8.00,
             'stock': 30,
             'stock_minimo': 10,
-            'categoria': 'Dulces'
+            'categoria': categories.get('Dulces')
         },
         {
             'codigo': 'REF001',
@@ -119,7 +139,7 @@ def create_demo_products(business):
             'precio': 18.00,
             'stock': 2,  # Muy bajo stock
             'stock_minimo': 20,
-            'categoria': 'Refrescos'
+            'categoria': categories.get('Refrescos')
         },
         {
             'codigo': 'GAL001',
@@ -127,7 +147,7 @@ def create_demo_products(business):
             'precio': 15.50,
             'stock': 40,
             'stock_minimo': 12,
-            'categoria': 'Galletas'
+            'categoria': categories.get('Galletas')
         }
     ]
     
