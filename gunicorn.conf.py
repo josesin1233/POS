@@ -5,11 +5,11 @@ import os
 bind = f"0.0.0.0:{os.environ.get('PORT', '8000')}"
 backlog = 2048
 
-# Worker processes
-workers = 2
+# Worker processes - Reduced for Railway memory limits
+workers = 1
 worker_class = "sync"
-worker_connections = 1000
-timeout = 120
+worker_connections = 500
+timeout = 300
 keepalive = 2
 max_requests = 1000
 max_requests_jitter = 100
