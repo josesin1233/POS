@@ -75,11 +75,18 @@ def index_view(request):
 def pos_view(request):
     """Vista POS completa - Solo usuarios autenticados"""
     try:
-        # Verificar business del usuario
-        if not hasattr(request.user, 'business') or not request.user.business:
+        # Verificar business del usuario con logging mejorado
+        if not hasattr(request.user, 'business'):
+            logger.warning(f"Usuario {request.user.username} no tiene atributo business")
+            return redirect('accounts:register')
+        
+        if not request.user.business:
+            logger.warning(f"Usuario {request.user.username} tiene business = None")
             return redirect('accounts:register')
         
         business = request.user.business
+        logger.info(f"Usuario {request.user.username} accediendo con business: {business.name}")
+        
         productos = Producto.objects.filter(business=business).order_by('nombre')
         
         context = {
@@ -92,7 +99,7 @@ def pos_view(request):
         return render(request, 'pos/pos.html', context)
         
     except Exception as e:
-        logger.error(f"Error en pos_view: {e}")
+        logger.error(f"Error en pos_view para usuario {request.user.username}: {e}")
         return render(request, 'pos/pos.html', {
             'error': str(e),
             'productos': []
