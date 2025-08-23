@@ -16,7 +16,10 @@
       "Bash(python:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

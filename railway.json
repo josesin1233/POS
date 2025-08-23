@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python manage.py migrate --noinput && gunicorn dulceria_pos.wsgi --log-file -",
+    "startCommand": "echo 'Testing DB connection...' && python -c 'import os; print(f\"DATABASE_URL: {os.getenv(\"DATABASE_URL\", \"NOT_SET\")[:50]}...\")' && python manage.py migrate --noinput && echo 'Starting server...' && gunicorn dulceria_pos.wsgi --log-file -",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",

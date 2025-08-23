@@ -22,18 +22,36 @@ DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 'on')
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', 'web-production-11df5.up.railway.app').split(',')] 
 
 # 🗄️ Database configuration
-# Railway provides DATABASE_URL automatically
+# Railway PostgreSQL connection with fallbacks
 DATABASE_URL = os.getenv('DATABASE_URL')
+
 if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True
+            ssl_require=False,  # Disable SSL requirement temporarily
+            conn_health_checks=True,
         )
     }
+elif not DEBUG:  # Production fallback
+    # Use Railway internal PostgreSQL directly
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'railway',
+            'USER': 'postgres',
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'AcQdOdIGuniWbAlhUMQBuHUyPYQghDMt'),
+            'HOST': os.getenv('POSTGRES_HOST', 'postgres-b2-_.railway.internal'),
+            'PORT': '5432',
+            'OPTIONS': {
+                'connect_timeout': 60,
+                'application_name': 'dulceria_pos',
+            },
+        }
+    }
 else:
-    # Fallback for local development
+    # Local development fallback
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
