@@ -283,29 +283,31 @@
     {% endif %}
 
     <!-- Agregar Producto -->
-    <div class="bg-gray-900/80 border border-gray-700 rounded-lg shadow p-4 mb-4">
-      <h2 class="text-lg font-semibold text-gray-200 mb-3">Agregar Producto</h2>
+    <div class="cart-container rounded-xl shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">➕ Agregar Producto</h2>
       
       <form id="form-agregar-producto" class="space-y-3">
         <!-- Primera fila: Código + Nombre -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-300 mb-1">Código</label>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Código:</label>
             <div class="flex gap-2">
               <input type="text" id="nuevo-codigo" required
-                     class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                     class="flex-1 px-4 py-3 border-2 rounded-lg font-medium transition text-sm"
+                     style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                      placeholder="Código de barras">
               <button type="button" onclick="openScanner()" 
-                      class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
-                      style="z-index: 1 !important; position: relative;">
+                      class="px-4 py-3 rounded-lg font-bold text-sm transition-all hover:scale-105"
+                      style="background: linear-gradient(135deg, var(--accent-green), #00cc66); color: #000000; border: none; box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);">
                 📱 SCAN
               </button>
             </div>
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-300 mb-1">Nombre</label>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nombre:</label>
             <input type="text" id="nuevo-nombre" required
-                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   class="w-full px-4 py-3 border-2 rounded-lg font-medium transition text-sm"
+                   style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                    placeholder="Nombre del producto">
           </div>
         </div>
@@ -330,7 +332,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-300 mb-1">Stock Mínimo</label>
-            <input type="number" id="nuevo-stock-minimo" min="0" step="1" value="10"
+            <input type="number" id="nuevo-stock-minimo" min="0" step="1"
                    class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
                    placeholder="Alerta cuando quede menos">
           </div>
@@ -440,24 +442,26 @@
       </div>
 
       <!-- Buscador de Productos -->
-      <div class="bg-gray-900/80 border border-gray-700 rounded-lg shadow p-4 mb-4">
-        <h3 class="text-lg font-semibold text-gray-200 mb-3">Buscar Productos</h3>
+      <div class="cart-container rounded-xl shadow-lg p-6 mb-6">
+        <h3 class="text-xl font-bold mb-4" style="color: var(--text-primary);">🔍 Buscar Productos</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="md:col-span-2">
             <div class="flex gap-2">
               <input type="text" id="buscar-inventario" 
-                     class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                     class="flex-1 px-4 py-3 border-2 rounded-lg font-medium transition text-sm"
+                     style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                      placeholder="Buscar por nombre o código...">
               <button type="button" onclick="openScanner()" 
-                      class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
-                      style="z-index: 1 !important; position: relative;">
+                      class="px-4 py-3 rounded-lg font-bold text-sm transition-all hover:scale-105"
+                      style="background: linear-gradient(135deg, var(--accent-green), #00cc66); color: #000000; border: none; box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);">
                 📱 SCAN
               </button>
             </div>
           </div>
           <div>
-            <button onclick="limpiarBusqueda()" class="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded font-medium text-sm transition">
-              Limpiar
+            <button onclick="limpiarBusqueda()" class="w-full py-3 px-4 rounded-lg font-bold text-sm transition-all hover:scale-105"
+                    style="background: linear-gradient(135deg, #6b7280, #4b5563); color: white; border: none; box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);">
+              🧹 Limpiar
             </button>
           </div>
         </div>
@@ -534,23 +538,32 @@ document.addEventListener("DOMContentLoaded", () => {
         const nuevoCodigo = document.getElementById('nuevo-codigo');
         const stockCodigo = document.getElementById('stock-codigo');
         
-        // Fill the most appropriate field based on what's visible/active
-        if (document.activeElement === buscarInventario || 
-            (!document.activeElement || document.activeElement === document.body)) {
-            // If search field is active or no field is focused, use search
+        // Fill the most appropriate field based on which is visible and likely intended
+        // Priority: focused input > closest input to recently clicked scan button > search field
+        const activeElement = document.activeElement;
+        
+        if (activeElement && (activeElement === nuevoCodigo || activeElement === stockCodigo || activeElement === buscarInventario)) {
+            // If any of our target inputs is focused, use that one
+            activeElement.value = code;
+            if (activeElement === stockCodigo) {
+                setTimeout(() => buscarProductoParaActualizar(code), 100);
+            } else if (activeElement === buscarInventario) {
+                filtrarProductos(code);
+            }
+        } else if (stockCodigo && stockCodigo.offsetParent !== null && !stockCodigo.value) {
+            // If update form is visible and empty, prefer it
+            stockCodigo.value = code;
+            stockCodigo.focus();
+            setTimeout(() => buscarProductoParaActualizar(code), 100);
+        } else if (nuevoCodigo && !nuevoCodigo.value) {
+            // If add form field is empty, use it
+            nuevoCodigo.value = code;
+            nuevoCodigo.focus();
+        } else {
+            // Default to search
             buscarInventario.value = code;
             buscarInventario.focus();
             filtrarProductos(code);
-        } else if (stockCodigo && stockCodigo.offsetParent !== null) {
-            stockCodigo.value = code;
-            stockCodigo.focus();
-            // Auto-search product
-            setTimeout(() => {
-                buscarProductoParaActualizar(code);
-            }, 100);
-        } else if (nuevoCodigo) {
-            nuevoCodigo.value = code;
-            nuevoCodigo.focus();
         }
         
         console.log(`Barcode ${code} processed in inventory`);
@@ -926,7 +939,7 @@ async function editarProducto(id) {
             // Fill the update form with product data
             document.getElementById('stock-codigo').value = producto.codigo;
             document.getElementById('nuevo-precio-update').value = producto.precio;
-            document.getElementById('stock-minimo-update').value = producto.stock_minimo || 10;
+            document.getElementById('stock-minimo-update').value = producto.stock_minimo || '';
             
             // Show product info
             mostrarInfoProducto(producto);
