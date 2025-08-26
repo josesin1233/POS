@@ -233,125 +233,35 @@
       transform: translateY(-1px);
     }
     
-    /* Mobile Responsive Styles for Demo */
-    @media (max-width: 768px) {
-      /* Make main container stack vertically on mobile */
-      .flex.overflow-hidden.flex-row {
-        flex-direction: column !important;
-        height: auto !important;
-        min-height: 100vh !important;
-        overflow: visible !important;
-      }
-      
-      /* Cart container takes full width and better height on mobile */
-      .cart-container[style*="width: 72%"], .cart-container {
-        width: 100% !important;
-        min-width: auto !important;
-        height: 60vh !important;
-        min-height: 400px !important;
-        order: 2 !important;
-      }
-      
-      /* Product form takes full width on mobile */
-      .flex.flex-col.rounded-xl.border-2[style*="width: 28%"], 
-      .flex-col[style*="min-width: 280px"] {
-        width: 100% !important;
-        min-width: auto !important;
-        height: auto !important;
-        order: 1 !important;
-        margin-bottom: 1rem !important;
-      }
-      
-      /* Adjust cart items scroll area for mobile */
-      .cart-container .overflow-y-auto {
-        max-height: 40vh !important;
-        min-height: 250px !important;
-      }
-      
-      /* Make buttons more touch-friendly on mobile */
-      .grid.grid-cols-3.gap-2 button,
-      .grid-cols-3 button {
-        padding: 0.75rem 0.5rem !important;
-        font-size: 0.75rem !important;
-      }
-      
-      /* Stack navigation tabs on smaller screens */
-      .flex.flex-wrap.gap-2 {
-        justify-content: center;
-      }
-      
-      .tab-active, .tab-inactive {
-        flex: 1 1 auto;
-        text-align: center;
-        min-width: 120px;
-      }
-      
-      /* Improve cart header and totals visibility */
-      .cart-header {
-        padding: 1rem !important;
-      }
-      
-      /* Better spacing for total section */
-      .cart-container > div:last-child {
-        padding: 1rem !important;
-      }
-      
-      /* Ensure proper viewport usage */
-      body {
-        overflow-x: hidden !important;
-      }
-      
-      /* Better spacing between sections */
-      .flex.flex-col.rounded-xl.border-2 {
-        margin-bottom: 1rem !important;
-      }
-      
-      /* Demo specific adjustments */
-      .p-2.gap-2 {
-        padding: 0.5rem !important;
-        gap: 1rem !important;
-      }
-      
-      /* Make demo layout more compact */
-      .min-h-screen .flex.overflow-hidden {
-        min-height: auto !important;
-        height: auto !important;
-      }
-    }
-    
-    /* Extra small screens (phones in portrait) */
-    @media (max-width: 480px) {
-      /* Make navigation more compact */
-      .w-full.px-4.py-1\\.5 {
-        padding: 0.5rem 1rem !important;
-      }
-      
-      /* Reduce font sizes */
-      .text-lg.font-bold {
-        font-size: 1rem !important;
-      }
-      
-      /* Make tabs smaller */
+    /* Mobile optimizations */
+    @media (max-width: 640px) {
+      /* Make tabs more compact */
       .tab-active, .tab-inactive {
         padding: 0.5rem 0.75rem !important;
         font-size: 0.75rem !important;
-        min-width: 100px;
+        min-width: 90px;
       }
       
-      /* Reduce padding in main content */
-      .p-2.gap-2 {
-        padding: 0.25rem !important;
+      /* Better button sizes for touch */
+      .btn-scan {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
       }
       
-      /* Make cart more compact on very small screens */
+      /* Improve form inputs on mobile */
+      input[type="text"], input[type="number"] {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+      }
+    }
+    
+    @media (max-width: 480px) {
+      /* Extra compact for very small screens */
       .cart-container {
-        height: 55vh !important;
-        min-height: 350px !important;
+        min-height: 300px !important;
       }
       
-      .cart-container .overflow-y-auto {
-        max-height: 35vh !important;
-        min-height: 200px !important;
+      .overflow-x-auto.max-h-64 {
+        max-height: 200px !important;
       }
     }
   </style>
@@ -415,17 +325,17 @@
     <div id="content-demo" class="tab-content w-screen p-0 m-0">
       
       <!-- Alerta de demo limitado -->
-      <div class="demo-limitation text-primary px-6 py-4 mb-6 w-screen">
-        <div class="flex justify-between items-center">
+      <div class="demo-limitation text-primary px-3 lg:px-6 py-3 lg:py-4 mb-4 lg:mb-6 mx-2 lg:mx-0">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3">
           <div class="flex items-center gap-3">
-            <span class="text-2xl">⚠️</span>
+            <span class="text-xl lg:text-2xl">⚠️</span>
             <div>
-              <h3 class="font-bold text-lg" style="color: #ff4444;">Demo Limitado - Solo 3 Productos Total</h3>
-              <p class="text-sm text-secondary">Intentos restantes: <span id="intentos-restantes" class="font-bold text-xl intentos-restantes">5</span></p>
+              <h3 class="font-bold text-sm lg:text-lg" style="color: #ff4444;">Demo Limitado - Solo 3 Productos Total</h3>
+              <p class="text-xs lg:text-sm text-secondary">Intentos restantes: <span id="intentos-restantes" class="font-bold text-lg lg:text-xl intentos-restantes">5</span></p>
             </div>
           </div>
-          <div class="text-right">
-            <button onclick="mostrarTab('suscripcion')" class="btn-cart-v1 px-4 py-2 rounded-lg font-bold transition-all">
+          <div class="w-full lg:w-auto">
+            <button onclick="mostrarTab('suscripcion')" class="btn-cart-v1 w-full lg:w-auto px-3 lg:px-4 py-2 rounded-lg font-bold text-xs lg:text-sm transition-all">
               💳 ¡SUSCRÍBETE AHORA!
             </button>
           </div>
@@ -433,12 +343,12 @@
       </div>
 
       <!-- Layout principal: Formulario y Carrito lado a lado -->
-      <div class="flex gap-4 p-4">
+      <div class="flex flex-col lg:flex-row gap-4 p-2 lg:p-4">
         
-        <!-- Formulario de búsqueda (Izquierda - 30%) -->
-        <div class="w-full max-w-sm">
-          <div class="cart-container shadow-lg p-4 rounded-lg">
-            <h3 class="text-lg font-bold text-primary mb-3">Buscar Producto</h3>
+        <!-- Formulario de búsqueda -->
+        <div class="w-full lg:w-auto lg:max-w-sm order-1 lg:order-1">
+          <div class="cart-container shadow-lg p-3 lg:p-4 rounded-lg">
+            <h3 class="text-base lg:text-lg font-bold text-primary mb-3">Buscar Producto</h3>
             
             <form id="form-demo" class="space-y-3">
               <div>
@@ -502,26 +412,26 @@
           </div>
         </div>
 
-        <!-- Carrito (Derecha - 70%) -->
-        <div class="flex-1">
-          <div class="cart-container shadow-lg p-4 rounded-lg">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-xl font-bold text-primary">Carrito de Compras</h3>
+        <!-- Carrito -->
+        <div class="flex-1 order-2 lg:order-2">
+          <div class="cart-container shadow-lg p-3 lg:p-4 rounded-lg min-h-96 lg:min-h-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+              <h3 class="text-lg lg:text-xl font-bold text-primary">Carrito de Compras</h3>
               <button onclick="limpiarCarrito()" 
-                      class="btn-cart-v1 px-3 py-2 rounded-lg text-sm font-medium transition-all">
+                      class="btn-cart-v1 px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-all">
                 Limpiar
               </button>
             </div>
             
-            <div class="overflow-x-auto">
-              <table class="w-full">
+            <div class="overflow-x-auto max-h-64 lg:max-h-none">
+              <table class="w-full text-xs lg:text-sm">
                 <thead class="sticky top-0" style="background: var(--bg-tertiary); border-bottom: 2px solid var(--border-color);">
                   <tr>
-                    <th class="px-3 py-2 text-left font-semibold text-sm text-primary">Producto</th>
-                    <th class="px-3 py-2 text-center font-semibold text-sm text-primary">Cant.</th>
-                    <th class="px-3 py-2 text-right font-semibold text-sm text-primary">Precio</th>
-                    <th class="px-3 py-2 text-right font-semibold text-sm text-primary">Total</th>
-                    <th class="px-3 py-2 text-center font-semibold text-sm text-primary">Acciones</th>
+                    <th class="px-2 lg:px-3 py-2 text-left font-semibold text-primary">Producto</th>
+                    <th class="px-1 lg:px-3 py-2 text-center font-semibold text-primary">Cant.</th>
+                    <th class="px-1 lg:px-3 py-2 text-right font-semibold text-primary">Precio</th>
+                    <th class="px-1 lg:px-3 py-2 text-right font-semibold text-primary">Total</th>
+                    <th class="px-1 lg:px-3 py-2 text-center font-semibold text-primary">Acciones</th>
                   </tr>
                 </thead>
                 <tbody id="tabla-carrito">
@@ -536,19 +446,19 @@
               </table>
             </div>
 
-            <div class="mt-6 pt-4 border-t-2" style="border-color: var(--border-color);">
-              <div class="flex justify-between items-center text-2xl font-bold mb-4">
+            <div class="mt-4 lg:mt-6 pt-3 lg:pt-4 border-t-2" style="border-color: var(--border-color);">
+              <div class="flex justify-between items-center text-lg lg:text-2xl font-bold mb-3 lg:mb-4">
                 <span class="text-primary">Total:</span>
                 <span style="color: var(--accent-blue);" id="total-carrito">$0.00</span>
               </div>
               
-              <div class="flex gap-3">
+              <div class="flex flex-col sm:flex-row gap-2 lg:gap-3">
                 <button onclick="simularCobro()" 
-                        class="flex-1 process-btn py-3 rounded-lg font-bold text-sm transition-all">
+                        class="flex-1 process-btn py-2 lg:py-3 rounded-lg font-bold text-xs lg:text-sm transition-all">
                   Simular Cobro
                 </button>
                 <button onclick="mostrarTab('suscripcion')" 
-                        class="ticket-btn px-6 py-3 rounded-lg font-bold text-sm transition-all">
+                        class="ticket-btn px-4 lg:px-6 py-2 lg:py-3 rounded-lg font-bold text-xs lg:text-sm transition-all">
                   ¡Comprar Ahora!
                 </button>
               </div>
@@ -558,16 +468,16 @@
       </div>
       
       <!-- Lista de productos demo (abajo, en formato compacto) -->
-      <div class="p-4 pt-0">
-        <div class="cart-container shadow-lg p-4 rounded-lg">
-          <div class="flex justify-between items-center mb-3">
-            <h4 class="text-lg font-bold text-primary">Productos Disponibles (Demo)</h4>
-            <div class="text-xs p-2 rounded border" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
+      <div class="p-2 lg:p-4 pt-0">
+        <div class="cart-container shadow-lg p-3 lg:p-4 rounded-lg">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
+            <h4 class="text-base lg:text-lg font-bold text-primary">Productos Disponibles (Demo)</h4>
+            <div class="text-xs p-2 rounded border w-full sm:w-auto text-center" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
               <span style="color: var(--accent-green);" class="font-semibold">Max: 3 productos total, 5 intentos</span>
             </div>
           </div>
           
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-h-64 overflow-y-auto" id="productos-demo">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 lg:gap-3 max-h-48 lg:max-h-64 overflow-y-auto" id="productos-demo">
             <!-- Se llenan con JavaScript -->
           </div>
         </div>
@@ -1030,15 +940,16 @@
         totalGeneral += item.total;
         
         const fila = document.createElement('tr');
+        fila.className = 'border-b border-gray-600';
         fila.innerHTML = `
-          <td class="px-4 py-3 text-base">${item.nombre}</td>
-          <td class="px-4 py-3 text-center text-base">${item.cantidad}</td>
-          <td class="px-4 py-3 text-right text-base">$${item.precio.toFixed(2)}</td>
-          <td class="px-4 py-3 text-right font-bold text-base">$${item.total.toFixed(2)}</td>
-          <td class="px-4 py-3 text-center">
+          <td class="px-2 lg:px-4 py-2 lg:py-3 text-xs lg:text-base">${item.nombre}</td>
+          <td class="px-1 lg:px-4 py-2 lg:py-3 text-center text-xs lg:text-base">${item.cantidad}</td>
+          <td class="px-1 lg:px-4 py-2 lg:py-3 text-right text-xs lg:text-base">$${item.precio.toFixed(2)}</td>
+          <td class="px-1 lg:px-4 py-2 lg:py-3 text-right font-bold text-xs lg:text-base">$${item.total.toFixed(2)}</td>
+          <td class="px-1 lg:px-4 py-2 lg:py-3 text-center">
             <button onclick="eliminarDelCarritoDemo(${index})" 
-                    class="text-red-600 hover:text-red-800 text-base font-medium">
-              🗑️ Eliminar
+                    class="text-red-600 hover:text-red-800 text-xs lg:text-base font-medium">
+              🗑️
             </button>
           </td>
         `;
