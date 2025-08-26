@@ -4,9 +4,7 @@
 {% block title %}Inventario - DulcePOS{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/scanner.css' %}">
-<script src="{% static 'js/barcode-scanner.js' %}"></script>
-<script src="{% static 'js/stock-alerts.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/scanner.css' %}
 <style>
   /* Button styles for inventory */
   .btn-update {
@@ -1027,6 +1025,12 @@ function openScanner() {
 }
 
 </script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/barcode-scanner.js' %}"></script>
+<script src="{% static 'js/stock-alerts.js' %}"></script>
+{% endblock %}
 
 {% csrf_token %}
 {% endblock %}
