@@ -315,15 +315,17 @@
         <!-- Segunda fila: Precio + Stock Inicial -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-300 mb-1">Precio</label>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Precio:</label>
             <input type="number" id="nuevo-precio" required step="0.01" min="0"
-                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   class="w-full px-4 py-3 border-2 rounded-lg font-medium transition text-sm"
+                   style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                    placeholder="0.00">
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-300 mb-1">Stock Inicial</label>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Stock Inicial:</label>
             <input type="number" id="nuevo-stock" min="0" step="1" value="0"
-                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   class="w-full px-4 py-3 border-2 rounded-lg font-medium transition text-sm"
+                   style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                    placeholder="Cantidad">
           </div>
         </div>
@@ -331,14 +333,16 @@
         <!-- Tercera fila: Stock Mínimo + Botón -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-300 mb-1">Stock Mínimo</label>
+            <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Stock Mínimo:</label>
             <input type="number" id="nuevo-stock-minimo" min="0" step="1"
-                   class="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
+                   class="w-full px-4 py-3 border-2 rounded-lg font-medium transition text-sm"
+                   style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                    placeholder="Alerta cuando quede menos">
           </div>
           <div class="flex items-end">
-            <button type="submit" class="w-full py-2 px-4 bg-blue-700 hover:bg-blue-600 rounded font-semibold text-sm transition">
-              Agregar Producto
+            <button type="submit" class="w-full py-3 px-4 rounded-lg font-bold text-sm transition-all hover:scale-105"
+                    style="background: linear-gradient(135deg, var(--accent-blue), #0099cc); color: #000000; border: none; box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);">
+              ➕ Agregar Producto
             </button>
           </div>
         </div>
@@ -346,8 +350,8 @@
     </div>
 
     <!-- Actualizar Producto Existente -->
-    <div class="bg-gray-900/80 border border-gray-700 rounded-lg shadow p-4 mb-4">
-      <h2 class="text-lg font-semibold text-gray-200 mb-3">Actualizar Producto</h2>
+    <div class="cart-container rounded-xl shadow-lg p-6 mb-6">
+      <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">🔄 Actualizar Producto</h2>
       
       <form id="form-actualizar-producto" class="space-y-3">
         <!-- Primera fila: Código + Agregar Stock -->
