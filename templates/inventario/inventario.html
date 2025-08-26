@@ -81,6 +81,22 @@
   .stock-normal {
     color: var(--accent-green) !important;
   }
+
+  /* Tab Buttons Styling */
+  .tab-button {
+    transition: all 0.2s ease;
+  }
+  
+  .tab-button:hover {
+    border-color: var(--accent-blue) !important;
+    background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%) !important;
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2) !important;
+    transform: translateY(-1px) scale(1.02);
+  }
+  
+  .tab-button-active {
+    box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4) !important;
+  }
   
   /* Nuevos estilos de botones mejorados */
   .btn-edit {
@@ -225,20 +241,36 @@
 {% block content %}
 <div class="min-h-screen" style="background-color: #000000; color: var(--text-primary);">
   
-  <!-- Header Navigation -->
-  <div class="border-b shadow-sm" style="background-color: #111111; border-color: #333333;">
-    <div class="max-w-full mx-auto px-4 py-2">
+  <!-- Navigation -->
+  <nav class="border-b shadow-sm" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-1.5">
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-bold" style="color: var(--text-primary);">📦 Inventario</h1>
+        <div class="text-lg font-bold text-primary">{{ business.name|default:"DulcePOS" }}</div>
         
-        <div class="flex items-center space-x-3">
-          <a href="/punto_de_venta/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-            🛒 POS
-          </a>
-          <a href="/caja/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-            💰 Caja
-          </a>
+        <div class="flex items-center space-x-2">
+          <a href="/punto_de_venta/" class="text-secondary hover:text-blue-600 font-medium text-xs">← Volver al POS</a>
+          <a href="/accounts/logout/" class="text-secondary hover:text-blue-600 font-medium text-xs">Salir</a>
         </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Tabs Navigation -->
+  <div class="border-b" style="background-color: #111111; border-color: #333333;">
+    <div class="max-w-full mx-auto px-4 py-2">
+      <div class="flex flex-wrap gap-2">
+        <a href="/punto_de_venta/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          🏪 Punto de Venta
+        </a>
+        <a href="/inventario/" class="tab-button-active px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%); color: #000000;">
+          📦 Inventario
+        </a>
+        <a href="/registro/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          📊 Registro
+        </a>
+        <a href="/caja/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
+          💰 Caja
+        </a>
       </div>
     </div>
   </div>
@@ -418,9 +450,10 @@
               <input type="text" id="buscar-inventario" 
                      class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
                      placeholder="Buscar por nombre o código...">
-              <button type="button" onclick="abrirScannerInventario('buscar')" 
-                      class="px-3 py-2 bg-green-700 hover:bg-green-600 rounded font-medium text-sm transition">
-                Scan
+              <button type="button" onclick="openScanner()" 
+                      class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
+                      style="z-index: 1 !important; position: relative;">
+                📱 SCAN
               </button>
             </div>
           </div>
@@ -499,11 +532,18 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log(`Barcode scanned from ${source}:`, code);
         
         // Determine which field to fill based on which is more likely to be active
+        const buscarInventario = document.getElementById('buscar-inventario');
         const nuevoCodigo = document.getElementById('nuevo-codigo');
         const stockCodigo = document.getElementById('stock-codigo');
         
-        // Fill the most appropriate field
-        if (stockCodigo && stockCodigo.offsetParent !== null) {
+        // Fill the most appropriate field based on what's visible/active
+        if (document.activeElement === buscarInventario || 
+            (!document.activeElement || document.activeElement === document.body)) {
+            // If search field is active or no field is focused, use search
+            buscarInventario.value = code;
+            buscarInventario.focus();
+            filtrarProductos(code);
+        } else if (stockCodigo && stockCodigo.offsetParent !== null) {
             stockCodigo.value = code;
             stockCodigo.focus();
             // Auto-search product
