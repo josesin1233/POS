@@ -1027,10 +1027,10 @@ function openScanner() {
 </script>
 {% endblock %}
 
+{% csrf_token %}
+{% endblock %}
+
 {% block extra_js %}
 <script src="{% static 'js/barcode-scanner.js' %}"></script>
 <script src="{% static 'js/stock-alerts.js' %}"></script>
-{% endblock %}
-
-{% csrf_token %}
 {% endblock %}
