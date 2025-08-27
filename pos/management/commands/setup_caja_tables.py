@@ -41,8 +41,8 @@ class Command(BaseCommand):
                             sucursal_id INTEGER REFERENCES pos_sucursal(id) ON DELETE SET NULL,
                             fecha_apertura TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
                             fecha_cierre TIMESTAMP WITH TIME ZONE NULL,
-                            usuario_apertura_id INTEGER NOT NULL REFERENCES accounts_user(id) ON DELETE PROTECT,
-                            usuario_cierre_id INTEGER NULL REFERENCES accounts_user(id) ON DELETE PROTECT,
+                            usuario_apertura_id INTEGER NOT NULL REFERENCES accounts_user(id) ON DELETE RESTRICT,
+                            usuario_cierre_id INTEGER NULL REFERENCES accounts_user(id) ON DELETE RESTRICT,
                             monto_inicial DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                             monto_final DECIMAL(10,2) NULL,
                             diferencia DECIMAL(10,2) NULL,
@@ -69,7 +69,7 @@ class Command(BaseCommand):
                             monto DECIMAL(10,2) NOT NULL,
                             tipo VARCHAR(50) NOT NULL DEFAULT 'gasto_operativo',
                             fecha TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-                            usuario_id INTEGER NOT NULL REFERENCES accounts_user(id) ON DELETE PROTECT,
+                            usuario_id INTEGER NOT NULL REFERENCES accounts_user(id) ON DELETE RESTRICT,
                             caja_id INTEGER NULL REFERENCES pos_caja(id) ON DELETE SET NULL,
                             notas TEXT NULL
                         );
