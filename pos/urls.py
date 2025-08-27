@@ -82,4 +82,10 @@ urlpatterns = [
     
     # Control de caja
     path('caja/', views.control_caja, name='control_caja'),
+    
+    # APIs de caja
+    path('caja/api/estado/', views.caja_estado_api, name='caja_estado_api'),
+    path('caja/api/abrir/', views.caja_abrir_api, name='caja_abrir_api'),
+    path('caja/api/cerrar/', views.caja_cerrar_api, name='caja_cerrar_api'),
+    path('caja/api/gastos/', views.caja_gastos_api, name='caja_gastos_api'),
 ]
