@@ -19,9 +19,20 @@
       "Bash(git push:*)",
       "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
       "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
+      "Bash(./venv/Scripts/python.exe manage.py makemigrations)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
       "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)"
     ],
     "deny": [],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "C:\\d C:\\Users\\josem\\Documents"
+    ]
   }
 }

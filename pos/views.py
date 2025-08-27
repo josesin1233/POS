@@ -911,6 +911,44 @@ def caja_gastos_api(request):
         logger.error(f"Error en caja_gastos_api: {e}")
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@csrf_exempt
+def caja_test_api(request):
+    """API de prueba simple para debugging caja"""
+    try:
+        return JsonResponse({
+            'status': 'working',
+            'user_authenticated': request.user.is_authenticated,
+            'has_business': hasattr(request.user, 'business') if request.user.is_authenticated else False,
+            'method': request.method
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt 
+def setup_caja_db(request):
+    """Vista para ejecutar setup de tablas de caja automáticamente"""
+    try:
+        from django.core.management import call_command
+        from io import StringIO
+        
+        # Capturar output del comando
+        out = StringIO()
+        call_command('setup_caja_tables', stdout=out)
+        output = out.getvalue()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Tablas de caja configuradas',
+            'output': output
+        })
+        
+    except Exception as e:
+        logger.error(f"Error en setup_caja_db: {e}")
+        return JsonResponse({
+            'success': False, 
+            'error': str(e)
+        }, status=500)
+
 # ========================
 # VIEWS INVENTARIO
 # ========================

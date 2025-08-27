@@ -88,4 +88,10 @@ urlpatterns = [
     path('caja/api/abrir/', views.caja_abrir_api, name='caja_abrir_api'),
     path('caja/api/cerrar/', views.caja_cerrar_api, name='caja_cerrar_api'),
     path('caja/api/gastos/', views.caja_gastos_api, name='caja_gastos_api'),
+    
+    # API de prueba para debugging
+    path('caja/api/test/', views.caja_test_api, name='caja_test_api'),
+    
+    # Setup automático de base de datos
+    path('setup-caja-db/', views.setup_caja_db, name='setup_caja_db'),
 ]
