@@ -643,6 +643,7 @@ def ventas_api(request):
 # VIEWS CAJA
 # ========================
 
+@csrf_exempt
 def caja_estado_api(request):
     """API para obtener estado actual de la caja"""
     try:
