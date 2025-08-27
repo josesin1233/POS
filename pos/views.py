@@ -653,6 +653,17 @@ def caja_estado_api(request):
         if not hasattr(request.user, 'business'):
             return JsonResponse({'error': 'Usuario sin negocio asignado'}, status=400)
         
+        # Verificar si los modelos existen
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_name = 'pos_caja';")
+                if not cursor.fetchone():
+                    return JsonResponse({'error': 'Tabla Caja no existe - ejecutar migraciones'}, status=500)
+        except Exception as db_error:
+            logger.error(f"Error verificando tabla: {db_error}")
+            # Si falla la verificación, intentar continuar
+        
         business = request.user.business
         hoy = timezone.now().date()
         
