@@ -667,12 +667,18 @@ def caja_estado_api(request):
         business = request.user.business
         hoy = timezone.now().date()
         
-        # Buscar caja del día
+        # Buscar caja del día (con fallback si la tabla no existe)
         try:
             caja = Caja.objects.get(business=business, fecha_apertura__date=hoy)
             estado = 'abierta' if caja.estado == 'abierta' else 'cerrada'
             monto_actual = float(caja.monto_inicial)  # Usar monto_inicial por ahora
         except Caja.DoesNotExist:
+            estado = 'cerrada'
+            monto_actual = 0.0
+            caja = None
+        except Exception as caja_error:
+            # Si falla por tabla no existente, devolver estado por defecto
+            logger.error(f"Error accediendo a modelo Caja: {caja_error}")
             estado = 'cerrada'
             monto_actual = 0.0
             caja = None
@@ -685,12 +691,16 @@ def caja_estado_api(request):
         )
         total_ventas = ventas_hoy.aggregate(total=Sum('total'))['total'] or 0
         
-        # Calcular gastos del día
-        gastos_hoy = GastoCaja.objects.filter(
-            business=business,
-            fecha__date=hoy
-        )
-        total_gastos = gastos_hoy.aggregate(total=Sum('monto'))['total'] or 0
+        # Calcular gastos del día (con fallback si la tabla no existe)
+        try:
+            gastos_hoy = GastoCaja.objects.filter(
+                business=business,
+                fecha__date=hoy
+            )
+            total_gastos = gastos_hoy.aggregate(total=Sum('monto'))['total'] or 0
+        except Exception as gastos_error:
+            logger.error(f"Error accediendo a modelo GastoCaja: {gastos_error}")
+            total_gastos = 0
         
         # Efectivo esperado = monto inicial + ventas - gastos
         efectivo_esperado = (caja.monto_inicial if caja else 0) + total_ventas - total_gastos
@@ -730,10 +740,14 @@ def caja_abrir_api(request):
         business = request.user.business
         hoy = timezone.now().date()
         
-        # Verificar si ya existe una caja para hoy
-        caja_existente = Caja.objects.filter(business=business, fecha_apertura__date=hoy).first()
-        if caja_existente:
-            return JsonResponse({'error': 'Ya existe una caja para el día de hoy'}, status=400)
+        # Verificar si ya existe una caja para hoy (con fallback si la tabla no existe)
+        try:
+            caja_existente = Caja.objects.filter(business=business, fecha_apertura__date=hoy).first()
+            if caja_existente:
+                return JsonResponse({'error': 'Ya existe una caja para el día de hoy'}, status=400)
+        except Exception as caja_error:
+            logger.error(f"Error verificando caja existente: {caja_error}")
+            return JsonResponse({'error': 'Sistema de caja no disponible - ejecutar migraciones'}, status=500)
         
         # Obtener sucursal principal o crear una por defecto
         sucursal = business.sucursales.filter(es_principal=True).first()
@@ -837,11 +851,15 @@ def caja_gastos_api(request):
         hoy = timezone.now().date()
         
         if request.method == 'GET':
-            # Obtener gastos del día
-            gastos = GastoCaja.objects.filter(
-                business=business,
-                fecha__date=hoy
-            ).order_by('-fecha')
+            # Obtener gastos del día (con fallback si la tabla no existe)
+            try:
+                gastos = GastoCaja.objects.filter(
+                    business=business,
+                    fecha__date=hoy
+                ).order_by('-fecha')
+            except Exception as gastos_error:
+                logger.error(f"Error accediendo a gastos: {gastos_error}")
+                return JsonResponse([], safe=False)  # Devolver lista vacía
             
             gastos_data = []
             for gasto in gastos:
