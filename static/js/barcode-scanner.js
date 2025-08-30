@@ -352,9 +352,18 @@ class BarCodeScanner {
         this.updateStatus(`📹 Stream OK | Pistas: ${this.stream.getTracks().length}`, 'text-green-600', 'bg-green-50');
       }
       
-      // Validate stream tracks are active
+      // Validate stream tracks are active - More lenient for iOS
       const videoTrack = this.stream.getVideoTracks()[0];
-      if (!videoTrack || videoTrack.readyState !== 'live') {
+      if (!videoTrack) {
+        console.error('❌ No video track found');
+        this.updateStatus('❌ Error: No hay pista de video', 'text-red-600', 'bg-red-50');
+        return;
+      }
+      
+      // iOS Safari may have track readyState other than 'live' initially, so be more lenient
+      if (this.isiOS()) {
+        console.log('🍎 iOS detected - Lenient track validation');
+      } else if (videoTrack.readyState !== 'live') {
         console.error('❌ Video track is not live:', videoTrack?.readyState);
         this.updateStatus('❌ Error: Video track no disponible', 'text-red-600', 'bg-red-50');
         return;
@@ -414,15 +423,23 @@ class BarCodeScanner {
           if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA or higher
             console.log('📹 Video metadata loaded, size:', videoElement.videoWidth, 'x', videoElement.videoHeight);
             
-            // Additional validation for black screen
+            // Additional validation for black screen - More lenient for iOS
             if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
               console.warn('⚠️ Video has zero dimensions, forcing refresh...');
               if (this.isMobile()) {
                 this.updateStatus('⚠️ Video sin dimensiones - Refrescando...', 'text-yellow-600', 'bg-yellow-50');
               }
-              videoElement.load(); // Force reload
-              setTimeout(checkVideoReady, 500);
-              return;
+              
+              // On iOS, sometimes dimensions come later, be more patient
+              if (this.isiOS()) {
+                console.log('🍎 iOS: Waiting longer for video dimensions...');
+                setTimeout(checkVideoReady, 1000); // Longer wait for iOS
+                return;
+              } else {
+                videoElement.load(); // Force reload on other platforms
+                setTimeout(checkVideoReady, 500);
+                return;
+              }
             }
             
             // Ensure video plays with multiple attempts
