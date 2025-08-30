@@ -27,7 +27,10 @@
       "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
       "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
       "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
-      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)"
+      "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
+      "Bash(.venvScriptspython.exe manage.py setup_caja_tables)",
+      "Read(C:\\Users\\josem/**)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

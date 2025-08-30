@@ -296,7 +296,7 @@
                      class="flex-1 px-4 py-3 border-2 rounded-lg font-medium transition text-sm"
                      style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                      placeholder="Código de barras">
-              <button type="button" onclick="openScanner()" 
+              <button type="button" onclick="openScanner('nuevo-codigo')" 
                       class="px-4 py-3 rounded-lg font-bold text-sm transition-all hover:scale-105"
                       style="background: linear-gradient(135deg, var(--accent-green), #00cc66); color: #000000; border: none; box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);">
                 📱 SCAN
@@ -362,7 +362,7 @@
               <input type="text" id="stock-codigo" required
                      class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded focus:border-blue-500 transition text-gray-200 text-sm placeholder-gray-500"
                      placeholder="Código del producto">
-              <button type="button" onclick="openScanner()" 
+              <button type="button" onclick="openScanner('stock-codigo')" 
                       class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
                       style="z-index: 1 !important; position: relative;">
                 📱 SCAN
@@ -455,7 +455,7 @@
                      class="flex-1 px-4 py-3 border-2 rounded-lg font-medium transition text-sm"
                      style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                      placeholder="Buscar por nombre o código...">
-              <button type="button" onclick="openScanner()" 
+              <button type="button" onclick="openScanner('buscar-inventario')" 
                       class="px-4 py-3 rounded-lg font-bold text-sm transition-all hover:scale-105"
                       style="background: linear-gradient(135deg, var(--accent-green), #00cc66); color: #000000; border: none; box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);">
                 📱 SCAN
@@ -532,22 +532,52 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     
-    // GLOBAL BARCODE EVENT LISTENER - EXACT COPY FROM POS
+    // GLOBAL BARCODE EVENT LISTENER - ENHANCED WITH DEBUGGING
     document.addEventListener('barcodeScanned', async (event) => {
-        const { code, source } = event.detail;
-        console.log(`Barcode scanned from ${source}:`, code);
+        const { code, source, targetField } = event.detail;
+        console.log(`🔍 INVENTARIO DEBUG: Barcode received - Code: ${code}, Source: ${source}, TargetField: ${targetField}`);
         
-        // Determine which field to fill based on which is more likely to be active
+        // PRIORITY 1: If we have a specific target field, use it exclusively
+        if (targetField) {
+            console.log(`🎯 INVENTARIO DEBUG: Using target field: ${targetField}`);
+            const targetElement = document.getElementById(targetField);
+            
+            if (targetElement) {
+                console.log(`✅ INVENTARIO DEBUG: Found target element for ${targetField}`);
+                targetElement.value = code;
+                targetElement.focus();
+                
+                // Trigger appropriate actions based on the target field
+                if (targetField === 'stock-codigo') {
+                    console.log(`🔄 INVENTARIO DEBUG: Triggering product lookup for stock update`);
+                    setTimeout(() => buscarProductoParaActualizar(code), 100);
+                } else if (targetField === 'buscar-inventario') {
+                    console.log(`🔍 INVENTARIO DEBUG: Triggering product search`);
+                    filtrarProductos(code);
+                } else if (targetField === 'nuevo-codigo') {
+                    console.log(`➕ INVENTARIO DEBUG: Code set for new product`);
+                }
+                
+                console.log(`✅ INVENTARIO DEBUG: Successfully assigned ${code} to ${targetField}`);
+                return;
+            } else {
+                console.error(`❌ INVENTARIO DEBUG: Target element ${targetField} not found!`);
+            }
+        }
+        
+        // PRIORITY 2: Fallback logic for USB scanner or when no target is specified
+        console.log(`🔄 INVENTARIO DEBUG: Using fallback logic - no target field or target not found`);
         const buscarInventario = document.getElementById('buscar-inventario');
         const nuevoCodigo = document.getElementById('nuevo-codigo');
         const stockCodigo = document.getElementById('stock-codigo');
         
-        // Fill the most appropriate field based on which is visible and likely intended
-        // Priority: focused input > closest input to recently clicked scan button > search field
+        // Check which input is currently focused
         const activeElement = document.activeElement;
+        console.log(`🎯 INVENTARIO DEBUG: Active element: ${activeElement?.id || 'none'}`);
         
         if (activeElement && (activeElement === nuevoCodigo || activeElement === stockCodigo || activeElement === buscarInventario)) {
             // If any of our target inputs is focused, use that one
+            console.log(`✅ INVENTARIO DEBUG: Using focused element: ${activeElement.id}`);
             activeElement.value = code;
             if (activeElement === stockCodigo) {
                 setTimeout(() => buscarProductoParaActualizar(code), 100);
@@ -556,21 +586,24 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } else if (stockCodigo && stockCodigo.offsetParent !== null && !stockCodigo.value) {
             // If update form is visible and empty, prefer it
+            console.log(`🔄 INVENTARIO DEBUG: Using empty stock-codigo field`);
             stockCodigo.value = code;
             stockCodigo.focus();
             setTimeout(() => buscarProductoParaActualizar(code), 100);
         } else if (nuevoCodigo && !nuevoCodigo.value) {
             // If add form field is empty, use it
+            console.log(`➕ INVENTARIO DEBUG: Using empty nuevo-codigo field`);
             nuevoCodigo.value = code;
             nuevoCodigo.focus();
         } else {
             // Default to search
+            console.log(`🔍 INVENTARIO DEBUG: Defaulting to search field`);
             buscarInventario.value = code;
             buscarInventario.focus();
             filtrarProductos(code);
         }
         
-        console.log(`Barcode ${code} processed in inventory`);
+        console.log(`✅ INVENTARIO DEBUG: Barcode processing completed`);
     });
     
     // Load inventory data
@@ -1032,11 +1065,15 @@ async function eliminarProducto(id) {
 // Sistema de alertas deshabilitado en inventario (ya tiene su propia sección)
 console.log('📦 Inventario: Las alertas se muestran en la sección dedicada');
 
-// Function to open scanner - EXACT SAME AS POS
-function openScanner() {
+// Function to open scanner - IMPROVED WITH TARGETING AND DEBUG
+function openScanner(targetFieldId = null) {
+  console.log(`🚀 INVENTARIO DEBUG: openScanner called with targetFieldId: ${targetFieldId}`);
+  
   if (typeof BarCodeScanner !== 'undefined') {
-    BarCodeScanner.open();
+    console.log(`✅ INVENTARIO DEBUG: BarCodeScanner available, opening with target: ${targetFieldId}`);
+    BarCodeScanner.open(targetFieldId);
   } else {
+    console.error(`❌ INVENTARIO DEBUG: BarCodeScanner not available!`);
     alert('Scanner no disponible. Ingresa el código manualmente.');
   }
 }

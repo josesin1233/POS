@@ -10,11 +10,18 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
     <link rel="alternate icon" href="{% static 'favicon.ico' %}">
     
-    <!-- Tailwind CSS from CDN (Railway static files fix) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS - Production build -->
+    <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
     
-    <!-- Backup: Local Tailwind if CDN fails -->
-    <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}" onerror="this.remove()">
+    <!-- Fallback: CDN Tailwind if local files fail (with production warning suppression) -->
+    <script>
+    if (!document.querySelector('link[href*="tailwind-production.css"]').sheet) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.tailwindcss.com';
+        document.head.appendChild(link);
+    }
+    </script>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,6 +29,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     {% block extra_css %}{% endblock %}
+    
+    <!-- Chatbot JS -->
+    <script src="{% static 'js/chatbot.js' %}" defer></script>
     
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -104,6 +114,8 @@
     
     <!-- Inline Barcode Scanner JS - Critical functionality -->
     <script>
+    // Check if BarCodeScanner already exists from external file
+    if (typeof BarCodeScanner === 'undefined') {
     // Minimal BarCodeScanner Class for Railway static files fix
     class BarCodeScanner {
       constructor() {
@@ -283,6 +295,7 @@
 
     // Auto-initialize
     window.BarCodeScanner = BarCodeScanner;
+    }
     window.USBBarcodeScanner = USBBarcodeScanner;
     
     document.addEventListener('DOMContentLoaded', () => {

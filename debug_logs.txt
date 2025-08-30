@@ -1,0 +1,17 @@
+INSTRUCCIONES PARA GUARDAR LOS LOGS:
+
+1. Abre tu navegador web
+2. Ve a la página de inventario
+3. Abre la consola del navegador (F12 → Console)
+4. Haz click en un botón SCAN (cualquiera)
+5. Escanea un código
+6. Copia TODOS los mensajes que aparecen en la consola
+7. Pega los mensajes aquí en este archivo, reemplazando este texto
+
+Los logs deben mostrar mensajes como:
+- 🚀 INVENTARIO DEBUG: openScanner called with targetFieldId: ...
+- 🎯 SCANNER DEBUG: Opening scanner with targetFieldId: ...
+- 🔍 INVENTARIO DEBUG: Barcode received - Code: ...
+
+PEGA TUS LOGS AQUÍ:
+(reemplaza todo este texto con los logs de la consola)

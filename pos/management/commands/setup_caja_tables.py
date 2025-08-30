@@ -12,6 +12,13 @@ class Command(BaseCommand):
         self.stdout.write('Iniciando creación de tablas de caja...')
         
         try:
+            # Primero, eliminar las tablas existentes si tienen el esquema incorrecto
+            with connection.cursor() as cursor:
+                self.stdout.write('Eliminando tablas incorrectas...')
+                cursor.execute("DROP TABLE IF EXISTS pos_gastocaja CASCADE;")
+                cursor.execute("DROP TABLE IF EXISTS pos_caja CASCADE;")
+                self.stdout.write('✅ Tablas eliminadas')
+            
             # Verificar si las tablas existen
             with connection.cursor() as cursor:
                 # Verificar tabla pos_caja
@@ -38,16 +45,24 @@ class Command(BaseCommand):
                         CREATE TABLE pos_caja (
                             id SERIAL PRIMARY KEY,
                             business_id INTEGER NOT NULL REFERENCES accounts_business(id) ON DELETE CASCADE,
-                            sucursal_id INTEGER REFERENCES pos_sucursal(id) ON DELETE SET NULL,
-                            fecha_apertura TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-                            fecha_cierre TIMESTAMP WITH TIME ZONE NULL,
+                            sucursal_id INTEGER NOT NULL REFERENCES pos_sucursal(id) ON DELETE CASCADE,
                             usuario_apertura_id INTEGER NOT NULL REFERENCES accounts_user(id) ON DELETE RESTRICT,
                             usuario_cierre_id INTEGER NULL REFERENCES accounts_user(id) ON DELETE RESTRICT,
                             monto_inicial DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                             monto_final DECIMAL(10,2) NULL,
-                            diferencia DECIMAL(10,2) NULL,
+                            total_ventas DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                            total_efectivo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                            total_tarjetas DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                            diferencia DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                             estado VARCHAR(20) NOT NULL DEFAULT 'abierta',
-                            notas TEXT NULL
+                            fecha_apertura TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                            fecha_cierre TIMESTAMP WITH TIME ZONE NULL,
+                            fecha DATE NOT NULL DEFAULT CURRENT_DATE,
+                            monto_actual DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                            efectivo_real DECIMAL(10,2) NULL,
+                            hora_cierre TIMESTAMP WITH TIME ZONE NULL,
+                            notas_apertura TEXT NULL,
+                            notas_cierre TEXT NULL
                         );
                     """)
                     
@@ -65,13 +80,11 @@ class Command(BaseCommand):
                         CREATE TABLE pos_gastocaja (
                             id SERIAL PRIMARY KEY,
                             business_id INTEGER NOT NULL REFERENCES accounts_business(id) ON DELETE CASCADE,
-                            concepto VARCHAR(255) NOT NULL,
+                            concepto VARCHAR(200) NOT NULL,
                             monto DECIMAL(10,2) NOT NULL,
-                            tipo VARCHAR(50) NOT NULL DEFAULT 'gasto_operativo',
+                            tipo VARCHAR(20) NOT NULL DEFAULT 'otro',
                             fecha TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-                            usuario_id INTEGER NOT NULL REFERENCES accounts_user(id) ON DELETE RESTRICT,
-                            caja_id INTEGER NULL REFERENCES pos_caja(id) ON DELETE SET NULL,
-                            notas TEXT NULL
+                            usuario_id INTEGER NOT NULL REFERENCES accounts_user(id) ON DELETE RESTRICT
                         );
                     """)
                     

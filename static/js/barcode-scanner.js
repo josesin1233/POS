@@ -15,6 +15,7 @@ class BarCodeScanner {
     this.maxAttempts = 5; // Más intentos
     this.lastScannedCode = null;
     this.scanTimeout = null;
+    this.targetField = null; // Add target field property
   }
 
   /**
@@ -202,10 +203,34 @@ class BarCodeScanner {
   /**
    * Abrir modal - AUTO-START MEJORADO
    */
-  static open() {
+  static open(targetFieldId = null) {
+    console.log(`🎯 SCANNER DEBUG: Opening scanner with targetFieldId: ${targetFieldId}`);
     const modal = document.getElementById('barcode-modal');
     if (modal) {
+      // Set target field if provided
+      if (window.barcodeScanner) {
+        window.barcodeScanner.targetField = targetFieldId;
+        console.log(`🎯 SCANNER DEBUG: Set targetField to: ${window.barcodeScanner.targetField}`);
+      }
+      
       modal.classList.remove('hidden');
+      
+      // Reset scanner overlay and status to initial state
+      const overlay = document.getElementById('scanner-overlay');
+      if (overlay) {
+        overlay.innerHTML = `
+          <div style="border: 3px dashed #ef4444; width: 16rem; height: 5rem; border-radius: 0.5rem; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center;">
+            <span style="color: white; font-size: 0.875rem; font-weight: 500; background: rgba(239, 68, 68, 0.7); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+              Posiciona el código aquí
+            </span>
+          </div>
+        `;
+      }
+      
+      // Reset status message
+      if (window.barcodeScanner) {
+        window.barcodeScanner.updateStatus('Preparando escáner de códigos...', 'text-gray-600', 'bg-gray-50');
+      }
       
       setTimeout(async () => {
         await window.barcodeScanner.loadCameras();
@@ -225,6 +250,12 @@ class BarCodeScanner {
    */
   static close() {
     window.barcodeScanner.stopScanning();
+    
+    // Clear target field
+    if (window.barcodeScanner) {
+      window.barcodeScanner.targetField = null;
+    }
+    
     const modal = document.getElementById('barcode-modal');
     if (modal) {
       modal.classList.add('hidden');
@@ -282,7 +313,15 @@ class BarCodeScanner {
 
       // Mostrar indicadores visuales
       document.getElementById('scan-indicator').classList.remove('hidden');
-      this.updateStatus('📱 Cámara activa - Posiciona el código DESPACIO y CENTRADO', 'text-green-600', 'bg-green-50');
+      const overlay = document.getElementById('scanner-overlay');
+      if (overlay) {
+        overlay.classList.add('active');
+      }
+      const video = document.getElementById('barcode-video');
+      if (video) {
+        video.classList.add('scanning');
+      }
+      this.updateStatus('📱 Cámara activa - Posiciona el código DESPACIO y CENTRADO', 'text-green-600 loading', 'bg-green-50');
       this.isScanning = true;
 
       // Cargar ZXing y comenzar
@@ -453,9 +492,11 @@ class BarCodeScanner {
     // Feedback visual en el overlay
     const overlay = document.getElementById('scanner-overlay');
     if (overlay) {
+      overlay.classList.remove('active');
+      overlay.classList.add('success');
       overlay.innerHTML = `
-        <div class="border-3 border-green-500 bg-green-500/20 w-64 h-20 rounded-lg flex items-center justify-center">
-          <span class="text-green-700 text-sm font-bold bg-green-200 px-3 py-2 rounded-lg">
+        <div style="border: 3px solid #00ff88; width: 16rem; height: 5rem; border-radius: 0.75rem; background: rgba(0, 255, 136, 0.2); display: flex; align-items: center; justify-content: center; animation: successPulse 0.6s ease-out;">
+          <span style="color: #000000; font-size: 0.875rem; font-weight: 700; background: rgba(0, 255, 136, 0.9); padding: 0.5rem 1rem; border-radius: 0.5rem; text-shadow: none;">
             ¡Código capturado!
           </span>
         </div>
@@ -463,11 +504,13 @@ class BarCodeScanner {
     }
     
     // GLOBAL EVENT DISPATCH - Fire custom event for any page to listen
+    console.log(`🎯 SCANNER DEBUG: Dispatching barcode event with targetField: ${this.targetField}`);
     const barcodeEvent = new CustomEvent('barcodeScanned', {
       detail: {
         code: code,
         source: 'camera',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        targetField: this.targetField || null // Add target field information
       },
       bubbles: true
     });
@@ -528,6 +571,16 @@ class BarCodeScanner {
     const indicator = document.getElementById('scan-indicator');
     if (indicator) {
       indicator.classList.add('hidden');
+    }
+    
+    // Remove scanning classes
+    const overlay = document.getElementById('scanner-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
+    const video = document.getElementById('barcode-video');
+    if (video) {
+      video.classList.remove('scanning');
     }
   }
 
@@ -727,7 +780,8 @@ class USBBarcodeScanner {
           detail: {
             code: code,
             source: 'usb',
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            targetField: null // USB scanner doesn't have specific target
           },
           bubbles: true
         });
