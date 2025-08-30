@@ -307,16 +307,45 @@ class BarCodeScanner {
 
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
       const videoElement = document.getElementById('barcode-video');
+      
+      // Add debug logging
+      console.log('📹 Stream obtenido:', this.stream);
+      console.log('📹 Video element:', videoElement);
+      
+      // Set up video element properly
       videoElement.srcObject = this.stream;
+      videoElement.setAttribute('autoplay', '');
+      videoElement.setAttribute('muted', ''); 
+      videoElement.setAttribute('playsinline', '');
+      
+      // Monitor stream for issues
+      this.stream.getTracks().forEach(track => {
+        track.addEventListener('ended', () => {
+          console.error('⚠️ STREAM TRACK ENDED unexpectedly:', track.kind);
+          this.handleStreamInterruption();
+        });
+      });
 
       await new Promise((resolve) => {
         videoElement.onloadedmetadata = () => {
-          // Only play if not already playing to prevent warning
-          if (videoElement.paused) {
-            videoElement.play().catch(e => console.log('Video play prevented:', e));
-          }
-          resolve();
+          console.log('📹 Video metadata loaded, size:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+          // Ensure video plays
+          videoElement.play()
+            .then(() => {
+              console.log('✅ Video playing successfully');
+              resolve();
+            })
+            .catch(e => {
+              console.error('❌ Video play error:', e);
+              resolve(); // Continue anyway
+            });
         };
+        
+        // Fallback timeout in case metadata never loads
+        setTimeout(() => {
+          console.warn('⏰ Video metadata timeout, continuing...');
+          resolve();
+        }, 5000);
       });
 
       // Mostrar indicadores visuales
@@ -593,6 +622,22 @@ class BarCodeScanner {
    */
   restartScanningAfterSuccess() {
     try {
+      console.log('🔄 Restarting scanner in continuous mode...');
+      
+      // Verify stream is still active
+      if (!this.stream || this.stream.getTracks().every(track => track.readyState === 'ended')) {
+        console.warn('⚠️ Stream not active, attempting to restart camera...');
+        this.startScanning();
+        return;
+      }
+      
+      // Verify video element is still playing
+      const videoElement = document.getElementById('barcode-video');
+      if (videoElement && (videoElement.paused || videoElement.readyState === 0)) {
+        console.warn('⚠️ Video paused or not ready, restarting...');
+        videoElement.play().catch(e => console.error('Failed to restart video:', e));
+      }
+      
       // Reset status and overlay to scanning mode
       this.updateStatus('🎯 Escaneador activo - Escanea otro código', 'text-green-600 animate-pulse', 'bg-green-50');
       
@@ -616,11 +661,15 @@ class BarCodeScanner {
         indicator.classList.remove('hidden');
       }
       
-      // Reset scan attempts for new code
-      this.scanAttempts = 0;
-      this.lastScannedCode = null;
+      // Reset video styling
+      if (videoElement) {
+        videoElement.classList.add('scanning');
+      }
       
-      console.log('🔄 Scanner reiniciado - Listo para el próximo código');
+      // Reset scan attempts for new code (but DON'T reset lastScannedCode to allow duplicate prevention)
+      this.scanAttempts = 0;
+      
+      console.log('✅ Scanner reiniciado - Listo para el próximo código');
       
     } catch (error) {
       console.error('Error reiniciando scanner:', error);
@@ -663,9 +712,29 @@ class BarCodeScanner {
   }
 
   /**
+   * Handle unexpected stream interruption
+   */
+  handleStreamInterruption() {
+    console.error('🚨 STREAM INTERRUPTED - Attempting recovery...');
+    this.updateStatus('🔄 Reconectando cámara...', 'text-orange-600', 'bg-orange-50');
+    
+    // Try to restart the stream
+    setTimeout(() => {
+      if (this.isScanning && this.currentCameraId) {
+        console.log('🔄 Restarting camera stream...');
+        this.startScanning().catch(error => {
+          console.error('❌ Failed to restart stream:', error);
+          this.updateStatus('❌ Error reconectando - Reinicia manualmente', 'text-red-600', 'bg-red-50');
+        });
+      }
+    }, 1000);
+  }
+
+  /**
    * Detener escaneo
    */
   stopScanning() {
+    console.log('🛑 Stopping scanner...');
     this.isScanning = false;
     this.scanAttempts = 0;
     this.lastScannedCode = null;
@@ -681,12 +750,20 @@ class BarCodeScanner {
     }
     
     if (this.codeReader) {
-      this.codeReader.reset();
+      try {
+        this.codeReader.reset();
+      } catch (e) {
+        console.warn('Warning resetting code reader:', e);
+      }
       this.codeReader = null;
     }
     
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      console.log('🛑 Stopping stream tracks...');
+      this.stream.getTracks().forEach(track => {
+        console.log('🛑 Stopping track:', track.kind, track.readyState);
+        track.stop();
+      });
       this.stream = null;
     }
 
