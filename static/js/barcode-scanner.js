@@ -17,6 +17,7 @@ class BarCodeScanner {
     this.lastScanTime = 0;
     this.scanTimeout = null;
     this.targetField = null; // Add target field property
+    this.continuousMode = true; // Keep scanning after successful detection
   }
 
   /**
@@ -94,6 +95,9 @@ class BarCodeScanner {
             </button>
             <button onclick="BarCodeScanner.toggleTorch()" type="button">
               Flash
+            </button>
+            <button onclick="BarCodeScanner.toggleContinuousMode()" type="button" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; font-size: 0.75rem; padding: 0.5rem 1rem;">
+              🔄 CONTINUO: ON
             </button>
             <button onclick="BarCodeScanner.close()" type="button" style="background-color: #6b7280; color: white;">
               Cancelar
@@ -572,10 +576,75 @@ class BarCodeScanner {
     // Ejecutar callback (legacy support)
     this.onScanCallback?.(code);
     
-    // Cerrar modal después de mostrar éxito
+    // Cerrar modal o reiniciar según el modo
     setTimeout(() => {
-      BarCodeScanner.close();
+      if (this.continuousMode) {
+        // Restart scanning without closing - keep camera active
+        this.restartScanningAfterSuccess();
+      } else {
+        // Close scanner (original behavior)
+        BarCodeScanner.close();
+      }
     }, 1500);
+  }
+
+  /**
+   * Restart scanning after successful code detection without closing camera
+   */
+  restartScanningAfterSuccess() {
+    try {
+      // Reset status and overlay to scanning mode
+      this.updateStatus('🎯 Escaneador activo - Escanea otro código', 'text-green-600 animate-pulse', 'bg-green-50');
+      
+      // Reset overlay to scanning state
+      const overlay = document.getElementById('scanner-overlay');
+      if (overlay) {
+        overlay.classList.remove('success');
+        overlay.classList.add('active');
+        overlay.innerHTML = `
+          <div style="border: 3px dashed #00d4ff; width: 16rem; height: 5rem; border-radius: 0.5rem; background: rgba(0, 212, 255, 0.1); display: flex; align-items: center; justify-content: center;">
+            <span style="color: #00d4ff; font-size: 0.875rem; font-weight: 700; text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);">
+              Posiciona el código aquí
+            </span>
+          </div>
+        `;
+      }
+      
+      // Show scan indicator again
+      const indicator = document.getElementById('scan-indicator');
+      if (indicator) {
+        indicator.classList.remove('hidden');
+      }
+      
+      // Reset scan attempts for new code
+      this.scanAttempts = 0;
+      this.lastScannedCode = null;
+      
+      console.log('🔄 Scanner reiniciado - Listo para el próximo código');
+      
+    } catch (error) {
+      console.error('Error reiniciando scanner:', error);
+      // Fallback to closing if restart fails
+      BarCodeScanner.close();
+    }
+  }
+
+  /**
+   * Toggle continuous scanning mode
+   */
+  static toggleContinuousMode() {
+    if (window.barcodeScanner) {
+      window.barcodeScanner.continuousMode = !window.barcodeScanner.continuousMode;
+      const button = document.querySelector('[onclick="BarCodeScanner.toggleContinuousMode()"]');
+      if (button) {
+        const isEnabled = window.barcodeScanner.continuousMode;
+        button.textContent = isEnabled ? '🔄 CONTINUO: ON' : '🔄 CONTINUO: OFF';
+        button.style.background = isEnabled ? 
+          'linear-gradient(135deg, #22c55e, #16a34a)' : 
+          'linear-gradient(135deg, #6b7280, #4b5563)';
+      }
+      console.log('Modo continuo:', window.barcodeScanner.continuousMode ? 'ACTIVADO' : 'DESACTIVADO');
+    }
   }
 
   /**
