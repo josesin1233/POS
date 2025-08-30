@@ -14,6 +14,7 @@ class BarCodeScanner {
     this.scanAttempts = 0;
     this.maxAttempts = 5; // Más intentos
     this.lastScannedCode = null;
+    this.lastScanTime = 0;
     this.scanTimeout = null;
     this.targetField = null; // Add target field property
   }
@@ -388,25 +389,37 @@ class BarCodeScanner {
       // Start continuous decode from video device using modern API
       const videoElement = document.getElementById('barcode-video');
       
-      // Use decodeFromConstraints which is the modern approach
+      // OPTIMIZED CONSTRAINTS FOR FASTER BARCODE SCANNING
       const constraints = {
         video: {
           deviceId: this.currentCameraId ? { exact: this.currentCameraId } : undefined,
-          width: { ideal: 1920, min: 640 },
-          height: { ideal: 1080, min: 480 },
+          // Higher resolution for better code recognition
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
+          // Higher frame rate for faster capture
+          frameRate: { ideal: 60, min: 30 },
+          // Better focus and exposure for barcodes
+          focusMode: 'continuous',
+          exposureMode: 'continuous',
+          whiteBalanceMode: 'continuous',
           facingMode: this.isMobile() ? 'environment' : undefined
         }
       };
       
-      // Start decoding from video stream
+      // ENHANCED DETECTION WITH MULTIPLE STRATEGIES
+      let scanInterval;
+      
+      // Strategy 1: Continuous scanning with optimized frequency
       const result = await this.codeReader.decodeFromConstraints(constraints, videoElement, (result, error) => {
         if (result) {
           const code = result.getText();
           
-          // Evitar códigos duplicados rápidos
-          if (this.lastScannedCode !== code) {
-            console.log('¡Código detectado!', code);
+          // Enhanced duplicate prevention with timestamp
+          const now = Date.now();
+          if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
+            console.log('🎯 ¡Código detectado con algoritmo principal!', code);
             this.lastScannedCode = code;
+            this.lastScanTime = now;
             this.onCodeScanned(code);
           }
         }
@@ -426,6 +439,47 @@ class BarCodeScanner {
         }
       });
 
+      // Strategy 2: Additional high-frequency manual scanning for difficult codes
+      scanInterval = setInterval(() => {
+        if (this.isScanning && videoElement && videoElement.videoWidth > 0) {
+          try {
+            // Create canvas for image processing
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            
+            // Draw current frame
+            ctx.drawImage(videoElement, 0, 0);
+            
+            // Enhanced image processing for better detection
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            this.enhanceImageForBarcode(imageData, ctx, canvas);
+            
+            // Try to decode the enhanced image
+            this.codeReader.decodeFromImageUrl(canvas.toDataURL())
+              .then(result => {
+                if (result) {
+                  const code = result.getText();
+                  const now = Date.now();
+                  if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
+                    console.log('🔥 ¡Código detectado con algoritmo de mejora de imagen!', code);
+                    this.lastScannedCode = code;
+                    this.lastScanTime = now;
+                    this.onCodeScanned(code);
+                  }
+                }
+              })
+              .catch(() => {
+                // Silent fail - this is supplementary scanning
+              });
+          } catch (error) {
+            // Silent fail for supplementary strategy
+          }
+        }
+      }, 200); // Scan every 200ms for supplementary detection
+
+      this.scanInterval = scanInterval;
       this.updateStatus('🎯 Escaneador activo - Posiciona el código lentamente', 'text-green-600 animate-pulse', 'bg-green-50');
 
     } catch (error) {
@@ -551,6 +605,12 @@ class BarCodeScanner {
       clearTimeout(this.scanTimeout);
     }
     
+    // Clear supplementary scanning interval
+    if (this.scanInterval) {
+      clearInterval(this.scanInterval);
+      this.scanInterval = null;
+    }
+    
     if (this.codeReader) {
       this.codeReader.reset();
       this.codeReader = null;
@@ -580,6 +640,33 @@ class BarCodeScanner {
     if (videoElement) {
       videoElement.classList.remove('scanning');
     }
+  }
+
+  /**
+   * Enhance image for better barcode detection
+   */
+  enhanceImageForBarcode(imageData, ctx, canvas) {
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+
+    // Convert to grayscale and enhance contrast
+    for (let i = 0; i < data.length; i += 4) {
+      // Calculate grayscale value
+      const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+      
+      // Enhance contrast for better barcode detection
+      const enhanced = gray < 128 ? Math.max(0, gray - 30) : Math.min(255, gray + 30);
+      
+      // Apply to all RGB channels
+      data[i] = enhanced;     // Red
+      data[i + 1] = enhanced; // Green  
+      data[i + 2] = enhanced; // Blue
+      // Alpha channel stays the same
+    }
+
+    // Apply the enhanced image data back to canvas
+    ctx.putImageData(imageData, 0, 0);
   }
 
   /**
@@ -641,10 +728,12 @@ class USBBarcodeScanner {
   constructor() {
     this.buffer = '';
     this.lastInputTime = 0;
-    this.scanThreshold = 100; // milliseconds between characters to consider it a barcode scan
-    this.minBarcodeLength = 4;
-    this.maxBarcodeLength = 20;
+    this.scanThreshold = 50; // OPTIMIZED: Reduced to 50ms for faster detection
+    this.minBarcodeLength = 3; // OPTIMIZED: Allow shorter codes
+    this.maxBarcodeLength = 30; // OPTIMIZED: Allow longer codes  
     this.isListening = false;
+    this.consecutiveScans = 0;
+    this.lastScannedCode = '';
   }
 
   startListening() {
@@ -737,10 +826,12 @@ class USBBarcodeScanner {
   attachGlobalListener() {
     this.keydownHandler = (e) => {
       const now = Date.now();
+      const timeDiff = now - this.lastInputTime;
       
-      // Reset buffer if too much time has passed (not a barcode scan)
-      if (now - this.lastInputTime > this.scanThreshold) {
+      // OPTIMIZED: More aggressive buffer reset for faster detection
+      if (timeDiff > this.scanThreshold) {
         this.buffer = '';
+        this.consecutiveScans = 0;
       }
       
       this.lastInputTime = now;
@@ -749,12 +840,20 @@ class USBBarcodeScanner {
         // End of barcode scan
         this.processBarcodeBuffer();
       } else if (e.key.length === 1) {
-        // Add character to buffer (printable characters only)
+        // OPTIMIZED: Add character to buffer (printable characters only)
         this.buffer += e.key;
         
-        // Auto-trigger if buffer gets too long (some scanners don't send Enter)
+        // OPTIMIZED: Faster auto-trigger for long barcodes
         if (this.buffer.length >= this.maxBarcodeLength) {
-          setTimeout(() => this.processBarcodeBuffer(), 50);
+          setTimeout(() => this.processBarcodeBuffer(), 10); // Reduced from 50ms to 10ms
+        }
+        
+        // OPTIMIZED: Early trigger for short but valid codes after quick succession
+        if (this.buffer.length >= this.minBarcodeLength && timeDiff < 20) {
+          this.consecutiveScans++;
+          if (this.consecutiveScans >= 3) {
+            setTimeout(() => this.processBarcodeBuffer(), 30);
+          }
         }
       }
     };
@@ -765,21 +864,30 @@ class USBBarcodeScanner {
   processBarcodeBuffer() {
     const code = this.buffer.trim();
     this.buffer = '';
+    this.consecutiveScans = 0;
     
-    // Validate barcode
+    // OPTIMIZED: Enhanced validation and duplicate prevention
     if (code.length >= this.minBarcodeLength && code.length <= this.maxBarcodeLength) {
-      // Check if it looks like a barcode (mostly numbers or alphanumeric)
-      const barcodePattern = /^[0-9A-Za-z\-_\.]+$/;
+      // Prevent immediate duplicates
+      if (code === this.lastScannedCode) {
+        console.log('🔄 Duplicate USB scan prevented:', code);
+        return;
+      }
+      
+      // OPTIMIZED: More flexible barcode pattern to support more formats
+      const barcodePattern = /^[0-9A-Za-z\-_\.\*\+\@\#\$\%\^\&\(\)\[\]]+$/;
       if (barcodePattern.test(code)) {
-        console.log('USB Scanner detected barcode:', code);
+        this.lastScannedCode = code;
+        console.log('⚡ USB Scanner detected barcode:', code);
         
-        // Fire global event
+        // OPTIMIZED: Fire global event with enhanced data
         const barcodeEvent = new CustomEvent('barcodeScanned', {
           detail: {
             code: code,
             source: 'usb',
             timestamp: Date.now(),
-            targetField: null // USB scanner doesn't have specific target
+            targetField: null, // USB scanner doesn't have specific target
+            speed: 'fast' // Indicate this was a fast USB scan
           },
           bubbles: true
         });
