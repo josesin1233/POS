@@ -300,10 +300,14 @@ class BarCodeScanner {
       const constraints = {
         video: {
           deviceId: { exact: this.currentCameraId },
-          width: { ideal: 1920, min: 640 }, // Fallback más bajo para compatibilidad
-          height: { ideal: 1080, min: 480 },
-          facingMode: this.isMobile() ? 'environment' : undefined
-          // Removidas propiedades que pueden causar problemas de compatibilidad
+          width: { ideal: this.isMobile() ? 1280 : 1920, min: 640 }, // Lower res for mobile
+          height: { ideal: this.isMobile() ? 720 : 1080, min: 480 },
+          facingMode: this.isMobile() ? 'environment' : undefined,
+          // iOS Safari specific optimizations
+          ...(this.isiOS() && {
+            frameRate: { ideal: 30, max: 30 },
+            aspectRatio: { ideal: 16/9 }
+          })
         },
         audio: false
       };
@@ -331,6 +335,14 @@ class BarCodeScanner {
       
       // Set up video element properly with enhanced error handling
       videoElement.srcObject = null; // Clear first to force refresh
+      
+      // iOS Safari specific setup
+      if (this.isiOS()) {
+        videoElement.setAttribute('webkit-playsinline', '');
+        videoElement.setAttribute('playsinline', '');
+        videoElement.style.webkitTransform = 'translateZ(0)';
+      }
+      
       setTimeout(() => {
         videoElement.srcObject = this.stream;
         videoElement.setAttribute('autoplay', '');
@@ -341,7 +353,13 @@ class BarCodeScanner {
         videoElement.style.display = 'block';
         videoElement.style.visibility = 'visible';
         videoElement.style.opacity = '1';
-      }, 100);
+        
+        // Additional iOS fixes
+        if (this.isiOS()) {
+          videoElement.style.objectFit = 'cover';
+          videoElement.style.webkitBackfaceVisibility = 'hidden';
+        }
+      }, this.isiOS() ? 200 : 100); // Longer delay for iOS
       
       // Monitor stream for issues
       this.stream.getTracks().forEach(track => {
@@ -372,6 +390,22 @@ class BarCodeScanner {
             
             // Ensure video plays with multiple attempts
             const attemptPlay = (attempt = 1) => {
+              // iOS specific play handling
+              if (this.isiOS() && attempt === 1) {
+                // Force video load on iOS
+                videoElement.load();
+                setTimeout(() => {
+                  videoElement.play()
+                    .then(() => {
+                      console.log('✅ iOS Video playing successfully on attempt:', attempt);
+                      resolved = true;
+                      resolve();
+                    })
+                    .catch(e => attemptPlay(2));
+                }, 300);
+                return;
+              }
+              
               videoElement.play()
                 .then(() => {
                   console.log('✅ Video playing successfully on attempt:', attempt);
@@ -380,8 +414,8 @@ class BarCodeScanner {
                 })
                 .catch(e => {
                   console.error(`❌ Video play error (attempt ${attempt}):`, e);
-                  if (attempt < 3) {
-                    setTimeout(() => attemptPlay(attempt + 1), 200);
+                  if (attempt < (this.isiOS() ? 5 : 3)) { // More attempts on iOS
+                    setTimeout(() => attemptPlay(attempt + 1), this.isiOS() ? 400 : 200);
                   } else {
                     console.warn('⚠️ Max play attempts reached, continuing...');
                     resolved = true;
@@ -459,6 +493,10 @@ class BarCodeScanner {
    */
   isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+  
+  isiOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   }
 
   /**
