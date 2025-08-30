@@ -17,7 +17,7 @@ class BarCodeScanner {
     this.lastScanTime = 0;
     this.scanTimeout = null;
     this.targetField = null; // Add target field property
-    this.continuousMode = true; // Keep scanning after successful detection
+    this.continuousMode = false; // Close modal after scan by default, can be toggled by user
   }
 
   /**
@@ -254,17 +254,24 @@ class BarCodeScanner {
    * Cerrar modal
    */
   static close() {
-    window.barcodeScanner.stopScanning();
-    
-    // Clear target field
     if (window.barcodeScanner) {
+      window.barcodeScanner.stopScanning();
+      // Clear target field
       window.barcodeScanner.targetField = null;
     }
     
     const modal = document.getElementById('barcode-modal');
     if (modal) {
       modal.classList.add('hidden');
+      // Force hide modal by removing from DOM if needed
+      setTimeout(() => {
+        if (modal.classList.contains('hidden')) {
+          modal.style.display = 'none';
+        }
+      }, 100);
     }
+    
+    console.log('📱 Scanner modal closed');
   }
 
   /**
@@ -679,10 +686,10 @@ class BarCodeScanner {
         // Restart scanning without closing - keep camera active
         this.restartScanningAfterSuccess();
       } else {
-        // Close scanner (original behavior)
+        // Close scanner (original behavior) - faster closing
         BarCodeScanner.close();
       }
-    }, 1500);
+    }, 800); // Reduced delay from 1500ms to 800ms for faster UX
   }
 
   /**
