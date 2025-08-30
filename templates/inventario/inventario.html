@@ -446,7 +446,7 @@
     <div id="poco-stock-container" class="cart-container rounded-xl shadow-lg p-6 mb-6" style="display: none;">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold" style="color: var(--text-primary);">⚠️ Productos con Poco Stock</h2>
-        <button onclick="actualizarPocoStock()" class="btn-refresh px-3 py-1 rounded text-sm transition-all">
+        <button onclick="actualizarPocoStockManual()" class="btn-refresh px-3 py-1 rounded text-sm transition-all">
           🔄 Actualizar
         </button>
       </div>
@@ -773,22 +773,57 @@ function ocultarInfoProducto() {
     document.getElementById('producto-info').classList.add('hidden');
 }
 
+// Manual update with visual feedback
+async function actualizarPocoStockManual() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = '⏳ Actualizando...';
+    button.disabled = true;
+    
+    try {
+        await actualizarPocoStock();
+        
+        // Show success feedback
+        button.innerHTML = '✅ Actualizado';
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 2000);
+    } catch (error) {
+        console.error('Error en actualización manual:', error);
+        // Show error feedback
+        button.innerHTML = '❌ Error';
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 2000);
+    }
+}
+
 // Update low stock products
 async function actualizarPocoStock() {
     const container = document.getElementById('productos-poco-stock');
     
     try {
+        console.log('🔄 INVENTARIO: Actualizando productos con poco stock...');
         container.innerHTML = '<div class="text-center py-6" style="color: var(--text-secondary);"><p>Cargando productos con poco stock...</p></div>';
         
-        const response = await fetch('/inventario/poco-stock/');
+        // Add cache busting parameter to ensure fresh data
+        const cacheBuster = new Date().getTime();
+        const response = await fetch(`/inventario/poco-stock/?t=${cacheBuster}`);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log('📦 INVENTARIO: Productos con poco stock recibidos:', data.productos_bajo_stock.length);
             mostrarProductosPocoStock(data.productos_bajo_stock);
         } else {
+            console.error('❌ INVENTARIO: Error en respuesta del servidor:', response.status);
             container.innerHTML = '<div class="text-center py-6" style="color: #ff4444;"><p>Error cargando productos con poco stock</p></div>';
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ INVENTARIO: Error:', error);
         container.innerHTML = '<div class="text-center py-6" style="color: #ff4444;"><p>Error de conexión</p></div>';
     }
 }
@@ -798,12 +833,16 @@ function mostrarProductosPocoStock(productos) {
     const container = document.getElementById('productos-poco-stock');
     const pocoStockContainer = document.getElementById('poco-stock-container');
     
+    console.log('📋 INVENTARIO: Mostrando productos con poco stock:', productos?.length || 0);
+    
     if (!productos || productos.length === 0) {
+        console.log('✅ INVENTARIO: No hay productos con poco stock, ocultando sección');
         // Ocultar completamente el banner si no hay productos con poco stock
         pocoStockContainer.style.display = 'none';
         return;
     }
     
+    console.log('⚠️ INVENTARIO: Mostrando', productos.length, 'productos con poco stock');
     // Mostrar el banner si hay productos con poco stock
     pocoStockContainer.style.display = 'block';
     
@@ -914,8 +953,13 @@ document.getElementById('form-agregar-producto').addEventListener('submit', asyn
         if (result.success) {
             alert('✅ Producto agregado exitosamente');
             this.reset();
-            cargarTodosLosProductos();
-            actualizarPocoStock();
+            
+            // Recargar datos después de un breve delay para asegurar que la DB se actualice  
+            setTimeout(() => {
+                cargarTodosLosProductos();
+                actualizarPocoStock();
+                console.log('🔄 Recargando sección de poco stock después de agregar producto');
+            }, 500);
             
             // Trigger verificación de alertas después de agregar producto
             if (window.stockAlerts) {
@@ -964,8 +1008,13 @@ document.getElementById('form-actualizar-producto').addEventListener('submit', a
             alert('✅ Producto actualizado exitosamente');
             this.reset();
             ocultarInfoProducto();
-            cargarTodosLosProductos();
-            actualizarPocoStock();
+            
+            // Recargar datos después de un breve delay para asegurar que la DB se actualice
+            setTimeout(() => {
+                cargarTodosLosProductos();
+                actualizarPocoStock();
+                console.log('🔄 Recargando sección de poco stock después de actualizar producto');
+            }, 500);
             
             // Trigger verificación de alertas después de actualizar stock
             if (window.stockAlerts) {
