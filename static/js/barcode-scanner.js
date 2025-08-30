@@ -316,12 +316,41 @@ class BarCodeScanner {
         this.stream.getTracks().forEach(track => track.stop());
       }
 
-      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+      try {
+        this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (error) {
+        console.error('❌ getUserMedia failed:', error);
+        if (this.isMobile()) {
+          this.updateStatus(`❌ Error cámara: ${error.name}`, 'text-red-600', 'bg-red-50');
+          
+          // Try fallback constraints for iOS
+          if (this.isiOS() && error.name === 'OverconstrainedError') {
+            this.updateStatus('🔄 Probando configuración alternativa...', 'text-yellow-600', 'bg-yellow-50');
+            const fallbackConstraints = {
+              video: {
+                facingMode: 'environment',
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+              }
+            };
+            this.stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
+      
       const videoElement = document.getElementById('barcode-video');
       
       // Add debug logging
       console.log('📹 Stream obtenido:', this.stream);
       console.log('📹 Video element:', videoElement);
+      
+      if (this.isMobile()) {
+        this.updateStatus(`📹 Stream OK | Pistas: ${this.stream.getTracks().length}`, 'text-green-600', 'bg-green-50');
+      }
       
       // Validate stream tracks are active
       const videoTrack = this.stream.getVideoTracks()[0];
@@ -332,6 +361,11 @@ class BarCodeScanner {
       }
       
       console.log('📹 Video track state:', videoTrack.readyState, 'enabled:', videoTrack.enabled);
+      
+      // Visual debugging for mobile
+      if (this.isMobile()) {
+        this.updateStatus(`🔍 iOS: ${this.isiOS()} | Track: ${videoTrack.readyState} | Enabled: ${videoTrack.enabled}`, 'text-blue-600', 'bg-blue-50');
+      }
       
       // Set up video element properly with enhanced error handling
       videoElement.srcObject = null; // Clear first to force refresh
@@ -383,6 +417,9 @@ class BarCodeScanner {
             // Additional validation for black screen
             if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
               console.warn('⚠️ Video has zero dimensions, forcing refresh...');
+              if (this.isMobile()) {
+                this.updateStatus('⚠️ Video sin dimensiones - Refrescando...', 'text-yellow-600', 'bg-yellow-50');
+              }
               videoElement.load(); // Force reload
               setTimeout(checkVideoReady, 500);
               return;
@@ -393,15 +430,20 @@ class BarCodeScanner {
               // iOS specific play handling
               if (this.isiOS() && attempt === 1) {
                 // Force video load on iOS
+                this.updateStatus('🍎 iOS: Forzando carga de video...', 'text-blue-600', 'bg-blue-50');
                 videoElement.load();
                 setTimeout(() => {
                   videoElement.play()
                     .then(() => {
                       console.log('✅ iOS Video playing successfully on attempt:', attempt);
+                      this.updateStatus(`✅ iOS: Video reproduciéndose (${videoElement.videoWidth}x${videoElement.videoHeight})`, 'text-green-600', 'bg-green-50');
                       resolved = true;
                       resolve();
                     })
-                    .catch(e => attemptPlay(2));
+                    .catch(e => {
+                      this.updateStatus(`❌ iOS: Error reproducción intento ${attempt}: ${e.message}`, 'text-red-600', 'bg-red-50');
+                      attemptPlay(2);
+                    });
                 }, 300);
                 return;
               }
