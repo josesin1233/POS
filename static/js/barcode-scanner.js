@@ -401,6 +401,24 @@ class BarCodeScanner {
         if (this.isiOS()) {
           videoElement.style.objectFit = 'cover';
           videoElement.style.webkitBackfaceVisibility = 'hidden';
+          
+          // iOS Safari video rendering fix
+          videoElement.style.webkitTransform = 'translate3d(0, 0, 0)';
+          videoElement.style.transform = 'translate3d(0, 0, 0)';
+          
+          // Force iOS video to actually render
+          setTimeout(() => {
+            if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+              // Force a layout update
+              const parent = videoElement.parentElement;
+              if (parent) {
+                parent.style.transform = 'translateZ(0.1px)';
+                setTimeout(() => {
+                  parent.style.transform = '';
+                }, 10);
+              }
+            }
+          }, 1000);
         }
       }, this.isiOS() ? 200 : 100); // Longer delay for iOS
       
@@ -453,7 +471,37 @@ class BarCodeScanner {
                   videoElement.play()
                     .then(() => {
                       console.log('✅ iOS Video playing successfully on attempt:', attempt);
-                      this.updateStatus(`✅ iOS: Video reproduciéndose (${videoElement.videoWidth}x${videoElement.videoHeight})`, 'text-green-600', 'bg-green-50');
+                      
+                      // Additional iOS rendering checks
+                      setTimeout(() => {
+                        const computedStyle = window.getComputedStyle(videoElement);
+                        const videoVisible = videoElement.offsetWidth > 0 && videoElement.offsetHeight > 0;
+                        
+                        this.updateStatus(`✅ iOS: Video ${videoElement.videoWidth}x${videoElement.videoHeight} | Visible: ${videoVisible} | Display: ${computedStyle.display}`, 'text-green-600', 'bg-green-50');
+                        
+                        // Force repaint on iOS if video seems invisible
+                        if (!videoVisible || videoElement.videoWidth === 0) {
+                          this.updateStatus('🔄 iOS: Video no visible, recreando elemento...', 'text-yellow-600', 'bg-yellow-50');
+                          
+                          // Recreate video element for iOS
+                          const parent = videoElement.parentElement;
+                          const newVideo = document.createElement('video');
+                          newVideo.id = 'barcode-video';
+                          newVideo.style.cssText = videoElement.style.cssText;
+                          newVideo.autoplay = true;
+                          newVideo.muted = true;
+                          newVideo.playsInline = true;
+                          newVideo.setAttribute('webkit-playsinline', '');
+                          
+                          parent.replaceChild(newVideo, videoElement);
+                          newVideo.srcObject = this.stream;
+                          
+                          newVideo.play().then(() => {
+                            this.updateStatus(`🎯 iOS: Video recreado y reproduciéndose!`, 'text-green-600', 'bg-green-50');
+                          }).catch(console.error);
+                        }
+                      }, 500);
+                      
                       resolved = true;
                       resolve();
                     })
