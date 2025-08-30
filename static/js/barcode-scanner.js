@@ -312,11 +312,29 @@ class BarCodeScanner {
       console.log('📹 Stream obtenido:', this.stream);
       console.log('📹 Video element:', videoElement);
       
-      // Set up video element properly
-      videoElement.srcObject = this.stream;
-      videoElement.setAttribute('autoplay', '');
-      videoElement.setAttribute('muted', ''); 
-      videoElement.setAttribute('playsinline', '');
+      // Validate stream tracks are active
+      const videoTrack = this.stream.getVideoTracks()[0];
+      if (!videoTrack || videoTrack.readyState !== 'live') {
+        console.error('❌ Video track is not live:', videoTrack?.readyState);
+        this.updateStatus('❌ Error: Video track no disponible', 'text-red-600', 'bg-red-50');
+        return;
+      }
+      
+      console.log('📹 Video track state:', videoTrack.readyState, 'enabled:', videoTrack.enabled);
+      
+      // Set up video element properly with enhanced error handling
+      videoElement.srcObject = null; // Clear first to force refresh
+      setTimeout(() => {
+        videoElement.srcObject = this.stream;
+        videoElement.setAttribute('autoplay', '');
+        videoElement.setAttribute('muted', ''); 
+        videoElement.setAttribute('playsinline', '');
+        
+        // Force CSS properties for better rendering
+        videoElement.style.display = 'block';
+        videoElement.style.visibility = 'visible';
+        videoElement.style.opacity = '1';
+      }, 100);
       
       // Monitor stream for issues
       this.stream.getTracks().forEach(track => {
@@ -327,25 +345,64 @@ class BarCodeScanner {
       });
 
       await new Promise((resolve) => {
-        videoElement.onloadedmetadata = () => {
-          console.log('📹 Video metadata loaded, size:', videoElement.videoWidth, 'x', videoElement.videoHeight);
-          // Ensure video plays
-          videoElement.play()
-            .then(() => {
-              console.log('✅ Video playing successfully');
-              resolve();
-            })
-            .catch(e => {
-              console.error('❌ Video play error:', e);
-              resolve(); // Continue anyway
-            });
+        let resolved = false;
+        
+        const checkVideoReady = () => {
+          if (resolved) return;
+          
+          console.log('🔍 Video readyState:', videoElement.readyState, 'networkState:', videoElement.networkState);
+          
+          if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+            console.log('📹 Video metadata loaded, size:', videoElement.videoWidth, 'x', videoElement.videoHeight);
+            
+            // Additional validation for black screen
+            if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+              console.warn('⚠️ Video has zero dimensions, forcing refresh...');
+              videoElement.load(); // Force reload
+              setTimeout(checkVideoReady, 500);
+              return;
+            }
+            
+            // Ensure video plays with multiple attempts
+            const attemptPlay = (attempt = 1) => {
+              videoElement.play()
+                .then(() => {
+                  console.log('✅ Video playing successfully on attempt:', attempt);
+                  resolved = true;
+                  resolve();
+                })
+                .catch(e => {
+                  console.error(`❌ Video play error (attempt ${attempt}):`, e);
+                  if (attempt < 3) {
+                    setTimeout(() => attemptPlay(attempt + 1), 200);
+                  } else {
+                    console.warn('⚠️ Max play attempts reached, continuing...');
+                    resolved = true;
+                    resolve();
+                  }
+                });
+            };
+            
+            attemptPlay();
+          } else {
+            setTimeout(checkVideoReady, 200);
+          }
         };
+        
+        videoElement.onloadedmetadata = checkVideoReady;
+        videoElement.oncanplay = checkVideoReady;
+        
+        // Immediate check in case metadata is already loaded
+        setTimeout(checkVideoReady, 100);
         
         // Fallback timeout in case metadata never loads
         setTimeout(() => {
-          console.warn('⏰ Video metadata timeout, continuing...');
-          resolve();
-        }, 5000);
+          if (!resolved) {
+            console.warn('⏰ Video metadata timeout, continuing...');
+            resolved = true;
+            resolve();
+          }
+        }, 8000);
       });
 
       // Mostrar indicadores visuales
@@ -474,40 +531,51 @@ class BarCodeScanner {
 
       // Strategy 2: Additional high-frequency manual scanning for difficult codes
       scanInterval = setInterval(() => {
-        if (this.isScanning && videoElement && videoElement.videoWidth > 0) {
-          try {
-            // Create canvas for image processing
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = videoElement.videoWidth;
-            canvas.height = videoElement.videoHeight;
-            
-            // Draw current frame
-            ctx.drawImage(videoElement, 0, 0);
-            
-            // Enhanced image processing for better detection
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            this.enhanceImageForBarcode(imageData, ctx, canvas);
-            
-            // Try to decode the enhanced image
-            this.codeReader.decodeFromImageUrl(canvas.toDataURL())
-              .then(result => {
-                if (result) {
-                  const code = result.getText();
-                  const now = Date.now();
-                  if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
-                    console.log('🔥 ¡Código detectado con algoritmo de mejora de imagen!', code);
-                    this.lastScannedCode = code;
-                    this.lastScanTime = now;
-                    this.onCodeScanned(code);
+        if (this.isScanning && videoElement) {
+          // Validate stream health every few cycles
+          if (this.scanAttempts % 10 === 0) {
+            this.validateAndRecoverStream();
+          }
+          
+          if (videoElement.videoWidth > 0) {
+            try {
+              // Create canvas for image processing
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              canvas.width = videoElement.videoWidth;
+              canvas.height = videoElement.videoHeight;
+              
+              // Draw current frame
+              ctx.drawImage(videoElement, 0, 0);
+              
+              // Enhanced image processing for better detection
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              this.enhanceImageForBarcode(imageData, ctx, canvas);
+              
+              // Try to decode the enhanced image
+              this.codeReader.decodeFromImageUrl(canvas.toDataURL())
+                .then(result => {
+                  if (result) {
+                    const code = result.getText();
+                    const now = Date.now();
+                    if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
+                      console.log('🔥 ¡Código detectado con algoritmo de mejora de imagen!', code);
+                      this.lastScannedCode = code;
+                      this.lastScanTime = now;
+                      this.onCodeScanned(code);
+                    }
                   }
-                }
-              })
-              .catch(() => {
-                // Silent fail - this is supplementary scanning
-              });
-          } catch (error) {
-            // Silent fail for supplementary strategy
+                })
+                .catch(() => {
+                  // Silent fail - this is supplementary scanning
+                });
+            } catch (error) {
+              // Silent fail for supplementary strategy
+            }
+          } else if (this.scanAttempts % 5 === 0) {
+            // Video has zero dimensions, might be black screen
+            console.warn('⚠️ Video dimensions are zero, attempting recovery...');
+            this.validateAndRecoverStream();
           }
         }
       }, 200); // Scan every 200ms for supplementary detection
@@ -718,6 +786,18 @@ class BarCodeScanner {
     console.error('🚨 STREAM INTERRUPTED - Attempting recovery...');
     this.updateStatus('🔄 Reconectando cámara...', 'text-orange-600', 'bg-orange-50');
     
+    // Stop current stream and clear video
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+      this.stream = null;
+    }
+    
+    const videoElement = document.getElementById('barcode-video');
+    if (videoElement) {
+      videoElement.srcObject = null;
+      videoElement.style.backgroundColor = '#000000';
+    }
+    
     // Try to restart the stream
     setTimeout(() => {
       if (this.isScanning && this.currentCameraId) {
@@ -725,9 +805,37 @@ class BarCodeScanner {
         this.startScanning().catch(error => {
           console.error('❌ Failed to restart stream:', error);
           this.updateStatus('❌ Error reconectando - Reinicia manualmente', 'text-red-600', 'bg-red-50');
+          
+          // Try to refresh camera list as fallback
+          this.refreshCameraList();
         });
       }
     }, 1000);
+  }
+  
+  // Add stream validation and recovery method
+  async validateAndRecoverStream() {
+    if (!this.stream) return false;
+    
+    const videoTrack = this.stream.getVideoTracks()[0];
+    if (!videoTrack || videoTrack.readyState !== 'live') {
+      console.warn('🔄 Stream track invalid, attempting recovery...');
+      this.handleStreamInterruption();
+      return false;
+    }
+    
+    const videoElement = document.getElementById('barcode-video');
+    if (videoElement && (videoElement.videoWidth === 0 || videoElement.videoHeight === 0)) {
+      console.warn('🔄 Video has zero dimensions, forcing refresh...');
+      videoElement.srcObject = null;
+      setTimeout(() => {
+        videoElement.srcObject = this.stream;
+        videoElement.play().catch(console.error);
+      }, 100);
+      return false;
+    }
+    
+    return true;
   }
 
   /**
