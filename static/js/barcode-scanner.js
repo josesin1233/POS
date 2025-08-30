@@ -561,9 +561,9 @@ class BarCodeScanner {
       this.stream = null;
     }
 
-    const video = document.getElementById('barcode-video');
-    if (video) {
-      video.srcObject = null;
+    const videoElement = document.getElementById('barcode-video');
+    if (videoElement) {
+      videoElement.srcObject = null;
     }
 
     // Limpiar indicadores
@@ -577,9 +577,8 @@ class BarCodeScanner {
     if (overlay) {
       overlay.classList.remove('active');
     }
-    const video = document.getElementById('barcode-video');
-    if (video) {
-      video.classList.remove('scanning');
+    if (videoElement) {
+      videoElement.classList.remove('scanning');
     }
   }
 

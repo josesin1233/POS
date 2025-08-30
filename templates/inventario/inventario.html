@@ -1106,4 +1106,16 @@ function openScanner(targetFieldId = null) {
 {% block extra_js %}
 <script src="{% static 'js/barcode-scanner.js' %}"></script>
 <script src="{% static 'js/stock-alerts.js' %}"></script>
+
+<script>
+// Ensure scripts are loaded before initializing
+document.addEventListener('DOMContentLoaded', function() {
+  // Small delay to ensure all scripts are fully loaded
+  setTimeout(function() {
+    console.log('📦 INVENTARIO: Verificando disponibilidad de BarCodeScanner y USBBarcodeScanner');
+    console.log('BarCodeScanner disponible:', typeof BarCodeScanner !== 'undefined');
+    console.log('USBBarcodeScanner disponible:', typeof USBBarcodeScanner !== 'undefined');
+  }, 100);
+});
+</script>
 {% endblock %}
