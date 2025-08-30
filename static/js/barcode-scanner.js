@@ -304,11 +304,11 @@ class BarCodeScanner {
       }
 
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-      const video = document.getElementById('barcode-video');
-      video.srcObject = this.stream;
+      const videoElement = document.getElementById('barcode-video');
+      videoElement.srcObject = this.stream;
 
       await new Promise((resolve) => {
-        video.onloadedmetadata = resolve;
+        videoElement.onloadedmetadata = resolve;
       });
 
       // Mostrar indicadores visuales
@@ -317,9 +317,8 @@ class BarCodeScanner {
       if (overlay) {
         overlay.classList.add('active');
       }
-      const video = document.getElementById('barcode-video');
-      if (video) {
-        video.classList.add('scanning');
+      if (videoElement) {
+        videoElement.classList.add('scanning');
       }
       this.updateStatus('📱 Cámara activa - Posiciona el código DESPACIO y CENTRADO', 'text-green-600 loading', 'bg-green-50');
       this.isScanning = true;

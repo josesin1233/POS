@@ -4,7 +4,7 @@
 {% block title %}Inventario - DulcePOS{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/scanner.css' %}
+<link rel="stylesheet" href="{% static 'css/scanner.css' %}">
 <style>
   /* Button styles for inventory */
   .btn-update {
@@ -50,13 +50,33 @@
     box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
     font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
     transition: all 0.3s ease;
+    z-index: 1;
+  }
+  
+  .btn-scan::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.3), transparent);
+    transition: left 0.5s ease;
   }
   
   .btn-scan:hover {
     background: linear-gradient(145deg, #374151, #1f2937);
     box-shadow: 0 0 30px rgba(34, 197, 94, 0.7);
     transform: translateY(-2px) scale(1.05);
+  }
+  
+  .btn-scan:hover::before {
+    left: 100%;
   }
   
   /* Search result highlighting */
@@ -297,8 +317,8 @@
                      style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                      placeholder="Código de barras">
               <button type="button" onclick="openScanner('nuevo-codigo')" 
-                      class="px-4 py-3 rounded-lg font-bold text-sm transition-all hover:scale-105"
-                      style="background: linear-gradient(135deg, var(--accent-green), #00cc66); color: #000000; border: none; box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);">
+                      class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
+                      style="z-index: 1 !important; position: relative;">
                 📱 SCAN
               </button>
             </div>
@@ -456,8 +476,8 @@
                      style="background-color: var(--bg-tertiary); border-color: var(--border-color); color: var(--text-primary);"
                      placeholder="Buscar por nombre o código...">
               <button type="button" onclick="openScanner('buscar-inventario')" 
-                      class="px-4 py-3 rounded-lg font-bold text-sm transition-all hover:scale-105"
-                      style="background: linear-gradient(135deg, var(--accent-green), #00cc66); color: #000000; border: none; box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);">
+                      class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
+                      style="z-index: 1 !important; position: relative;">
                 📱 SCAN
               </button>
             </div>
