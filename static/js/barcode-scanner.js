@@ -285,17 +285,14 @@ class BarCodeScanner {
       this.scanAttempts = 0;
       this.lastScannedCode = null;
 
-      // Configuración OPTIMIZADA para códigos difíciles
+      // Configuración OPTIMIZADA pero compatible para códigos difíciles
       const constraints = {
         video: {
           deviceId: { exact: this.currentCameraId },
-          width: { ideal: 1920, min: 1280 }, // Resolución más alta
-          height: { ideal: 1080, min: 720 },
-          facingMode: this.isMobile() ? 'environment' : undefined,
-          focusMode: 'continuous',
-          exposureMode: 'continuous', // Mejor exposición
-          whiteBalanceMode: 'continuous',
-          torch: false
+          width: { ideal: 1920, min: 640 }, // Fallback más bajo para compatibilidad
+          height: { ideal: 1080, min: 480 },
+          facingMode: this.isMobile() ? 'environment' : undefined
+          // Removidas propiedades que pueden causar problemas de compatibilidad
         },
         audio: false
       };
@@ -309,7 +306,13 @@ class BarCodeScanner {
       videoElement.srcObject = this.stream;
 
       await new Promise((resolve) => {
-        videoElement.onloadedmetadata = resolve;
+        videoElement.onloadedmetadata = () => {
+          // Only play if not already playing to prevent warning
+          if (videoElement.paused) {
+            videoElement.play().catch(e => console.log('Video play prevented:', e));
+          }
+          resolve();
+        };
       });
 
       // Mostrar indicadores visuales
@@ -389,20 +392,17 @@ class BarCodeScanner {
       // Start continuous decode from video device using modern API
       const videoElement = document.getElementById('barcode-video');
       
-      // OPTIMIZED CONSTRAINTS FOR FASTER BARCODE SCANNING
+      // OPTIMIZED BUT COMPATIBLE CONSTRAINTS FOR FASTER BARCODE SCANNING
       const constraints = {
         video: {
           deviceId: this.currentCameraId ? { exact: this.currentCameraId } : undefined,
-          // Higher resolution for better code recognition
-          width: { ideal: 1920, min: 1280 },
-          height: { ideal: 1080, min: 720 },
-          // Higher frame rate for faster capture
-          frameRate: { ideal: 60, min: 30 },
-          // Better focus and exposure for barcodes
-          focusMode: 'continuous',
-          exposureMode: 'continuous',
-          whiteBalanceMode: 'continuous',
+          // Higher resolution for better code recognition with compatibility fallback
+          width: { ideal: 1920, min: 640 },
+          height: { ideal: 1080, min: 480 },
+          // Frame rate optimization where supported
+          frameRate: { ideal: 30, min: 15 },
           facingMode: this.isMobile() ? 'environment' : undefined
+          // Removed advanced camera controls for better compatibility
         }
       };
       
@@ -767,7 +767,8 @@ class USBBarcodeScanner {
     hiddenInput.style.pointerEvents = 'none';
     hiddenInput.style.zIndex = '-1000';
     hiddenInput.setAttribute('tabindex', '-1');
-    hiddenInput.setAttribute('aria-hidden', 'true');
+    // Remove aria-hidden to prevent accessibility warnings when focused
+    hiddenInput.setAttribute('aria-label', 'Barcode scanner input');
     document.body.appendChild(hiddenInput);
     
     // Keep focus on hidden input ONLY when no other input is focused - PREVENT SCROLL
