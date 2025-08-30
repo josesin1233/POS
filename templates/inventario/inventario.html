@@ -144,6 +144,20 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
   }
+  
+  .btn-auto {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    border: 1px solid #8b5cf6;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-auto:hover {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  }
 
   /* Fix input text colors for user typing */
   input, select {
@@ -320,6 +334,12 @@
                       class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
                       style="z-index: 1 !important; position: relative;">
                 📱 SCAN
+              </button>
+              <button type="button" onclick="asignarCodigoAutomatico()" 
+                      class="btn-auto px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
+                      style="box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);"
+                      title="Asignar código automático secuencial">
+                🏷️ AUTO
               </button>
             </div>
           </div>
@@ -1145,6 +1165,124 @@ function openScanner(targetFieldId = null) {
     console.error(`❌ INVENTARIO DEBUG: BarCodeScanner not available!`);
     alert('Scanner no disponible. Ingresa el código manualmente.');
   }
+}
+
+// Automatic sequential code assignment
+async function asignarCodigoAutomatico() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    const codigoInput = document.getElementById('nuevo-codigo');
+    
+    // Show loading state
+    button.innerHTML = '⏳ Calc...';
+    button.disabled = true;
+    
+    try {
+        console.log('🏷️ INVENTARIO: Calculando próximo código automático...');
+        
+        // Get all existing codes from the current products
+        const codigosExistentes = new Set();
+        
+        // Add codes from the visible table
+        const rows = document.querySelectorAll('#productos-table tbody tr');
+        rows.forEach(row => {
+            const codigo = row.cells[0]?.textContent.trim();
+            if (codigo && /^\d+$/.test(codigo)) { // Only numeric codes
+                codigosExistentes.add(parseInt(codigo));
+            }
+        });
+        
+        // Also fetch from API to ensure we have all codes
+        try {
+            const response = await fetch('/inventario/api/');
+            if (response.ok) {
+                const todosLosProductos = await response.json();
+                todosLosProductos.forEach(producto => {
+                    if (producto.codigo && /^\d+$/.test(producto.codigo)) {
+                        codigosExistentes.add(parseInt(producto.codigo));
+                    }
+                });
+            }
+        } catch (apiError) {
+            console.warn('No se pudo obtener todos los códigos de la API, usando solo los visibles');
+        }
+        
+        console.log('📋 INVENTARIO: Códigos existentes encontrados:', Array.from(codigosExistentes).sort((a,b) => a-b));
+        
+        // Find the next available sequential code
+        let proximoCodigo = 1;
+        
+        if (codigosExistentes.size > 0) {
+            // Find gaps in the sequence or get the next number after the highest
+            const codigosOrdenados = Array.from(codigosExistentes).sort((a, b) => a - b);
+            
+            // Look for gaps in the sequence starting from 1
+            for (let i = 1; i <= Math.max(...codigosOrdenados) + 1; i++) {
+                if (!codigosExistentes.has(i)) {
+                    proximoCodigo = i;
+                    break;
+                }
+            }
+        }
+        
+        // Format with leading zeros (2 digits minimum)
+        const codigoFormateado = proximoCodigo.toString().padStart(2, '0');
+        
+        console.log(`✅ INVENTARIO: Próximo código asignado: ${codigoFormateado}`);
+        
+        // Set the code in the input
+        codigoInput.value = codigoFormateado;
+        codigoInput.focus();
+        
+        // Show success feedback
+        button.innerHTML = '✅ Asignado';
+        
+        // Show notification
+        mostrarNotificacionCodigo(codigoFormateado);
+        
+    } catch (error) {
+        console.error('❌ Error al asignar código automático:', error);
+        button.innerHTML = '❌ Error';
+        alert('Error al calcular el próximo código automático');
+    } finally {
+        // Restore button after 2 seconds
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 2000);
+    }
+}
+
+// Show code assignment notification
+function mostrarNotificacionCodigo(codigo) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-purple-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300';
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span class="text-xl">🏷️</span>
+            <div>
+                <div class="font-semibold">Código asignado</div>
+                <div class="text-sm opacity-90">Código automático: ${codigo}</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate entrance
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
 }
 
 </script>
