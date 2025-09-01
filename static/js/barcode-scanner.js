@@ -184,21 +184,58 @@ class BarCodeScanner {
    */
   async loadCameras() {
     try {
-      this.updateStatus('🔐 Solicitando permisos de cámara...', 'text-blue-600', 'bg-blue-50');
+      // Check HTTPS compatibility first
+      const httpsCheck = this.checkHTTPS();
+      console.log('🔒 HTTPS Check:', httpsCheck);
       
-      // Solicitar permisos explícitamente
+      if (httpsCheck.required && !httpsCheck.available) {
+        this.updateStatus(httpsCheck.message + ' - Cámara no disponible', 'text-red-600', 'bg-red-50');
+        return;
+      }
+      
+      // Show iOS version info for debugging
+      if (this.isiOS()) {
+        const iosVersion = this.getIOSVersion();
+        if (iosVersion) {
+          console.log(`📱 iOS ${iosVersion.full} detected`);
+          this.updateStatus(`📱 iOS ${iosVersion.full} - Solicitando permisos...`, 'text-blue-600', 'bg-blue-50');
+        }
+      } else {
+        this.updateStatus('🔐 Solicitando permisos de cámara...', 'text-blue-600', 'bg-blue-50');
+      }
+      
+      // iPhone 6S specific permission request
       try {
-        const tempStream = await navigator.mediaDevices.getUserMedia({ 
+        const constraints = this.isiPhone6S() ? {
+          video: { 
+            width: { ideal: 640, max: 1280 }, 
+            height: { ideal: 480, max: 720 },
+            facingMode: 'environment'
+          }, 
+          audio: false 
+        } : {
           video: { 
             width: { ideal: 1920 }, 
             height: { ideal: 1080 } 
           }, 
           audio: false 
-        });
+        };
+        
+        const tempStream = await navigator.mediaDevices.getUserMedia(constraints);
         
         tempStream.getTracks().forEach(track => track.stop());
         this.updateStatus('✅ Permisos concedidos, detectando cámaras...', 'text-green-600', 'bg-green-50');
       } catch (permissionError) {
+        console.error('❌ Permission error:', permissionError);
+        
+        if (this.isiPhone6S()) {
+          const iosVersion = this.getIOSVersion();
+          if (iosVersion && iosVersion.major < 11) {
+            this.updateStatus(`❌ iOS ${iosVersion.full}: getUserMedia no soportado`, 'text-red-600', 'bg-red-50');
+            return;
+          }
+        }
+        
         this.updateStatus('❌ Permisos de cámara denegados - Permite el acceso', 'text-red-600', 'bg-red-50');
         console.error('Permisos denegados:', permissionError);
         return;
@@ -480,20 +517,29 @@ class BarCodeScanner {
         videoElement.style.webkitTransform = 'translateZ(0)';
       }
       
-      // iPhone 6S gets special treatment
-      const setupDelay = this.isiPhone6S() ? 1000 : (this.isiOS() ? 200 : 100);
+      // iPhone 6S gets special treatment - HTTPS COMPATIBLE
+      const setupDelay = this.isiPhone6S() ? 1500 : (this.isiOS() ? 200 : 100);
       
       setTimeout(() => {
-        // Clear video first for iPhone 6S
+        // CRITICAL: Clear video first for iPhone 6S
         if (this.isiPhone6S()) {
+          console.log('📱 iPhone 6S: Clearing video element...');
           videoElement.srcObject = null;
           videoElement.removeAttribute('src');
+          videoElement.load(); // Force reload for iPhone 6S
         }
         
+        // Set video source
         videoElement.srcObject = this.stream;
-        videoElement.setAttribute('autoplay', 'true');
-        videoElement.setAttribute('muted', 'true'); 
-        videoElement.setAttribute('playsinline', 'true');
+        
+        // CRITICAL: Use setAttribute (not property assignment) for iOS compatibility
+        videoElement.setAttribute('autoplay', '');
+        videoElement.setAttribute('muted', ''); 
+        videoElement.setAttribute('playsinline', '');
+        videoElement.setAttribute('webkit-playsinline', ''); // iOS specific
+        
+        // Also set properties for double security
+        videoElement.autoplay = true;
         videoElement.muted = true;
         videoElement.playsInline = true;
         
@@ -502,27 +548,48 @@ class BarCodeScanner {
         videoElement.style.visibility = 'visible';
         videoElement.style.opacity = '1';
         
-        // iPhone 6S specific fixes
+        // iPhone 6S specific fixes for iOS 9-15
         if (this.isiPhone6S()) {
-          console.log('📱 Applying iPhone 6S specific video fixes...');
-          videoElement.style.objectFit = 'contain'; // Less aggressive than cover
+          const iosVersion = this.getIOSVersion();
+          console.log(`📱 Applying iPhone 6S fixes for iOS ${iosVersion?.full || 'unknown'}...`);
+          
+          // Less aggressive styling for old iOS
+          videoElement.style.objectFit = 'contain';
           videoElement.style.webkitTransform = 'translate3d(0, 0, 0)';
           videoElement.style.transform = 'translate3d(0, 0, 0)';
           videoElement.style.webkitBackfaceVisibility = 'hidden';
           videoElement.style.backfaceVisibility = 'hidden';
           
-          // iPhone 6S - Force play with patience
-          setTimeout(() => {
+          // Force hardware acceleration
+          videoElement.style.willChange = 'transform';
+          videoElement.style.webkitPerspective = '1000px';
+          
+          // iPhone 6S - Multiple play attempts with increasing delays
+          let playAttempt = 0;
+          const attemptPlay = () => {
+            playAttempt++;
+            console.log(`📱 iPhone 6S play attempt ${playAttempt}...`);
+            
             videoElement.play()
               .then(() => {
-                console.log('✅ iPhone 6S video playing successfully');
-                this.updateStatus('✅ iPhone 6S: Cámara activa', 'text-green-600', 'bg-green-50');
+                console.log(`✅ iPhone 6S video playing on attempt ${playAttempt}`);
+                this.updateStatus(`✅ iPhone 6S: Cámara activa (intento ${playAttempt})`, 'text-green-600', 'bg-green-50');
               })
               .catch(e => {
-                console.error('❌ iPhone 6S video play error:', e);
-                this.updateStatus('⚠️ iPhone 6S: Intentando reiniciar...', 'text-yellow-600', 'bg-yellow-50');
+                console.error(`❌ iPhone 6S play attempt ${playAttempt} failed:`, e);
+                
+                if (playAttempt < 3) {
+                  this.updateStatus(`⚠️ iPhone 6S: Reintentando ${playAttempt}/3...`, 'text-yellow-600', 'bg-yellow-50');
+                  setTimeout(attemptPlay, 1000 * playAttempt); // Increasing delay
+                } else {
+                  this.updateStatus('❌ iPhone 6S: Error de video - iOS muy antiguo?', 'text-red-600', 'bg-red-50');
+                }
               });
-          }, 500);
+          };
+          
+          // Start first attempt after delay
+          setTimeout(attemptPlay, 800);
+          
         } else if (this.isiOS()) {
           // Modern iOS devices
           videoElement.style.objectFit = 'cover';
@@ -717,20 +784,65 @@ class BarCodeScanner {
   }
 
   /**
-   * iPhone 6S specific detection - SIMPLIFIED
+   * iPhone 6S specific detection with iOS version checking
    */
   isiPhone6S() {
     const userAgent = navigator.userAgent;
     
-    // Simple iOS version detection for iPhone 6S era (iOS 9-15)
-    const iosMatch = userAgent.match(/OS (\d+)_/);
-    if (iosMatch && /iPhone/.test(userAgent)) {
-      const iosVersion = parseInt(iosMatch[1]);
-      // iPhone 6S runs iOS 9-15, but we focus on the older Safari issues
-      return iosVersion <= 15;
+    // Detect iPhone 6S specifically
+    if (/iPhone/.test(userAgent)) {
+      const iosMatch = userAgent.match(/OS (\d+)_(\d+)/);
+      if (iosMatch) {
+        const iosVersion = parseInt(iosMatch[1]);
+        const iosMinor = parseInt(iosMatch[2]);
+        
+        // iPhone 6S detection - focus on problematic iOS versions
+        return iosVersion <= 15; // iOS 9-15 had various getUserMedia issues
+      }
     }
     
     return false;
+  }
+
+  /**
+   * Get iOS version for compatibility checks
+   */
+  getIOSVersion() {
+    const userAgent = navigator.userAgent;
+    const iosMatch = userAgent.match(/OS (\d+)_(\d+)/);
+    if (iosMatch && /iPhone|iPad|iPod/.test(userAgent)) {
+      return {
+        major: parseInt(iosMatch[1]),
+        minor: parseInt(iosMatch[2]),
+        full: `${iosMatch[1]}.${iosMatch[2]}`
+      };
+    }
+    return null;
+  }
+
+  /**
+   * Check if HTTPS is required and available
+   */
+  checkHTTPS() {
+    const isHTTPS = location.protocol === 'https:';
+    const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    
+    if (!isHTTPS && !isLocalhost && this.isiOS()) {
+      const iosVersion = this.getIOSVersion();
+      if (iosVersion && iosVersion.major >= 12) {
+        return {
+          required: true,
+          available: false,
+          message: `⚠️ iOS ${iosVersion.full}: HTTPS requerido para cámara`
+        };
+      }
+    }
+    
+    return {
+      required: false,
+      available: isHTTPS || isLocalhost,
+      message: isHTTPS ? '✅ HTTPS activo' : '⚠️ Usando HTTP'
+    };
   }
 
   /**
