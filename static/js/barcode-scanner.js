@@ -300,13 +300,14 @@ class BarCodeScanner {
       const constraints = {
         video: {
           deviceId: { exact: this.currentCameraId },
-          width: { ideal: this.isMobile() ? 1280 : 1920, min: 640 }, // Lower res for mobile
-          height: { ideal: this.isMobile() ? 720 : 1080, min: 480 },
+          // Much lower resolution for iPhone 6S and older devices
+          width: { ideal: this.isiOS() ? 640 : (this.isMobile() ? 1280 : 1920), min: 320 },
+          height: { ideal: this.isiOS() ? 480 : (this.isMobile() ? 720 : 1080), min: 240 },
           facingMode: this.isMobile() ? 'environment' : undefined,
-          // iOS Safari specific optimizations
+          // iOS Safari specific optimizations - much more conservative for older devices
           ...(this.isiOS() && {
-            frameRate: { ideal: 30, max: 30 },
-            aspectRatio: { ideal: 16/9 }
+            frameRate: { ideal: 15, max: 20 }, // Much lower frame rate for iPhone 6S
+            aspectRatio: { ideal: 4/3 } // 4:3 is more stable on older iOS
           })
         },
         audio: false
@@ -329,8 +330,9 @@ class BarCodeScanner {
             const fallbackConstraints = {
               video: {
                 facingMode: 'environment',
-                width: { ideal: 640 },
-                height: { ideal: 480 }
+                width: { ideal: 320, max: 640 },
+                height: { ideal: 240, max: 480 },
+                frameRate: { ideal: 10, max: 15 } // Very low frame rate for iPhone 6S
               }
             };
             this.stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
@@ -397,7 +399,7 @@ class BarCodeScanner {
         videoElement.style.visibility = 'visible';
         videoElement.style.opacity = '1';
         
-        // Additional iOS fixes
+        // Additional iOS fixes - More aggressive for iPhone 6S
         if (this.isiOS()) {
           videoElement.style.objectFit = 'cover';
           videoElement.style.webkitBackfaceVisibility = 'hidden';
@@ -406,7 +408,12 @@ class BarCodeScanner {
           videoElement.style.webkitTransform = 'translate3d(0, 0, 0)';
           videoElement.style.transform = 'translate3d(0, 0, 0)';
           
-          // Force iOS video to actually render
+          // Additional iPhone 6S specific fixes
+          videoElement.style.willChange = 'transform';
+          videoElement.style.webkitPerspective = '1000px';
+          videoElement.style.perspective = '1000px';
+          
+          // Force iOS video to actually render - Multiple attempts for iPhone 6S
           setTimeout(() => {
             if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
               // Force a layout update
@@ -417,10 +424,14 @@ class BarCodeScanner {
                   parent.style.transform = '';
                 }, 10);
               }
+            } else {
+              // iPhone 6S fallback - recreate video element if dimensions are still 0
+              console.warn('🍎 iPhone 6S: Video dimensions still 0, applying fallback...');
+              this.applyiPhone6SFallback(videoElement);
             }
-          }, 1000);
+          }, 2000); // Longer wait for iPhone 6S
         }
-      }, this.isiOS() ? 200 : 100); // Longer delay for iOS
+      }, this.isiOS() ? 500 : 100); // Much longer delay for iPhone 6S
       
       // Monitor stream for issues
       this.stream.getTracks().forEach(track => {
@@ -604,6 +615,66 @@ class BarCodeScanner {
   
   isiOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  /**
+   * iPhone 6S specific fallback for video rendering issues
+   */
+  async applyiPhone6SFallback(videoElement) {
+    try {
+      console.log('🍎 Applying iPhone 6S fallback...');
+      this.updateStatus('🍎 iPhone 6S: Aplicando corrección...', 'text-orange-600', 'bg-orange-50');
+      
+      // Stop current stream
+      if (this.stream) {
+        this.stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Create ultra-conservative constraints for iPhone 6S
+      const iPhone6SConstraints = {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 240, max: 320 },
+          height: { ideal: 180, max: 240 },
+          frameRate: { ideal: 8, max: 12 } // Very low frame rate
+        }
+      };
+      
+      // Get new stream with ultra-low specs
+      this.stream = await navigator.mediaDevices.getUserMedia(iPhone6SConstraints);
+      
+      // Clear video element completely
+      videoElement.srcObject = null;
+      videoElement.removeAttribute('src');
+      
+      // Wait and apply stream
+      setTimeout(() => {
+        videoElement.srcObject = this.stream;
+        
+        // Force play with multiple attempts
+        const forcePlay = (attempt = 1) => {
+          videoElement.play()
+            .then(() => {
+              console.log('✅ iPhone 6S fallback video playing');
+              this.updateStatus('✅ iPhone 6S: Video funcionando!', 'text-green-600', 'bg-green-50');
+            })
+            .catch(e => {
+              if (attempt < 3) {
+                setTimeout(() => forcePlay(attempt + 1), 500);
+              } else {
+                console.error('❌ iPhone 6S fallback failed:', e);
+                this.updateStatus('❌ iPhone 6S: Error de video', 'text-red-600', 'bg-red-50');
+              }
+            });
+        };
+        
+        setTimeout(() => forcePlay(), 500);
+      }, 1000);
+      
+    } catch (error) {
+      console.error('❌ iPhone 6S fallback error:', error);
+      this.updateStatus('❌ iPhone 6S: Error crítico', 'text-red-600', 'bg-red-50');
+    }
   }
 
   /**
@@ -917,17 +988,58 @@ class BarCodeScanner {
   }
 
   /**
-   * Toggle flash/torch (para móviles)
+   * Toggle flash/torch (para móviles) - IMPROVED
    */
-  static toggleTorch() {
-    if (window.barcodeScanner && window.barcodeScanner.stream) {
+  static async toggleTorch() {
+    if (!window.barcodeScanner || !window.barcodeScanner.stream) {
+      console.warn('⚠️ No stream available for torch');
+      return;
+    }
+
+    try {
       const track = window.barcodeScanner.stream.getVideoTracks()[0];
-      if (track && track.getCapabilities && track.getCapabilities().torch) {
-        const settings = track.getSettings();
-        track.applyConstraints({
-          advanced: [{torch: !settings.torch}]
-        });
+      if (!track) {
+        console.warn('⚠️ No video track available');
+        return;
       }
+
+      // Check if torch is supported
+      const capabilities = track.getCapabilities();
+      if (!capabilities || !capabilities.torch) {
+        console.warn('⚠️ Torch not supported on this device');
+        window.barcodeScanner.updateStatus('⚠️ Flash no disponible en este dispositivo', 'text-yellow-600', 'bg-yellow-50');
+        return;
+      }
+
+      const settings = track.getSettings();
+      const currentTorch = settings.torch || false;
+      const newTorchState = !currentTorch;
+
+      console.log(`🔦 Toggling torch: ${currentTorch} → ${newTorchState}`);
+      
+      // Apply torch constraint
+      await track.applyConstraints({
+        advanced: [{ torch: newTorchState }]
+      });
+
+      // Update button text and status
+      const torchButton = document.querySelector('[onclick="BarCodeScanner.toggleTorch()"]');
+      if (torchButton) {
+        torchButton.textContent = newTorchState ? '🔦 Flash ON' : '🔦 Flash';
+        torchButton.style.backgroundColor = newTorchState ? '#f59e0b' : '';
+      }
+
+      window.barcodeScanner.updateStatus(
+        newTorchState ? '🔦 Flash activado' : '🔦 Flash desactivado', 
+        'text-blue-600', 
+        'bg-blue-50'
+      );
+
+      console.log(`✅ Torch ${newTorchState ? 'enabled' : 'disabled'}`);
+
+    } catch (error) {
+      console.error('❌ Error toggling torch:', error);
+      window.barcodeScanner.updateStatus('❌ Error activando flash', 'text-red-600', 'bg-red-50');
     }
   }
 
