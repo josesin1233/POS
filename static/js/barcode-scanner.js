@@ -300,23 +300,11 @@ class BarCodeScanner {
       const constraints = {
         video: {
           deviceId: { exact: this.currentCameraId },
-          // Progressive resolution based on device capability
-          width: { 
-            ideal: this.isiPhone6SOrOlder() ? 640 : (this.isMobile() ? 1280 : 1920), 
-            min: 320 
-          },
-          height: { 
-            ideal: this.isiPhone6SOrOlder() ? 480 : (this.isMobile() ? 720 : 1080), 
-            min: 240 
-          },
+          width: { ideal: this.isMobile() ? 1280 : 1920, min: 640 }, // Back to working resolution
+          height: { ideal: this.isMobile() ? 720 : 1080, min: 480 },
           facingMode: this.isMobile() ? 'environment' : undefined,
-          // iOS Safari specific optimizations - conservative only for iPhone 6S
-          ...(this.isiPhone6SOrOlder() && {
-            frameRate: { ideal: 15, max: 20 }, // Lower frame rate only for iPhone 6S
-            aspectRatio: { ideal: 4/3 } // 4:3 is more stable on older iOS
-          }),
-          // Better settings for modern iOS devices
-          ...(this.isiOS() && !this.isiPhone6SOrOlder() && {
+          // iOS Safari specific optimizations
+          ...(this.isiOS() && {
             frameRate: { ideal: 30, max: 30 },
             aspectRatio: { ideal: 16/9 }
           })
@@ -341,10 +329,8 @@ class BarCodeScanner {
             const fallbackConstraints = {
               video: {
                 facingMode: 'environment',
-                // Only use ultra-low settings for iPhone 6S, better for newer devices
-                width: { ideal: this.isiPhone6SOrOlder() ? 320 : 720, max: this.isiPhone6SOrOlder() ? 640 : 1280 },
-                height: { ideal: this.isiPhone6SOrOlder() ? 240 : 540, max: this.isiPhone6SOrOlder() ? 480 : 720 },
-                frameRate: { ideal: this.isiPhone6SOrOlder() ? 10 : 25, max: this.isiPhone6SOrOlder() ? 15 : 30 }
+                width: { ideal: 640 },
+                height: { ideal: 480 }
               }
             };
             this.stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
@@ -411,7 +397,7 @@ class BarCodeScanner {
         videoElement.style.visibility = 'visible';
         videoElement.style.opacity = '1';
         
-        // Additional iOS fixes - More aggressive for iPhone 6S
+        // Additional iOS fixes
         if (this.isiOS()) {
           videoElement.style.objectFit = 'cover';
           videoElement.style.webkitBackfaceVisibility = 'hidden';
@@ -420,12 +406,7 @@ class BarCodeScanner {
           videoElement.style.webkitTransform = 'translate3d(0, 0, 0)';
           videoElement.style.transform = 'translate3d(0, 0, 0)';
           
-          // Additional iPhone 6S specific fixes
-          videoElement.style.willChange = 'transform';
-          videoElement.style.webkitPerspective = '1000px';
-          videoElement.style.perspective = '1000px';
-          
-          // Force iOS video to actually render - Multiple attempts for iPhone 6S
+          // Force iOS video to actually render
           setTimeout(() => {
             if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
               // Force a layout update
@@ -436,14 +417,10 @@ class BarCodeScanner {
                   parent.style.transform = '';
                 }, 10);
               }
-            } else {
-              // iPhone 6S fallback - recreate video element if dimensions are still 0
-              console.warn('🍎 iPhone 6S: Video dimensions still 0, applying fallback...');
-              this.applyiPhone6SFallback(videoElement);
             }
-          }, 2000); // Longer wait for iPhone 6S
+          }, 1000);
         }
-      }, this.isiOS() ? 500 : 100); // Much longer delay for iPhone 6S
+      }, this.isiOS() ? 200 : 100); // Longer delay for iOS
       
       // Monitor stream for issues
       this.stream.getTracks().forEach(track => {
