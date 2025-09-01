@@ -300,14 +300,25 @@ class BarCodeScanner {
       const constraints = {
         video: {
           deviceId: { exact: this.currentCameraId },
-          // Much lower resolution for iPhone 6S and older devices
-          width: { ideal: this.isiOS() ? 640 : (this.isMobile() ? 1280 : 1920), min: 320 },
-          height: { ideal: this.isiOS() ? 480 : (this.isMobile() ? 720 : 1080), min: 240 },
+          // Progressive resolution based on device capability
+          width: { 
+            ideal: this.isiPhone6SOrOlder() ? 640 : (this.isMobile() ? 1280 : 1920), 
+            min: 320 
+          },
+          height: { 
+            ideal: this.isiPhone6SOrOlder() ? 480 : (this.isMobile() ? 720 : 1080), 
+            min: 240 
+          },
           facingMode: this.isMobile() ? 'environment' : undefined,
-          // iOS Safari specific optimizations - much more conservative for older devices
-          ...(this.isiOS() && {
-            frameRate: { ideal: 15, max: 20 }, // Much lower frame rate for iPhone 6S
+          // iOS Safari specific optimizations - conservative only for iPhone 6S
+          ...(this.isiPhone6SOrOlder() && {
+            frameRate: { ideal: 15, max: 20 }, // Lower frame rate only for iPhone 6S
             aspectRatio: { ideal: 4/3 } // 4:3 is more stable on older iOS
+          }),
+          // Better settings for modern iOS devices
+          ...(this.isiOS() && !this.isiPhone6SOrOlder() && {
+            frameRate: { ideal: 30, max: 30 },
+            aspectRatio: { ideal: 16/9 }
           })
         },
         audio: false
@@ -330,9 +341,10 @@ class BarCodeScanner {
             const fallbackConstraints = {
               video: {
                 facingMode: 'environment',
-                width: { ideal: 320, max: 640 },
-                height: { ideal: 240, max: 480 },
-                frameRate: { ideal: 10, max: 15 } // Very low frame rate for iPhone 6S
+                // Only use ultra-low settings for iPhone 6S, better for newer devices
+                width: { ideal: this.isiPhone6SOrOlder() ? 320 : 720, max: this.isiPhone6SOrOlder() ? 640 : 1280 },
+                height: { ideal: this.isiPhone6SOrOlder() ? 240 : 540, max: this.isiPhone6SOrOlder() ? 480 : 720 },
+                frameRate: { ideal: this.isiPhone6SOrOlder() ? 10 : 25, max: this.isiPhone6SOrOlder() ? 15 : 30 }
               }
             };
             this.stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
@@ -615,6 +627,35 @@ class BarCodeScanner {
   
   isiOS() {
     return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  /**
+   * Detect specifically iPhone 6S or older devices that need ultra-conservative settings
+   */
+  isiPhone6SOrOlder() {
+    const userAgent = navigator.userAgent;
+    
+    // Check for iPhone 6S specifically
+    if (/iPhone OS (9_|10_|11_)/.test(userAgent)) {
+      return true;
+    }
+    
+    // Check for iPhone 6S hardware identifier if available
+    if (userAgent.includes('iPhone8,1') || userAgent.includes('iPhone8,2')) {
+      return true;
+    }
+    
+    // Fallback: Check for iPhone with iOS 9-11 (likely iPhone 6S era)
+    const iosMatch = userAgent.match(/OS (\d+)_/);
+    if (iosMatch) {
+      const iosVersion = parseInt(iosMatch[1]);
+      // iOS 9-11 likely indicates iPhone 6S or similar era device
+      if (iosVersion >= 9 && iosVersion <= 11 && /iPhone/.test(userAgent)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   /**
@@ -1003,12 +1044,29 @@ class BarCodeScanner {
         return;
       }
 
-      // Check if torch is supported
+      // Check if torch is supported - More aggressive detection
       const capabilities = track.getCapabilities();
-      if (!capabilities || !capabilities.torch) {
+      console.log('🔍 Camera capabilities:', capabilities);
+      
+      // Try multiple ways to detect flash support
+      const hasTorch = capabilities && (
+        capabilities.torch === true || 
+        'torch' in capabilities ||
+        capabilities.flashMode ||
+        capabilities.flash
+      );
+      
+      if (!hasTorch) {
         console.warn('⚠️ Torch not supported on this device');
-        window.barcodeScanner.updateStatus('⚠️ Flash no disponible en este dispositivo', 'text-yellow-600', 'bg-yellow-50');
-        return;
+        console.log('Device capabilities:', JSON.stringify(capabilities));
+        window.barcodeScanner.updateStatus('⚠️ Flash no detectado automáticamente', 'text-yellow-600', 'bg-yellow-50');
+        
+        // Try anyway on mobile devices (sometimes capabilities lie)
+        if (!window.barcodeScanner.isMobile()) {
+          return;
+        } else {
+          console.log('📱 Mobile device - attempting torch anyway...');
+        }
       }
 
       const settings = track.getSettings();
@@ -1017,10 +1075,18 @@ class BarCodeScanner {
 
       console.log(`🔦 Toggling torch: ${currentTorch} → ${newTorchState}`);
       
-      // Apply torch constraint
-      await track.applyConstraints({
-        advanced: [{ torch: newTorchState }]
-      });
+      // Try multiple constraint formats for better compatibility
+      try {
+        await track.applyConstraints({
+          advanced: [{ torch: newTorchState }]
+        });
+      } catch (error) {
+        console.log('🔄 Trying alternative torch constraint...');
+        // Try alternative constraint format
+        await track.applyConstraints({
+          torch: newTorchState
+        });
+      }
 
       // Update button text and status
       const torchButton = document.querySelector('[onclick="BarCodeScanner.toggleTorch()"]');
