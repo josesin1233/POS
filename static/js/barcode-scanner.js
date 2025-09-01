@@ -80,6 +80,44 @@ class BarCodeScanner {
         .scanner-btn-cancel:hover {
           background: linear-gradient(135deg, #dc2626, #b91c1c);
         }
+        #barcode-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.75);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+          padding: 20px;
+        }
+        #barcode-modal.hidden {
+          display: none !important;
+        }
+        #barcode-modal > div {
+          background: white;
+          border-radius: 16px;
+          padding: 24px;
+          max-width: 500px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        @media (max-width: 480px) {
+          #barcode-modal {
+            padding: 16px;
+          }
+          #barcode-modal > div {
+            padding: 20px;
+            border-radius: 12px;
+          }
+          .video-container {
+            height: 250px !important;
+          }
+        }
       </style>
       <div id="barcode-modal" class="hidden">
         <div>
@@ -97,14 +135,14 @@ class BarCodeScanner {
           </div>
 
           <!-- Video preview MEJORADO -->
-          <div class="video-container">
-            <video id="barcode-video" style="width: 100%; height: 18rem; background-color: black; object-fit: cover;" autoplay playsinline muted></video>
+          <div class="video-container" style="position: relative; width: 100%; height: 300px; max-height: 50vh; border-radius: 12px; overflow: hidden; background: black;">
+            <video id="barcode-video" style="width: 100%; height: 100%; background-color: black; object-fit: cover; border-radius: 12px;" autoplay playsinline muted></video>
             
-            <!-- Overlay con guía visual -->
-            <div id="scanner-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;">
-              <div style="border: 3px dashed #ef4444; width: 16rem; height: 5rem; border-radius: 0.5rem; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center;">
-                <span style="color: white; font-size: 0.875rem; font-weight: 500; background: rgba(239, 68, 68, 0.7); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
-                  Posiciona el código aquí
+            <!-- Overlay con guía visual RESPONSIVE -->
+            <div id="scanner-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; padding: 20px;">
+              <div style="border: 3px dashed #ef4444; max-width: 280px; width: 80%; height: 80px; max-height: 25%; border-radius: 12px; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+                <span style="color: white; font-size: 14px; font-weight: 600; background: rgba(239, 68, 68, 0.8); padding: 8px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                  📱 Posiciona el código aquí
                 </span>
               </div>
             </div>
@@ -255,9 +293,9 @@ class BarCodeScanner {
       const overlay = document.getElementById('scanner-overlay');
       if (overlay) {
         overlay.innerHTML = `
-          <div style="border: 3px dashed #ef4444; width: 16rem; height: 5rem; border-radius: 0.5rem; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center;">
-            <span style="color: white; font-size: 0.875rem; font-weight: 500; background: rgba(239, 68, 68, 0.7); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
-              Posiciona el código aquí
+          <div style="border: 3px dashed #ef4444; max-width: 280px; width: 80%; height: 80px; max-height: 25%; border-radius: 12px; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+            <span style="color: white; font-size: 14px; font-weight: 600; background: rgba(239, 68, 68, 0.8); padding: 8px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+              📱 Posiciona el código aquí
             </span>
           </div>
         `;
@@ -950,9 +988,9 @@ class BarCodeScanner {
       overlay.classList.remove('active');
       overlay.classList.add('success');
       overlay.innerHTML = `
-        <div style="border: 3px solid #00ff88; width: 16rem; height: 5rem; border-radius: 0.75rem; background: rgba(0, 255, 136, 0.2); display: flex; align-items: center; justify-content: center; animation: successPulse 0.6s ease-out;">
-          <span style="color: #000000; font-size: 0.875rem; font-weight: 700; background: rgba(0, 255, 136, 0.9); padding: 0.5rem 1rem; border-radius: 0.5rem; text-shadow: none;">
-            ¡Código capturado!
+        <div style="border: 3px solid #00ff88; max-width: 280px; width: 80%; height: 80px; max-height: 25%; border-radius: 12px; background: rgba(0, 255, 136, 0.2); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px); animation: successPulse 0.6s ease-out;">
+          <span style="color: #000000; font-size: 14px; font-weight: 700; background: rgba(0, 255, 136, 0.9); padding: 8px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+            ✅ ¡Código capturado!
           </span>
         </div>
       `;
