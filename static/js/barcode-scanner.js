@@ -17,7 +17,6 @@ class BarCodeScanner {
     this.lastScanTime = 0;
     this.scanTimeout = null;
     this.targetField = null; // Add target field property
-    this.continuousMode = false; // Close modal after scan by default, can be toggled by user
   }
 
   /**
@@ -47,6 +46,41 @@ class BarCodeScanner {
     if (document.getElementById('barcode-modal')) return;
 
     const modalHTML = `
+      <style>
+        .scanner-btn {
+          padding: 12px 20px;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          min-width: 120px;
+        }
+        .scanner-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .scanner-btn:active {
+          transform: translateY(0);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .scanner-btn-torch {
+          background: linear-gradient(135deg, #f59e0b, #d97706);
+          color: white;
+        }
+        .scanner-btn-torch:hover {
+          background: linear-gradient(135deg, #d97706, #b45309);
+        }
+        .scanner-btn-cancel {
+          background: linear-gradient(135deg, #ef4444, #dc2626);
+          color: white;
+        }
+        .scanner-btn-cancel:hover {
+          background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+      </style>
       <div id="barcode-modal" class="hidden">
         <div>
           <div class="flex-between mb-4">
@@ -93,14 +127,11 @@ class BarCodeScanner {
             <button onclick="BarCodeScanner.startScanning()" type="button">
               Iniciar Escaneo
             </button>
-            <button onclick="BarCodeScanner.toggleTorch()" type="button">
-              Flash
+            <button onclick="BarCodeScanner.toggleTorch()" type="button" class="scanner-btn scanner-btn-torch">
+              🔦 Flash
             </button>
-            <button onclick="BarCodeScanner.toggleContinuousMode()" type="button" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; font-size: 0.75rem; padding: 0.5rem 1rem;">
-              🔄 CONTINUO: ON
-            </button>
-            <button onclick="BarCodeScanner.close()" type="button" style="background-color: #6b7280; color: white;">
-              Cancelar
+            <button onclick="BarCodeScanner.close()" type="button" class="scanner-btn scanner-btn-cancel">
+              ❌ Cancelar
             </button>
           </div>
         </div>
@@ -251,36 +282,45 @@ class BarCodeScanner {
   }
 
   /**
-   * Cerrar modal
+   * Cerrar modal - FIXED FOR REOPEN
    */
   static close() {
     if (window.barcodeScanner) {
+      console.log('🛑 Closing scanner - stopping all streams...');
       window.barcodeScanner.stopScanning();
-      // Clear target field
+      
+      // CRITICAL: Completely clean up the scanner state
+      window.barcodeScanner.isScanning = false;
+      window.barcodeScanner.codeReader = null;
+      window.barcodeScanner.scanAttempts = 0;
+      window.barcodeScanner.lastScannedCode = null;
       window.barcodeScanner.targetField = null;
+      
+      // Clean up video element completely
+      const videoElement = document.getElementById('barcode-video');
+      if (videoElement) {
+        videoElement.srcObject = null;
+        videoElement.removeAttribute('src');
+        videoElement.style.backgroundColor = 'black';
+      }
     }
     
     const modal = document.getElementById('barcode-modal');
     if (modal) {
       modal.classList.add('hidden');
-      // Force hide modal by removing from DOM if needed
-      setTimeout(() => {
-        if (modal.classList.contains('hidden')) {
-          modal.style.display = 'none';
-        }
-      }, 100);
+      modal.style.display = 'none';
     }
     
-    console.log('📱 Scanner modal closed');
+    console.log('✅ Scanner modal completely closed and cleaned');
   }
 
   /**
-   * Iniciar escaneo - SÚPER MEJORADO
+   * Iniciar escaneo - REESCRITO PARA iPHONE 6S
    */
   async startScanning() {
     if (this.isScanning) {
       this.stopScanning();
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 500)); // Longer wait for iPhone 6S cleanup
     }
 
     try {
@@ -292,18 +332,34 @@ class BarCodeScanner {
         return;
       }
 
-      this.updateStatus('🔄 Iniciando cámara de alta resolución...', 'text-blue-600', 'bg-blue-50');
+      // iPhone 6S specific status
+      if (this.isiPhone6S()) {
+        this.updateStatus('📱 iPhone 6S: Iniciando cámara optimizada...', 'text-blue-600', 'bg-blue-50');
+      } else {
+        this.updateStatus('🔄 Iniciando cámara de alta resolución...', 'text-blue-600', 'bg-blue-50');
+      }
+      
       this.scanAttempts = 0;
       this.lastScannedCode = null;
 
-      // Configuración OPTIMIZADA pero compatible para códigos difíciles
-      const constraints = {
+      // iPhone 6S SPECIFIC CONSTRAINTS - Very conservative
+      const constraints = this.isiPhone6S() ? {
         video: {
           deviceId: { exact: this.currentCameraId },
-          width: { ideal: this.isMobile() ? 1280 : 1920, min: 640 }, // Back to working resolution
+          width: { ideal: 640, max: 1280, min: 480 }, // Conservative for iPhone 6S
+          height: { ideal: 480, max: 720, min: 360 },
+          facingMode: 'environment',
+          frameRate: { ideal: 20, max: 25 }, // Lower frame rate for iPhone 6S
+          aspectRatio: { ideal: 4/3 } // More stable ratio
+        },
+        audio: false
+      } : {
+        // Modern devices - full resolution
+        video: {
+          deviceId: { exact: this.currentCameraId },
+          width: { ideal: this.isMobile() ? 1280 : 1920, min: 640 },
           height: { ideal: this.isMobile() ? 720 : 1080, min: 480 },
           facingMode: this.isMobile() ? 'environment' : undefined,
-          // iOS Safari specific optimizations
           ...(this.isiOS() && {
             frameRate: { ideal: 30, max: 30 },
             aspectRatio: { ideal: 16/9 }
@@ -386,41 +442,57 @@ class BarCodeScanner {
         videoElement.style.webkitTransform = 'translateZ(0)';
       }
       
+      // iPhone 6S gets special treatment
+      const setupDelay = this.isiPhone6S() ? 1000 : (this.isiOS() ? 200 : 100);
+      
       setTimeout(() => {
+        // Clear video first for iPhone 6S
+        if (this.isiPhone6S()) {
+          videoElement.srcObject = null;
+          videoElement.removeAttribute('src');
+        }
+        
         videoElement.srcObject = this.stream;
-        videoElement.setAttribute('autoplay', '');
-        videoElement.setAttribute('muted', ''); 
-        videoElement.setAttribute('playsinline', '');
+        videoElement.setAttribute('autoplay', 'true');
+        videoElement.setAttribute('muted', 'true'); 
+        videoElement.setAttribute('playsinline', 'true');
+        videoElement.muted = true;
+        videoElement.playsInline = true;
         
         // Force CSS properties for better rendering
         videoElement.style.display = 'block';
         videoElement.style.visibility = 'visible';
         videoElement.style.opacity = '1';
         
-        // Additional iOS fixes
-        if (this.isiOS()) {
-          videoElement.style.objectFit = 'cover';
-          videoElement.style.webkitBackfaceVisibility = 'hidden';
-          
-          // iOS Safari video rendering fix
+        // iPhone 6S specific fixes
+        if (this.isiPhone6S()) {
+          console.log('📱 Applying iPhone 6S specific video fixes...');
+          videoElement.style.objectFit = 'contain'; // Less aggressive than cover
           videoElement.style.webkitTransform = 'translate3d(0, 0, 0)';
           videoElement.style.transform = 'translate3d(0, 0, 0)';
+          videoElement.style.webkitBackfaceVisibility = 'hidden';
+          videoElement.style.backfaceVisibility = 'hidden';
           
-          // Force iOS video to actually render
+          // iPhone 6S - Force play with patience
           setTimeout(() => {
-            if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
-              // Force a layout update
-              const parent = videoElement.parentElement;
-              if (parent) {
-                parent.style.transform = 'translateZ(0.1px)';
-                setTimeout(() => {
-                  parent.style.transform = '';
-                }, 10);
-              }
-            }
-          }, 1000);
+            videoElement.play()
+              .then(() => {
+                console.log('✅ iPhone 6S video playing successfully');
+                this.updateStatus('✅ iPhone 6S: Cámara activa', 'text-green-600', 'bg-green-50');
+              })
+              .catch(e => {
+                console.error('❌ iPhone 6S video play error:', e);
+                this.updateStatus('⚠️ iPhone 6S: Intentando reiniciar...', 'text-yellow-600', 'bg-yellow-50');
+              });
+          }, 500);
+        } else if (this.isiOS()) {
+          // Modern iOS devices
+          videoElement.style.objectFit = 'cover';
+          videoElement.style.webkitBackfaceVisibility = 'hidden';
+          videoElement.style.webkitTransform = 'translate3d(0, 0, 0)';
+          videoElement.style.transform = 'translate3d(0, 0, 0)';
         }
-      }, this.isiOS() ? 200 : 100); // Longer delay for iOS
+      }, setupDelay);
       
       // Monitor stream for issues
       this.stream.getTracks().forEach(track => {
@@ -607,29 +679,17 @@ class BarCodeScanner {
   }
 
   /**
-   * Detect specifically iPhone 6S or older devices that need ultra-conservative settings
+   * iPhone 6S specific detection - SIMPLIFIED
    */
-  isiPhone6SOrOlder() {
+  isiPhone6S() {
     const userAgent = navigator.userAgent;
     
-    // Check for iPhone 6S specifically
-    if (/iPhone OS (9_|10_|11_)/.test(userAgent)) {
-      return true;
-    }
-    
-    // Check for iPhone 6S hardware identifier if available
-    if (userAgent.includes('iPhone8,1') || userAgent.includes('iPhone8,2')) {
-      return true;
-    }
-    
-    // Fallback: Check for iPhone with iOS 9-11 (likely iPhone 6S era)
+    // Simple iOS version detection for iPhone 6S era (iOS 9-15)
     const iosMatch = userAgent.match(/OS (\d+)_/);
-    if (iosMatch) {
+    if (iosMatch && /iPhone/.test(userAgent)) {
       const iosVersion = parseInt(iosMatch[1]);
-      // iOS 9-11 likely indicates iPhone 6S or similar era device
-      if (iosVersion >= 9 && iosVersion <= 11 && /iPhone/.test(userAgent)) {
-        return true;
-      }
+      // iPhone 6S runs iOS 9-15, but we focus on the older Safari issues
+      return iosVersion <= 15;
     }
     
     return false;
@@ -914,96 +974,12 @@ class BarCodeScanner {
     // Ejecutar callback (legacy support)
     this.onScanCallback?.(code);
     
-    // Cerrar modal o reiniciar según el modo
+    // Cerrar modal después del escaneo exitoso
     setTimeout(() => {
-      if (this.continuousMode) {
-        // Restart scanning without closing - keep camera active
-        this.restartScanningAfterSuccess();
-      } else {
-        // Close scanner (original behavior) - faster closing
-        BarCodeScanner.close();
-      }
-    }, 800); // Reduced delay from 1500ms to 800ms for faster UX
-  }
-
-  /**
-   * Restart scanning after successful code detection without closing camera
-   */
-  restartScanningAfterSuccess() {
-    try {
-      console.log('🔄 Restarting scanner in continuous mode...');
-      
-      // Verify stream is still active
-      if (!this.stream || this.stream.getTracks().every(track => track.readyState === 'ended')) {
-        console.warn('⚠️ Stream not active, attempting to restart camera...');
-        this.startScanning();
-        return;
-      }
-      
-      // Verify video element is still playing
-      const videoElement = document.getElementById('barcode-video');
-      if (videoElement && (videoElement.paused || videoElement.readyState === 0)) {
-        console.warn('⚠️ Video paused or not ready, restarting...');
-        videoElement.play().catch(e => console.error('Failed to restart video:', e));
-      }
-      
-      // Reset status and overlay to scanning mode
-      this.updateStatus('🎯 Escaneador activo - Escanea otro código', 'text-green-600 animate-pulse', 'bg-green-50');
-      
-      // Reset overlay to scanning state
-      const overlay = document.getElementById('scanner-overlay');
-      if (overlay) {
-        overlay.classList.remove('success');
-        overlay.classList.add('active');
-        overlay.innerHTML = `
-          <div style="border: 3px dashed #00d4ff; width: 16rem; height: 5rem; border-radius: 0.5rem; background: rgba(0, 212, 255, 0.1); display: flex; align-items: center; justify-content: center;">
-            <span style="color: #00d4ff; font-size: 0.875rem; font-weight: 700; text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);">
-              Posiciona el código aquí
-            </span>
-          </div>
-        `;
-      }
-      
-      // Show scan indicator again
-      const indicator = document.getElementById('scan-indicator');
-      if (indicator) {
-        indicator.classList.remove('hidden');
-      }
-      
-      // Reset video styling
-      if (videoElement) {
-        videoElement.classList.add('scanning');
-      }
-      
-      // Reset scan attempts for new code (but DON'T reset lastScannedCode to allow duplicate prevention)
-      this.scanAttempts = 0;
-      
-      console.log('✅ Scanner reiniciado - Listo para el próximo código');
-      
-    } catch (error) {
-      console.error('Error reiniciando scanner:', error);
-      // Fallback to closing if restart fails
       BarCodeScanner.close();
-    }
+    }, 800);
   }
 
-  /**
-   * Toggle continuous scanning mode
-   */
-  static toggleContinuousMode() {
-    if (window.barcodeScanner) {
-      window.barcodeScanner.continuousMode = !window.barcodeScanner.continuousMode;
-      const button = document.querySelector('[onclick="BarCodeScanner.toggleContinuousMode()"]');
-      if (button) {
-        const isEnabled = window.barcodeScanner.continuousMode;
-        button.textContent = isEnabled ? '🔄 CONTINUO: ON' : '🔄 CONTINUO: OFF';
-        button.style.background = isEnabled ? 
-          'linear-gradient(135deg, #22c55e, #16a34a)' : 
-          'linear-gradient(135deg, #6b7280, #4b5563)';
-      }
-      console.log('Modo continuo:', window.barcodeScanner.continuousMode ? 'ACTIVADO' : 'DESACTIVADO');
-    }
-  }
 
   /**
    * Toggle flash/torch (para móviles) - IMPROVED
@@ -1068,8 +1044,14 @@ class BarCodeScanner {
       // Update button text and status
       const torchButton = document.querySelector('[onclick="BarCodeScanner.toggleTorch()"]');
       if (torchButton) {
-        torchButton.textContent = newTorchState ? '🔦 Flash ON' : '🔦 Flash';
-        torchButton.style.backgroundColor = newTorchState ? '#f59e0b' : '';
+        torchButton.textContent = newTorchState ? '💡 Flash ON' : '🔦 Flash';
+        if (newTorchState) {
+          torchButton.style.background = 'linear-gradient(135deg, #fbbf24, #f59e0b)';
+          torchButton.style.boxShadow = '0 4px 12px rgba(251, 191, 36, 0.4)';
+        } else {
+          torchButton.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+          torchButton.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+        }
       }
 
       window.barcodeScanner.updateStatus(
