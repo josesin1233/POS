@@ -1117,16 +1117,39 @@ def actualizar_producto_inventario(request):
             }, status=404)
         
         # Actualizar campos
+        stock_anterior = producto.stock  # Guardar stock anterior para el movimiento
+        cantidad_agregada = 0
+
         if 'stock_agregar' in data:
-            producto.stock += int(data['stock_agregar'])
-        
+            cantidad_agregada = int(data['stock_agregar'])
+            producto.stock += cantidad_agregada
+
         if 'nuevo_precio' in data and data['nuevo_precio']:
             producto.precio = Decimal(str(data['nuevo_precio']))
-        
+
         if 'stock_minimo' in data:
             producto.stock_minimo = int(data.get('stock_minimo', 10))
-        
+
         producto.save()
+
+        # Registrar movimiento de stock si se agregó cantidad
+        if cantidad_agregada != 0:
+            motivo_movimiento = f"Actualización de inventario - {producto.nombre}: inventario anterior: {stock_anterior}, stock agregado: {cantidad_agregada}, stock final: {producto.stock}"
+
+            # Determinar tipo de movimiento
+            tipo_movimiento = 'entrada' if cantidad_agregada > 0 else 'ajuste'
+
+            MovimientoStock.objects.create(
+                business=business,
+                producto=producto,
+                tipo_movimiento=tipo_movimiento,
+                cantidad=cantidad_agregada,
+                stock_anterior=stock_anterior,
+                stock_nuevo=producto.stock,
+                usuario=request.user,
+                motivo=motivo_movimiento,
+                ip_address=get_client_ip(request)
+            )
         
         return JsonResponse({
             'success': True,
