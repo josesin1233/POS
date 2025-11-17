@@ -30,7 +30,17 @@
       "Read(/C:\\Users\\josem\\OneDrive\\Imágenes\\Capturas de pantalla/**)",
       "Bash(.venvScriptspython.exe manage.py setup_caja_tables)",
       "Read(C:\\Users\\josem/**)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos/**)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos/**)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos\\dulceria_pos/**)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos\\dulceria_pos/**)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos\\pos/**)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos\\pos/**)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos\\static\\js/**)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos\\pos/**)",
+      "Read(/C:\\Users\\josem\\Documents\\dulceria-pos\\accounts/**)",
+      "Bash(.\\venv\\Scripts\\python.exe manage.py runserver:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

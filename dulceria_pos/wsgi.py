@@ -40,26 +40,26 @@ def setup_staticfiles():
                     dest_file = staticfiles_dir / relative_path
                     dest_file.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(item, dest_file)
-            print("✅ Static files copied successfully")
+            print("Static files copied successfully")
         else:
-            print(f"⚠️ Source directory {source_dir} not found")
+            print(f"WARNING: Source directory {source_dir} not found")
             
         # Also try collectstatic
         from django.core.management import execute_from_command_line
-        print("🔄 Running collectstatic...")
+        print("Running collectstatic...")
         execute_from_command_line(['manage.py', 'collectstatic', '--noinput', '--clear'])
-        print("✅ collectstatic completed")
+        print("collectstatic completed")
         
     except Exception as e:
-        print(f"⚠️ Static files setup error (continuing): {e}")
+        print(f"WARNING: Static files setup error (continuing): {e}")
 
 # ALWAYS run staticfiles setup (force debug logging)
-print("🚨 WSGI.PY LOADING - About to run staticfiles setup")
+print("WSGI.PY LOADING - About to run staticfiles setup")
 print(f"DEBUG = {os.getenv('DEBUG', 'Not Set')}")
 print(f"Current working directory: {os.getcwd()}")
 
 # Force run regardless of DEBUG
 setup_staticfiles()
-print("🚨 WSGI.PY - staticfiles setup completed")
+print("WSGI.PY - staticfiles setup completed")
 
 application = get_wsgi_application()

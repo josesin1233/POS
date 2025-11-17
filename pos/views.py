@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from pos.models import Producto, Venta, VentaDetalle, Caja, GastoCaja, Sucursal
+from pos.models import Producto, Venta, VentaDetalle, Caja, GastoCaja, Sucursal, MovimientoStock
 from accounts.models import Business, User
 import json
 import logging
@@ -19,6 +19,19 @@ from django.core.paginator import Paginator
 
 
 logger = logging.getLogger(__name__)
+
+# ========================
+# UTILITY FUNCTIONS
+# ========================
+
+def get_client_ip(request):
+    """Obtener la IP del cliente para registros de trazabilidad"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 # ========================
 # VIEWS PRINCIPALES
@@ -393,7 +406,7 @@ def registrar_venta(request):
             metodo_pago='efectivo'  # Default, could be enhanced later
         )
         
-        # Crear detalles y actualizar stock
+        # Crear detalles y actualizar stock CON REGISTRO DE MOVIMIENTOS
         for item in productos_venta:
             VentaDetalle.objects.create(
                 venta=venta,
@@ -402,10 +415,30 @@ def registrar_venta(request):
                 precio_unitario=item['precio_unitario'],
                 subtotal=item['subtotal']
             )
-            
-            # Actualizar stock
-            item['producto'].stock -= item['cantidad']
-            item['producto'].save()
+
+            # Registrar movimiento de stock ANTES de actualizar
+            producto = item['producto']
+            stock_anterior = producto.stock
+            cantidad_vendida = item['cantidad']
+            stock_nuevo = stock_anterior - cantidad_vendida
+
+            # Crear registro de movimiento de stock
+            MovimientoStock.objects.create(
+                business=business,
+                producto=producto,
+                tipo_movimiento='venta',
+                cantidad=-cantidad_vendida,  # Negativo porque es una salida
+                stock_anterior=stock_anterior,
+                stock_nuevo=stock_nuevo,
+                venta=venta,
+                usuario=request.user,
+                motivo=f'Venta #{venta.folio} - {cantidad_vendida} unidades',
+                ip_address=get_client_ip(request)
+            )
+
+            # Actualizar stock del producto
+            producto.stock = stock_nuevo
+            producto.save()
         
         return JsonResponse({
             'success': True,
@@ -1263,3 +1296,173 @@ def obtener_stock_producto(request, codigo):
     except Exception as e:
         logger.error(f"Error en obtener_stock_producto: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+
+# ========================
+# API MOVIMIENTOS DE STOCK
+# ========================
+
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def registrar_movimiento_stock(request):
+    """API para registrar movimientos de stock manuales (entradas, ajustes, etc.)"""
+    try:
+        data = json.loads(request.body)
+
+        codigo_producto = data.get('codigo_producto')
+        tipo_movimiento = data.get('tipo_movimiento')
+        cantidad = int(data.get('cantidad', 0))
+        motivo = data.get('motivo', '')
+
+        if not codigo_producto or not tipo_movimiento:
+            return JsonResponse({
+                'success': False,
+                'error': 'Código de producto y tipo de movimiento son requeridos'
+            }, status=400)
+
+        if cantidad == 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'La cantidad debe ser diferente de cero'
+            }, status=400)
+
+        business = request.user.business
+
+        try:
+            producto = Producto.objects.get(business=business, codigo=codigo_producto)
+        except Producto.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': f'Producto con código {codigo_producto} no encontrado'
+            }, status=404)
+
+        # Obtener stock actual
+        stock_anterior = producto.stock
+
+        # Calcular nuevo stock basado en el tipo de movimiento
+        if tipo_movimiento in ['entrada', 'compra']:
+            stock_nuevo = stock_anterior + abs(cantidad)
+            cantidad_movimiento = abs(cantidad)
+        elif tipo_movimiento in ['salida', 'merma']:
+            if stock_anterior < abs(cantidad):
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Stock insuficiente. Stock actual: {stock_anterior}'
+                }, status=400)
+            stock_nuevo = stock_anterior - abs(cantidad)
+            cantidad_movimiento = -abs(cantidad)
+        elif tipo_movimiento == 'ajuste':
+            # Para ajuste, la cantidad puede ser positiva o negativa
+            stock_nuevo = max(0, stock_anterior + cantidad)
+            cantidad_movimiento = cantidad
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': f'Tipo de movimiento "{tipo_movimiento}" no válido'
+            }, status=400)
+
+        # Crear registro de movimiento
+        movimiento = MovimientoStock.objects.create(
+            business=business,
+            producto=producto,
+            tipo_movimiento=tipo_movimiento,
+            cantidad=cantidad_movimiento,
+            stock_anterior=stock_anterior,
+            stock_nuevo=stock_nuevo,
+            usuario=request.user,
+            motivo=motivo or f'{tipo_movimiento.title()} manual - {abs(cantidad)} unidades',
+            ip_address=get_client_ip(request)
+        )
+
+        # Actualizar stock del producto
+        producto.stock = stock_nuevo
+        producto.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': f'Movimiento registrado exitosamente',
+            'movimiento_id': movimiento.id,
+            'stock_anterior': stock_anterior,
+            'stock_nuevo': stock_nuevo,
+            'producto': {
+                'codigo': producto.codigo,
+                'nombre': producto.nombre,
+                'stock': producto.stock
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error registrando movimiento de stock: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Error interno: {str(e)}'
+        }, status=500)
+
+
+@csrf_exempt
+@login_required
+def obtener_movimientos_stock(request):
+    """API para obtener historial de movimientos de stock"""
+    try:
+        business = request.user.business
+
+        # Parámetros de filtro
+        codigo_producto = request.GET.get('codigo_producto')
+        tipo_movimiento = request.GET.get('tipo_movimiento')
+        fecha_inicio = request.GET.get('fecha_inicio')
+        fecha_fin = request.GET.get('fecha_fin')
+        limite = int(request.GET.get('limite', 50))
+
+        # Base queryset
+        movimientos = MovimientoStock.objects.filter(business=business)
+
+        # Aplicar filtros
+        if codigo_producto:
+            movimientos = movimientos.filter(producto__codigo=codigo_producto)
+
+        if tipo_movimiento:
+            movimientos = movimientos.filter(tipo_movimiento=tipo_movimiento)
+
+        if fecha_inicio:
+            from datetime import datetime
+            fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d')
+            movimientos = movimientos.filter(fecha_movimiento__gte=fecha_inicio_dt)
+
+        if fecha_fin:
+            from datetime import datetime
+            fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d')
+            movimientos = movimientos.filter(fecha_movimiento__lte=fecha_fin_dt)
+
+        # Ordenar y limitar
+        movimientos = movimientos.order_by('-fecha_movimiento')[:limite]
+
+        # Construir respuesta
+        movimientos_data = []
+        for mov in movimientos:
+            movimientos_data.append({
+                'id': mov.id,
+                'fecha': mov.fecha_movimiento.isoformat(),
+                'producto': {
+                    'codigo': mov.producto.codigo,
+                    'nombre': mov.producto.nombre
+                },
+                'tipo_movimiento': mov.tipo_movimiento,
+                'tipo_movimiento_display': mov.get_tipo_movimiento_display(),
+                'cantidad': mov.cantidad,
+                'stock_anterior': mov.stock_anterior,
+                'stock_nuevo': mov.stock_nuevo,
+                'motivo': mov.motivo,
+                'usuario': mov.usuario.username,
+                'venta_folio': mov.venta.folio if mov.venta else None
+            })
+
+        return JsonResponse({
+            'movimientos': movimientos_data,
+            'total_encontrados': len(movimientos_data)
+        })
+
+    except Exception as e:
+        logger.error(f"Error obteniendo movimientos de stock: {e}")
+        return JsonResponse({
+            'error': f'Error interno: {str(e)}'
+        }, status=500)

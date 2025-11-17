@@ -94,4 +94,14 @@ urlpatterns = [
     
     # Setup automático de base de datos
     path('setup-caja-db/', views.setup_caja_db, name='setup_caja_db'),
+
+    # ========================
+    # API MOVIMIENTOS DE STOCK (NUEVAS)
+    # ========================
+
+    # Registrar movimientos de stock (entradas, salidas, ajustes)
+    path('inventario/movimientos/registrar/', views.registrar_movimiento_stock, name='registrar_movimiento_stock'),
+
+    # Obtener historial de movimientos de stock
+    path('inventario/movimientos/', views.obtener_movimientos_stock, name='obtener_movimientos_stock'),
 ]

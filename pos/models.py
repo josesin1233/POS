@@ -586,6 +586,107 @@ class GastoCaja(models.Model):
 
 
 # ========================
+# MODELOS DE INVENTARIO
+# ========================
+
+class MovimientoStock(models.Model):
+    """Registro de todos los movimientos de inventario"""
+
+    TIPO_MOVIMIENTO_CHOICES = [
+        ('entrada', 'Entrada'),
+        ('salida', 'Salida'),
+        ('ajuste', 'Ajuste'),
+        ('venta', 'Venta'),
+        ('compra', 'Compra'),
+        ('devolucion', 'Devolución'),
+        ('merma', 'Merma'),
+    ]
+
+    business = models.ForeignKey(
+        Business,
+        on_delete=models.CASCADE,
+        related_name='movimientos_stock'
+    )
+
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        related_name='movimientos'
+    )
+
+    tipo_movimiento = models.CharField(
+        max_length=20,
+        choices=TIPO_MOVIMIENTO_CHOICES
+    )
+
+    cantidad = models.IntegerField(
+        help_text="Cantidad de productos (positivo para entradas, negativo para salidas)"
+    )
+
+    stock_anterior = models.PositiveIntegerField(
+        verbose_name="Stock antes del movimiento"
+    )
+
+    stock_nuevo = models.PositiveIntegerField(
+        verbose_name="Stock después del movimiento"
+    )
+
+    # Referencias opcionales a otros modelos
+    venta = models.ForeignKey(
+        'Venta',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='movimientos_stock'
+    )
+
+    usuario = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='movimientos_stock_realizados'
+    )
+
+    motivo = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text="Descripción del movimiento"
+    )
+
+    fecha_movimiento = models.DateTimeField(auto_now_add=True)
+
+    # Información adicional para trazabilidad
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True,
+        verbose_name="IP desde donde se hizo el movimiento"
+    )
+
+    class Meta:
+        verbose_name = "Movimiento de Stock"
+        verbose_name_plural = "Movimientos de Stock"
+        ordering = ['-fecha_movimiento']
+        indexes = [
+            models.Index(fields=['business', 'fecha_movimiento']),
+            models.Index(fields=['producto', 'fecha_movimiento']),
+            models.Index(fields=['business', 'tipo_movimiento']),
+            models.Index(fields=['venta']),
+        ]
+
+    def __str__(self):
+        signo = '+' if self.cantidad > 0 else ''
+        return f"{self.producto.nombre} - {signo}{self.cantidad} ({self.get_tipo_movimiento_display()})"
+
+    def save(self, *args, **kwargs):
+        # Validar que el stock nuevo sea consistente
+        if self.stock_anterior + self.cantidad != self.stock_nuevo:
+            raise ValueError(
+                f"Inconsistencia en stock: {self.stock_anterior} + {self.cantidad} ≠ {self.stock_nuevo}"
+            )
+        super().save(*args, **kwargs)
+
+
+# ========================
 # MODELOS DE SUSCRIPCIÓN
 # ========================
 

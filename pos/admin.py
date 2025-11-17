@@ -1,5 +1,5 @@
-from django.contrib import admin 
-from .models import Producto, Venta, VentaDetalle, Categoria, Sucursal
+from django.contrib import admin
+from .models import Producto, Venta, VentaDetalle, Categoria, Sucursal, MovimientoStock
 from django.utils.html import format_html
 
 # Configurar el admin site
@@ -123,3 +123,71 @@ class VentaDetalleAdmin(admin.ModelAdmin):
     def subtotal_formatted(self, obj):
         return format_html('<span style="color: green; font-weight: bold;">${:,.2f}</span>', obj.subtotal)
     subtotal_formatted.short_description = "Subtotal"
+
+
+@admin.register(MovimientoStock)
+class MovimientoStockAdmin(admin.ModelAdmin):
+    list_display = [
+        'fecha_movimiento', 'business', 'producto_info', 'tipo_movimiento',
+        'cantidad_display', 'stock_anterior', 'stock_nuevo', 'usuario', 'motivo_corto'
+    ]
+    list_filter = [
+        'tipo_movimiento', 'business', 'fecha_movimiento', 'usuario'
+    ]
+    search_fields = [
+        'producto__codigo', 'producto__nombre', 'motivo', 'venta__folio', 'usuario__username'
+    ]
+    date_hierarchy = 'fecha_movimiento'
+    ordering = ['-fecha_movimiento']
+    readonly_fields = [
+        'fecha_movimiento', 'stock_anterior', 'stock_nuevo', 'ip_address'
+    ]
+    list_per_page = 50
+
+    fieldsets = (
+        ('Información del Movimiento', {
+            'fields': ('business', 'producto', 'tipo_movimiento', 'cantidad')
+        }),
+        ('Stock', {
+            'fields': ('stock_anterior', 'stock_nuevo')
+        }),
+        ('Referencias', {
+            'fields': ('venta', 'usuario', 'motivo')
+        }),
+        ('Información Técnica', {
+            'fields': ('fecha_movimiento', 'ip_address'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def producto_info(self, obj):
+        return format_html(
+            '<strong>{}</strong><br><small style="color: gray;">{}</small>',
+            obj.producto.nombre,
+            obj.producto.codigo
+        )
+    producto_info.short_description = "Producto"
+
+    def cantidad_display(self, obj):
+        if obj.cantidad > 0:
+            color = 'green'
+            signo = '+'
+        else:
+            color = 'red'
+            signo = ''
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}{}</span>',
+            color, signo, obj.cantidad
+        )
+    cantidad_display.short_description = "Cantidad"
+
+    def motivo_corto(self, obj):
+        if len(obj.motivo or '') > 40:
+            return (obj.motivo or '')[:37] + '...'
+        return obj.motivo or '-'
+    motivo_corto.short_description = "Motivo"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            'business', 'producto', 'usuario', 'venta'
+        )
