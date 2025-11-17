@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "echo '🚀 Starting Railway deployment...' && python manage.py migrate --noinput && echo '✅ Migrations completed' && python init_railway.py && echo '✅ Initial data loaded' && gunicorn dulceria_pos.wsgi --log-file -",
+    "startCommand": "python railway_migrate.py && python init_railway.py && gunicorn dulceria_pos.wsgi --log-file -",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",

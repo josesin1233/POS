@@ -5,4 +5,4 @@ cmds = [
 ]
 
 [phases.start]
-cmd = "python manage.py migrate --noinput && python init_railway.py && gunicorn dulceria_pos.wsgi --config gunicorn.conf.py"
+cmd = "python railway_migrate.py && python init_railway.py && gunicorn dulceria_pos.wsgi --config gunicorn.conf.py"
