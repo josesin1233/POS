@@ -221,8 +221,8 @@
               <th class="p-3 font-medium text-center">Cantidad</th>
               <th class="p-3 font-medium text-right">Precio Unitario</th>
               <th class="p-3 font-medium text-right">Total</th>
-              <th class="p-3 font-medium">Usuario</th>
-              <th class="p-3 font-medium">Stock</th>
+              <th class="p-3 font-medium text-center">Código</th>
+              <th class="p-3 font-medium text-center">Stock</th>
             </tr>
           </thead>
           <tbody id="tabla-ventas-body"></tbody>
@@ -348,13 +348,17 @@
                 const stockInfo = movimiento ?
                   `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '';
 
+                // Detectar si es una venta antigua (sin movimientos de stock)
+                const esVentaAntigua = !venta.movimientos_stock || venta.movimientos_stock.length === 0;
+                const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
+
                 fila.innerHTML = `
                   <td class="p-3" style="color: var(--text-primary);">${detalle.producto.nombre}</td>
                   <td class="p-3 text-center" style="color: var(--text-primary);">${detalle.cantidad}</td>
                   <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(detalle.precio_unitario)}</td>
                   <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(detalle.cantidad * detalle.precio_unitario)}</td>
-                  <td class="p-3 text-sm" style="color: var(--text-secondary);">${venta.usuario ? venta.usuario.nombre_completo : ''}</td>
-                  <td class="p-3 text-sm font-mono" style="color: var(--accent-green);">${stockInfo}</td>
+                  <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">-</td>
+                  <td class="p-3 text-sm font-mono text-center" style="color: var(--accent-green);">${stockDisplay}</td>
                 `;
                 grupoContainer.appendChild(fila);
               });
@@ -407,13 +411,17 @@
               const stockInfo = movimiento ?
                 `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '';
 
+              // Detectar si es una venta antigua (sin movimientos de stock)
+              const esVentaAntigua = !venta.movimientos_stock || venta.movimientos_stock.length === 0;
+              const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
+
               fila.innerHTML = `
                 <td class="p-3" style="color: var(--text-primary);">${p.nombre_producto}</td>
                 <td class="p-3 text-center" style="color: var(--text-primary);">${p.cantidad_vendida}</td>
                 <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(p.precio_unitario)}</td>
                 <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(p.total)}</td>
-                <td class="p-3 text-sm" style="color: var(--text-secondary);">${venta.usuario ? venta.usuario.nombre_completo : ''}</td>
-                <td class="p-3 text-sm font-mono" style="color: var(--accent-green);">${stockInfo}</td>
+                <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">-</td>
+                <td class="p-3 text-sm font-mono text-center" style="color: var(--accent-green);">${stockDisplay}</td>
               `;
               tabla.appendChild(fila);
             });
