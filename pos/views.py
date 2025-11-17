@@ -1500,6 +1500,144 @@ def obtener_movimientos_stock(request):
 
 @csrf_exempt
 @login_required
+def registro_completo_api(request):
+    """API unificada para mostrar ventas y movimientos de stock en una sola vista cronológica"""
+    try:
+        business = request.user.business
+
+        # Parámetros de filtro
+        fecha_inicio = request.GET.get('fecha_inicio')
+        fecha_fin = request.GET.get('fecha_fin')
+        limite = int(request.GET.get('limite', 50))
+
+        from datetime import timedelta
+        from django.utils import timezone
+        from django.db.models import Q
+
+        hoy = timezone.now().date()
+
+        # Si no hay filtros, mostrar últimos 7 días
+        if not fecha_inicio and not fecha_fin:
+            fecha_inicio = (hoy - timedelta(days=7)).isoformat()
+            fecha_fin = hoy.isoformat()
+
+        # Obtener ventas
+        ventas_query = Venta.objects.filter(
+            business=business,
+            estado='completada'
+        ).select_related('usuario').prefetch_related('detalles__producto', 'movimientos_stock')
+
+        # Obtener movimientos de stock que NO sean de ventas (entradas manuales, ajustes, etc.)
+        movimientos_query = MovimientoStock.objects.filter(
+            business=business
+        ).exclude(
+            tipo_movimiento='venta'  # Excluir movimientos de venta (ya están en ventas)
+        ).select_related('usuario', 'producto')
+
+        # Aplicar filtros de fecha
+        if fecha_inicio:
+            fecha_inicio_dt = timezone.datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            ventas_query = ventas_query.filter(fecha_creacion__date__gte=fecha_inicio_dt)
+            movimientos_query = movimientos_query.filter(fecha_movimiento__date__gte=fecha_inicio_dt)
+
+        if fecha_fin:
+            fecha_fin_dt = timezone.datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+            ventas_query = ventas_query.filter(fecha_creacion__date__lte=fecha_fin_dt)
+            movimientos_query = movimientos_query.filter(fecha_movimiento__date__lte=fecha_fin_dt)
+
+        # Obtener datos
+        ventas = ventas_query.order_by('-fecha_creacion')
+        movimientos = movimientos_query.order_by('-fecha_movimiento')
+
+        # Crear lista unificada de actividades
+        actividades = []
+
+        # Agregar ventas
+        for venta in ventas:
+            usuario_nombre = f"{venta.usuario.first_name} {venta.usuario.last_name}".strip() or venta.usuario.username
+
+            actividades.append({
+                'tipo': 'venta',
+                'id': venta.id,
+                'fecha': venta.fecha_creacion.isoformat(),
+                'titulo': f"💰 Venta #{venta.folio}",
+                'usuario': usuario_nombre,
+                'total': float(venta.total),
+                'metodo_pago': venta.get_metodo_pago_display(),
+                'productos': [
+                    {
+                        'nombre': detalle.producto.nombre,
+                        'cantidad': detalle.cantidad,
+                        'precio_unitario': float(detalle.precio_unitario),
+                        'subtotal': float(detalle.subtotal)
+                    }
+                    for detalle in venta.detalles.all()
+                ],
+                'movimientos_stock': [
+                    {
+                        'producto': mov.producto.nombre,
+                        'stock_anterior': mov.stock_anterior,
+                        'cantidad': mov.cantidad,
+                        'stock_nuevo': mov.stock_nuevo
+                    }
+                    for mov in venta.movimientos_stock.all()
+                ]
+            })
+
+        # Agregar movimientos de stock (entradas, ajustes, etc.)
+        for movimiento in movimientos:
+            usuario_nombre = f"{movimiento.usuario.first_name} {movimiento.usuario.last_name}".strip() or movimiento.usuario.username
+
+            # Determinar icono y color según tipo
+            iconos_tipo = {
+                'entrada': '📦⬆️',
+                'compra': '🛒',
+                'ajuste': '⚖️',
+                'salida': '📦⬇️',
+                'merma': '💸',
+                'devolucion': '↩️'
+            }
+
+            actividades.append({
+                'tipo': 'movimiento_stock',
+                'id': movimiento.id,
+                'fecha': movimiento.fecha_movimiento.isoformat(),
+                'titulo': f"{iconos_tipo.get(movimiento.tipo_movimiento, '📦')} {movimiento.get_tipo_movimiento_display()}",
+                'usuario': usuario_nombre,
+                'motivo': movimiento.motivo,
+                'producto': {
+                    'nombre': movimiento.producto.nombre,
+                    'codigo': movimiento.producto.codigo,
+                    'stock_anterior': movimiento.stock_anterior,
+                    'cantidad_movida': movimiento.cantidad,
+                    'stock_nuevo': movimiento.stock_nuevo
+                }
+            })
+
+        # Ordenar todo por fecha (más reciente primero)
+        actividades.sort(key=lambda x: x['fecha'], reverse=True)
+
+        # Limitar resultados
+        if limite > 0:
+            actividades = actividades[:limite]
+
+        return JsonResponse({
+            'actividades': actividades,
+            'total_actividades': len(actividades),
+            'fecha_inicio': fecha_inicio,
+            'fecha_fin': fecha_fin
+        })
+
+    except Exception as e:
+        logger.error(f"Error en registro_completo_api: {e}")
+        return JsonResponse({
+            'error': f'Error interno: {str(e)}',
+            'actividades': []
+        }, status=500)
+
+
+@csrf_exempt
+@login_required
 def movimientos_stock_api(request):
     """API para obtener historial de movimientos de stock para el frontend"""
     try:

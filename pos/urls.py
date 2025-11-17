@@ -107,4 +107,7 @@ urlpatterns = [
 
     # API específica para frontend de movimientos de stock
     path('inventario/movimientos/api/', views.movimientos_stock_api, name='movimientos_stock_api'),
+
+    # API unificada: registro completo de ventas + movimientos de inventario
+    path('registro/completo/', views.registro_completo_api, name='registro_completo_api'),
 ]

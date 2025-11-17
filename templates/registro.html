@@ -265,9 +265,9 @@
         return cookieValue;
       }
       
-      // For now, we'll use the existing API structure
-      console.log('[DEBUG] Haciendo fetch a:', `/ventas/api/${queryParams}`);
-      const res = await fetch(`/ventas/api/${queryParams}`, {
+      // Usar la nueva API unificada que incluye movimientos de inventario
+      console.log('[DEBUG] Haciendo fetch a:', `/registro/completo/${queryParams}`);
+      const res = await fetch(`/registro/completo/${queryParams}`, {
         method: 'GET',
         credentials: 'same-origin',
         headers: {
@@ -288,13 +288,103 @@
       const data = await res.json();
 
       tabla.innerHTML = "";
-      
-      // Mostrar total del día actual siempre
+
+      // Para el total del día, usaremos la nueva API de ventas original como fallback
+      // TODO: Implementar cálculo de total del día en la nueva API
       if (data.total_del_dia !== undefined) {
         totalDiaSpan.textContent = formatearPesos(data.total_del_dia);
       }
 
-      if (data.es_agrupado) {
+      // Nueva estructura: mostrar actividades unificadas
+      if (data.actividades && data.actividades.length > 0) {
+        data.actividades.forEach(actividad => {
+          const fecha = new Date(actividad.fecha).toLocaleString('es-MX');
+
+          if (actividad.tipo === 'venta') {
+            // Renderizar venta
+            const filaHeader = document.createElement("tr");
+            filaHeader.style.background = "var(--bg-tertiary)";
+            filaHeader.style.borderBottom = "1px solid var(--border-color)";
+            filaHeader.innerHTML = `
+              <td colspan="6" class="p-3 font-semibold" style="color: var(--accent-blue);">
+                ${actividad.titulo} del ${fecha} - Total: ${formatearPesos(actividad.total)}
+                - 👤 ${actividad.usuario} - 💳 ${actividad.metodo_pago}
+              </td>
+            `;
+            tabla.appendChild(filaHeader);
+
+            // Productos de la venta
+            actividad.productos.forEach(producto => {
+              // Buscar movimiento de stock para este producto
+              const movimiento = actividad.movimientos_stock ?
+                actividad.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
+
+              const stockInfo = movimiento ?
+                `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '⏳ Sin registro';
+
+              const fila = document.createElement("tr");
+              fila.style.borderBottom = "1px solid var(--border-color)";
+              fila.style.transition = "background-color 0.2s ease";
+              fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
+              fila.onmouseleave = () => fila.style.background = "transparent";
+              fila.innerHTML = `
+                <td class="p-3" style="color: var(--text-primary);">${producto.nombre}</td>
+                <td class="p-3 text-center" style="color: var(--text-primary);">${producto.cantidad}</td>
+                <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
+                <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(producto.subtotal)}</td>
+                <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">-</td>
+                <td class="p-3 text-sm font-mono text-center" style="color: var(--accent-green);">${stockInfo}</td>
+              `;
+              tabla.appendChild(fila);
+            });
+
+          } else if (actividad.tipo === 'movimiento_stock') {
+            // Renderizar movimiento de inventario
+            const filaHeader = document.createElement("tr");
+            filaHeader.style.background = "linear-gradient(135deg, #2a5a2a 0%, #1a4a1a 100%)";
+            filaHeader.style.borderBottom = "1px solid var(--border-color)";
+            filaHeader.innerHTML = `
+              <td colspan="6" class="p-3 font-semibold" style="color: #90EE90;">
+                ${actividad.titulo} del ${fecha} - 👤 ${actividad.usuario}
+                ${actividad.motivo ? `- 📝 ${actividad.motivo}` : ''}
+              </td>
+            `;
+            tabla.appendChild(filaHeader);
+
+            // Detalle del movimiento de stock
+            const cantidad_text = actividad.producto.cantidad_movida > 0 ?
+              `+${actividad.producto.cantidad_movida}` :
+              `${actividad.producto.cantidad_movida}`;
+
+            const fila = document.createElement("tr");
+            fila.style.borderBottom = "1px solid var(--border-color)";
+            fila.style.background = "rgba(144, 238, 144, 0.05)";
+            fila.innerHTML = `
+              <td class="p-3" style="color: var(--text-primary);">${actividad.producto.nombre}</td>
+              <td class="p-3 text-center font-bold" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</td>
+              <td class="p-3 text-center" style="color: var(--text-secondary);">-</td>
+              <td class="p-3 text-center" style="color: var(--text-secondary);">-</td>
+              <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">${actividad.producto.codigo}</td>
+              <td class="p-3 text-sm font-mono text-center font-bold" style="color: var(--accent-green);">
+                📦 ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
+              </td>
+            `;
+            tabla.appendChild(fila);
+          }
+        });
+      } else {
+        // No hay actividades
+        const filaVacia = document.createElement("tr");
+        filaVacia.innerHTML = `
+          <td colspan="6" class="p-6 text-center" style="color: var(--text-secondary);">
+            No hay actividades registradas en el período seleccionado
+          </td>
+        `;
+        tabla.appendChild(filaVacia);
+      }
+
+      // Resto del código para compatibilidad con versión anterior
+      if (false && data.es_agrupado) {
         // Vista agrupada (sin filtros)
         if (data.grupos && data.grupos.length > 0) {
           data.grupos.forEach(grupo => {
