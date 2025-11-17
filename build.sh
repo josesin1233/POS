@@ -13,9 +13,8 @@ echo "📁 Creating staticfiles directory..."
 mkdir -p /app/staticfiles
 ls -la /app/
 
-# Run migrations
-echo "🗄️ Running migrations..."
-python manage.py migrate --noinput
+# Skip migrations during build (will run at startup)
+echo "🗄️ Skipping migrations during build (will run at startup)..."
 
 # Collect static files (try multiple approaches)
 echo "🎨 Collecting static files..."
