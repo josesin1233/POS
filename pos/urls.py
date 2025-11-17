@@ -104,4 +104,7 @@ urlpatterns = [
 
     # Obtener historial de movimientos de stock
     path('inventario/movimientos/', views.obtener_movimientos_stock, name='obtener_movimientos_stock'),
+
+    # API específica para frontend de movimientos de stock
+    path('inventario/movimientos/api/', views.movimientos_stock_api, name='movimientos_stock_api'),
 ]

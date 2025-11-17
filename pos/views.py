@@ -588,6 +588,12 @@ def ventas_api(request):
                     'id': venta.id,
                     'fecha_creacion': venta.fecha_creacion.isoformat(),
                     'total': float(venta.total),
+                    'usuario': {
+                        'username': venta.usuario.username,
+                        'nombre_completo': f"{venta.usuario.first_name} {venta.usuario.last_name}".strip() or venta.usuario.username
+                    },
+                    'folio': venta.folio,
+                    'metodo_pago': venta.get_metodo_pago_display(),
                     'detalles': [
                         {
                             'producto': {'nombre': detalle.producto.nombre},
@@ -595,7 +601,16 @@ def ventas_api(request):
                             'precio_unitario': float(detalle.precio_unitario)
                         }
                         for detalle in venta.detalles.all()
-                    ]
+                    ],
+                    'movimientos_stock': [
+                        {
+                            'producto': mov.producto.nombre,
+                            'cantidad_movida': mov.cantidad,
+                            'stock_anterior': mov.stock_anterior,
+                            'stock_nuevo': mov.stock_nuevo
+                        }
+                        for mov in venta.movimientos_stock.all()
+                    ] if hasattr(venta, 'movimientos_stock') else []
                 }
 
             # Combinar todo con marcadores de grupo
@@ -651,12 +666,27 @@ def ventas_api(request):
                     'precio_unitario': float(detalle.precio_unitario),
                     'total': float(detalle.cantidad * detalle.precio_unitario)
                 })
-            
+
             ventas_data.append({
                 'id': venta.id,
                 'fecha': venta.fecha_creacion.isoformat(),
                 'total_venta': float(venta.total),
-                'productos': productos_venta
+                'usuario': {
+                    'username': venta.usuario.username,
+                    'nombre_completo': f"{venta.usuario.first_name} {venta.usuario.last_name}".strip() or venta.usuario.username
+                },
+                'folio': venta.folio,
+                'metodo_pago': venta.get_metodo_pago_display(),
+                'productos': productos_venta,
+                'movimientos_stock': [
+                    {
+                        'producto': mov.producto.nombre,
+                        'cantidad_movida': mov.cantidad,
+                        'stock_anterior': mov.stock_anterior,
+                        'stock_nuevo': mov.stock_nuevo
+                    }
+                    for mov in venta.movimientos_stock.all()
+                ] if hasattr(venta, 'movimientos_stock') else []
             })
         
         return JsonResponse({
@@ -1465,4 +1495,111 @@ def obtener_movimientos_stock(request):
         logger.error(f"Error obteniendo movimientos de stock: {e}")
         return JsonResponse({
             'error': f'Error interno: {str(e)}'
+        }, status=500)
+
+
+@csrf_exempt
+@login_required
+def movimientos_stock_api(request):
+    """API para obtener historial de movimientos de stock para el frontend"""
+    try:
+        business = request.user.business
+
+        # Parámetros de filtro
+        limite = int(request.GET.get('limite', 50))
+        tipo_movimiento = request.GET.get('tipo_movimiento')
+        producto_id = request.GET.get('producto_id')
+        fecha_desde = request.GET.get('fecha_desde')
+        fecha_hasta = request.GET.get('fecha_hasta')
+
+        # Base queryset
+        movimientos = MovimientoStock.objects.filter(business=business).select_related(
+            'producto', 'usuario', 'venta'
+        )
+
+        # Aplicar filtros
+        if tipo_movimiento:
+            movimientos = movimientos.filter(tipo_movimiento=tipo_movimiento)
+
+        if producto_id:
+            movimientos = movimientos.filter(producto__id=producto_id)
+
+        if fecha_desde:
+            from datetime import datetime
+            fecha_desde_dt = datetime.strptime(fecha_desde, '%Y-%m-%d')
+            movimientos = movimientos.filter(fecha_movimiento__gte=fecha_desde_dt)
+
+        if fecha_hasta:
+            from datetime import datetime
+            fecha_hasta_dt = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+            movimientos = movimientos.filter(fecha_movimiento__lte=fecha_hasta_dt)
+
+        # Ordenar y limitar
+        movimientos = movimientos.order_by('-fecha_movimiento')[:limite]
+
+        # Construir respuesta
+        movimientos_data = []
+        for mov in movimientos:
+            usuario_nombre = f"{mov.usuario.first_name} {mov.usuario.last_name}".strip() or mov.usuario.username
+
+            movimiento_info = {
+                'id': mov.id,
+                'fecha': mov.fecha_movimiento.isoformat(),
+                'tipo_movimiento': mov.tipo_movimiento,
+                'tipo_movimiento_display': mov.get_tipo_movimiento_display(),
+                'cantidad': mov.cantidad,
+                'stock_anterior': mov.stock_anterior,
+                'stock_nuevo': mov.stock_nuevo,
+                'motivo': mov.motivo,
+                'usuario': {
+                    'username': mov.usuario.username,
+                    'nombre_completo': usuario_nombre
+                },
+                'producto': {
+                    'id': mov.producto.id,
+                    'codigo': mov.producto.codigo,
+                    'nombre': mov.producto.nombre,
+                    'stock_actual': mov.producto.stock
+                }
+            }
+
+            # Agregar información de venta si existe
+            if mov.venta:
+                movimiento_info['venta'] = {
+                    'id': mov.venta.id,
+                    'folio': mov.venta.folio,
+                    'total': float(mov.venta.total),
+                    'fecha': mov.venta.fecha_creacion.isoformat()
+                }
+
+            movimientos_data.append(movimiento_info)
+
+        # Obtener estadísticas
+        total_movimientos = MovimientoStock.objects.filter(business=business).count()
+        movimientos_hoy = MovimientoStock.objects.filter(
+            business=business,
+            fecha_movimiento__date=timezone.now().date()
+        ).count()
+
+        return JsonResponse({
+            'movimientos': movimientos_data,
+            'total_encontrados': len(movimientos_data),
+            'total_movimientos': total_movimientos,
+            'movimientos_hoy': movimientos_hoy,
+            'tipos_disponibles': [
+                {'value': 'venta', 'label': 'Ventas'},
+                {'value': 'entrada', 'label': 'Entradas'},
+                {'value': 'salida', 'label': 'Salidas'},
+                {'value': 'ajuste', 'label': 'Ajustes'},
+                {'value': 'compra', 'label': 'Compras'},
+                {'value': 'devolucion', 'label': 'Devoluciones'},
+                {'value': 'merma', 'label': 'Mermas'}
+            ]
+        })
+
+    except Exception as e:
+        logger.error(f"Error en movimientos_stock_api: {e}")
+        return JsonResponse({
+            'error': f'Error interno: {str(e)}',
+            'movimientos': []
         }, status=500)
