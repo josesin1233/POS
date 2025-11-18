@@ -188,35 +188,29 @@
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="modern-card p-6 mb-6">
-      <form id="filtro-form" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por día:</label>
-          <input type="date" id="filtro-dia" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
+    <!-- Filters - Compacto -->
+    <div class="modern-card p-3 mb-4">
+      <form id="filtro-form" class="flex flex-wrap gap-3 items-end">
+        <div class="flex-shrink-0">
+          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Día:</label>
+          <input type="date" id="filtro-dia" class="w-32 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por mes:</label>
-          <input type="month" id="filtro-mes" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
+        <div class="flex-shrink-0">
+          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Mes:</label>
+          <input type="month" id="filtro-mes" class="w-32 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por año:</label>
-          <input type="number" id="filtro-anio" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Ej. 2025" min="2000" />
+        <div class="flex-shrink-0">
+          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Año:</label>
+          <input type="number" id="filtro-anio" class="w-20 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="2025" min="2000" />
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por producto:</label>
-          <div class="flex space-x-2">
-            <input type="text" id="filtro-producto" class="flex-1 p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Código o nombre del producto" />
-            <button type="button" onclick="openScanner('filtro-producto')"
-                    class="modern-button flex items-center justify-center px-3"
-                    style="min-width: 50px;">
-              🔍
-            </button>
+        <div class="flex-1 min-w-48">
+          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Producto:</label>
+          <div class="flex gap-1">
+            <input type="text" id="filtro-producto" class="flex-1 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Código o nombre" />
+            <button type="button" onclick="openScanner('filtro-producto')" class="modern-button flex items-center justify-center px-2 text-sm" style="min-width: 32px; height: 34px;">🔍</button>
           </div>
         </div>
-        <div class="flex items-end">
-          <button type="submit" class="modern-button primary w-full">Aplicar filtro</button>
-        </div>
+        <button type="submit" class="modern-button primary px-4 py-2 text-sm">Filtrar</button>
       </form>
     </div>
 
