@@ -1533,14 +1533,37 @@ def registro_completo_api(request):
         fecha_fin = request.GET.get('fecha_fin')
         limite = int(request.GET.get('limite', 50))
 
+        # Nuevos filtros de fecha compatible con frontend existente
+        dia = request.GET.get('dia')
+        mes = request.GET.get('mes')
+        anio = request.GET.get('anio')
+        producto_filtro = request.GET.get('producto')
+
         from datetime import timedelta
         from django.utils import timezone
         from django.db.models import Q
 
         hoy = timezone.now().date()
 
-        # Si no hay filtros, mostrar últimos 7 días
-        if not fecha_inicio and not fecha_fin:
+        # Procesar filtros de fecha del frontend existente
+        if dia:
+            fecha_inicio = dia
+            fecha_fin = dia
+        elif mes:
+            año, mes_num = mes.split('-')
+            from datetime import datetime
+            primer_dia = datetime(int(año), int(mes_num), 1).date()
+            if int(mes_num) == 12:
+                ultimo_dia = datetime(int(año) + 1, 1, 1).date() - timedelta(days=1)
+            else:
+                ultimo_dia = datetime(int(año), int(mes_num) + 1, 1).date() - timedelta(days=1)
+            fecha_inicio = primer_dia.isoformat()
+            fecha_fin = ultimo_dia.isoformat()
+        elif anio:
+            fecha_inicio = f"{anio}-01-01"
+            fecha_fin = f"{anio}-12-31"
+        elif not fecha_inicio and not fecha_fin:
+            # Si no hay filtros, mostrar últimos 7 días
             fecha_inicio = (hoy - timedelta(days=7)).isoformat()
             fecha_fin = hoy.isoformat()
 
@@ -1567,6 +1590,20 @@ def registro_completo_api(request):
             fecha_fin_dt = timezone.datetime.strptime(fecha_fin, '%Y-%m-%d').date()
             ventas_query = ventas_query.filter(fecha_creacion__date__lte=fecha_fin_dt)
             movimientos_query = movimientos_query.filter(fecha_movimiento__date__lte=fecha_fin_dt)
+
+        # Aplicar filtro por producto
+        if producto_filtro:
+            # Filtrar ventas que contengan este producto
+            ventas_query = ventas_query.filter(
+                Q(detalles__producto__codigo__icontains=producto_filtro) |
+                Q(detalles__producto__nombre__icontains=producto_filtro)
+            ).distinct()
+
+            # Filtrar movimientos de stock de este producto
+            movimientos_query = movimientos_query.filter(
+                Q(producto__codigo__icontains=producto_filtro) |
+                Q(producto__nombre__icontains=producto_filtro)
+            )
 
         # Obtener datos
         ventas = ventas_query.order_by('-fecha_creacion')

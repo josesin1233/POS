@@ -7,6 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
   <link rel="alternate icon" href="{% static 'favicon.ico' %}">
   <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+  <link rel="stylesheet" href="{% static 'css/scanner.css' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -189,7 +190,7 @@
 
     <!-- Filters -->
     <div class="modern-card p-6 mb-6">
-      <form id="filtro-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <form id="filtro-form" class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
           <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por día:</label>
           <input type="date" id="filtro-dia" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
@@ -201,6 +202,17 @@
         <div>
           <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por año:</label>
           <input type="number" id="filtro-anio" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Ej. 2025" min="2000" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por producto:</label>
+          <div class="flex space-x-2">
+            <input type="text" id="filtro-producto" class="flex-1 p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Código o nombre del producto" />
+            <button type="button" onclick="openScanner('filtro-producto')"
+                    class="modern-button flex items-center justify-center px-3"
+                    style="min-width: 50px;">
+              🔍
+            </button>
+          </div>
         </div>
         <div class="flex items-end">
           <button type="submit" class="modern-button primary w-full">Aplicar filtro</button>
@@ -568,11 +580,13 @@
     const dia = document.getElementById("filtro-dia").value;
     const mes = document.getElementById("filtro-mes").value;
     const anio = document.getElementById("filtro-anio").value;
+    const producto = document.getElementById("filtro-producto").value;
 
     const params = new URLSearchParams();
     if (dia) params.append("dia", dia);
     if (mes) params.append("mes", mes);
     if (anio) params.append("anio", anio);
+    if (producto) params.append("producto", producto);
 
     const queryString = params.toString();
     cargarVentas(queryString ? "?" + queryString : "");
@@ -599,7 +613,26 @@
 
   // Make toggleGrupo globally available
   window.toggleGrupo = toggleGrupo;
+
+  // Function to open scanner for product filter
+  function openScanner(targetFieldId = null) {
+    console.log(`🚀 REGISTRO DEBUG: openScanner called with targetFieldId: ${targetFieldId}`);
+
+    if (typeof BarCodeScanner !== 'undefined') {
+      console.log(`✅ REGISTRO DEBUG: BarCodeScanner available, opening with target: ${targetFieldId}`);
+      BarCodeScanner.open(targetFieldId);
+    } else {
+      console.error(`❌ REGISTRO DEBUG: BarCodeScanner not available!`);
+      alert('Scanner no disponible. Ingresa el código manualmente.');
+    }
+  }
+
+  // Make openScanner globally available
+  window.openScanner = openScanner;
 </script>
+
+<!-- Include barcode scanner -->
+<script src="{% static 'js/barcode-scanner.js' %}"></script>
 
 </body>
 </html>
