@@ -205,9 +205,12 @@
         </div>
         <div class="flex-1 min-w-48">
           <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Producto:</label>
-          <div class="flex gap-1">
-            <input type="text" id="filtro-producto" class="flex-1 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Código o nombre" />
-            <button type="button" onclick="openScanner('filtro-producto')" class="modern-button flex items-center justify-center px-2 text-sm" style="min-width: 32px; height: 34px;">🔍</button>
+          <div class="flex gap-1 relative">
+            <input type="text" id="filtro-producto" class="flex-1 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Escribe para buscar..." />
+            <div id="loading-indicator" class="absolute right-12 top-2 hidden">
+              <span class="text-blue-400 text-xs">🔍</span>
+            </div>
+            <button type="button" onclick="openScanner('filtro-producto')" class="modern-button flex items-center justify-center px-2 text-sm" style="min-width: 32px; height: 34px;">📷</button>
           </div>
         </div>
         <button type="submit" class="modern-button primary px-4 py-2 text-sm">Filtrar</button>
@@ -254,6 +257,12 @@
   async function cargarVentas(queryParams = "") {
     try {
       console.log('[DEBUG] Cargando ventas con queryParams:', queryParams);
+
+      // Mostrar indicador de carga si es búsqueda por producto
+      const loadingIndicator = document.getElementById('loading-indicator');
+      if (queryParams.includes('producto')) {
+        loadingIndicator?.classList.remove('hidden');
+      }
       
       // Get CSRF token
       function getCookie(name) {
@@ -388,6 +397,10 @@
         `;
         tabla.appendChild(filaVacia);
       }
+
+      // Ocultar indicador de carga
+      const loadingIndicator = document.getElementById('loading-indicator');
+      loadingIndicator?.classList.add('hidden');
 
       // Resto del código para compatibilidad con versión anterior
       if (false && data.es_agrupado) {
@@ -559,6 +572,10 @@
       if (totalDiaSpan) {
         totalDiaSpan.textContent = "$0.00";
       }
+
+      // Ocultar indicador de carga en caso de error
+      const loadingIndicator = document.getElementById('loading-indicator');
+      loadingIndicator?.classList.add('hidden');
     }
   }
 
@@ -570,7 +587,11 @@
   // Handle filter form submission
   formFiltro.addEventListener("submit", e => {
     e.preventDefault();
+    aplicarFiltros();
+  });
 
+  // Función centralizada para aplicar filtros
+  function aplicarFiltros() {
     const dia = document.getElementById("filtro-dia").value;
     const mes = document.getElementById("filtro-mes").value;
     const anio = document.getElementById("filtro-anio").value;
@@ -584,6 +605,37 @@
 
     const queryString = params.toString();
     cargarVentas(queryString ? "?" + queryString : "");
+  }
+
+  // Búsqueda en tiempo real para el campo de producto
+  let timeoutId = null;
+  const filtroProducto = document.getElementById("filtro-producto");
+
+  filtroProducto.addEventListener("input", function() {
+    // Cancelar búsqueda anterior si existe
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    const valorActual = this.value.trim();
+
+    // Si está vacío, buscar inmediatamente para mostrar todo
+    if (valorActual === '') {
+      console.log('🔍 Campo vacío - mostrando todas las actividades');
+      aplicarFiltros();
+      return;
+    }
+
+    // Si tiene menos de 2 caracteres, no buscar aún
+    if (valorActual.length < 2) {
+      return;
+    }
+
+    // Esperar 300ms después del último keystroke para buscar
+    timeoutId = setTimeout(() => {
+      console.log('🔍 Búsqueda en tiempo real activada:', valorActual);
+      aplicarFiltros();
+    }, 300);
   });
 
   // Toggle grupos (expandir/colapsar)
