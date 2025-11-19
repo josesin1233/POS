@@ -512,15 +512,19 @@ def ventas_api(request):
         from datetime import timedelta
         from django.utils import timezone
         from django.db.models import Sum
-        
-        hoy = timezone.now().date()
-        
+        from zoneinfo import ZoneInfo
+
+        # Obtener fecha actual en timezone de México
+        mexico_tz = ZoneInfo('America/Mexico_City')
+        ahora_mexico = timezone.now().astimezone(mexico_tz)
+        hoy = ahora_mexico.date()
+
         # Obtener parámetros de filtro
         dia = request.GET.get('dia')
         mes = request.GET.get('mes')
         anio = request.GET.get('anio')
-        
-        # Calcular total del día actual siempre
+
+        # Calcular total del día actual siempre usando timezone local
         ventas_hoy = Venta.objects.filter(
             business=business,
             estado='completada',
@@ -1521,6 +1525,205 @@ def obtener_movimientos_stock(request):
         }, status=500)
 
 
+def crear_vista_agrupada_jerarquica(business, ventas, movimientos):
+    """Crear vista jerárquica: años → meses → semanas → días"""
+    from datetime import timedelta, datetime
+    from django.utils import timezone
+    from django.db.models import Sum
+    from collections import defaultdict
+    import calendar
+
+    # Obtener fecha actual en timezone de México
+    from zoneinfo import ZoneInfo
+    mexico_tz = ZoneInfo('America/Mexico_City')
+    ahora_mexico = timezone.now().astimezone(mexico_tz)
+    hoy = ahora_mexico.date()
+
+    # Calcular total del día actual usando timezone local
+    ventas_hoy = Venta.objects.filter(
+        business=business,
+        estado='completada',
+        fecha_creacion__date=hoy
+    )
+    total_del_dia = ventas_hoy.aggregate(total=Sum('total'))['total'] or 0
+
+    # Agrupar ventas por jerarquía
+    jerarquia = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
+
+    for venta in ventas:
+        fecha = venta.fecha_creacion.date()
+        anio = fecha.year
+        mes = fecha.month
+
+        # Calcular semana del mes
+        primer_dia_mes = fecha.replace(day=1)
+        dias_desde_inicio = (fecha - primer_dia_mes).days
+        semana_del_mes = (dias_desde_inicio // 7) + 1
+
+        jerarquia[anio][mes][semana_del_mes][fecha].append({
+            'tipo': 'venta',
+            'venta': venta,
+            'fecha': fecha
+        })
+
+    # Agrupar movimientos de stock
+    for movimiento in movimientos:
+        fecha = movimiento.fecha_movimiento.date()
+        anio = fecha.year
+        mes = fecha.month
+
+        # Calcular semana del mes
+        primer_dia_mes = fecha.replace(day=1)
+        dias_desde_inicio = (fecha - primer_dia_mes).days
+        semana_del_mes = (dias_desde_inicio // 7) + 1
+
+        jerarquia[anio][mes][semana_del_mes][fecha].append({
+            'tipo': 'movimiento_stock',
+            'movimiento': movimiento,
+            'fecha': fecha
+        })
+
+    # Construir estructura de respuesta
+    grupos_anios = []
+
+    for anio in sorted(jerarquia.keys(), reverse=True):
+        # Calcular total del año
+        total_anio = Venta.objects.filter(
+            business=business,
+            estado='completada',
+            fecha_creacion__year=anio
+        ).aggregate(total=Sum('total'))['total'] or 0
+
+        grupos_meses = []
+        for mes in sorted(jerarquia[anio].keys(), reverse=True):
+            # Calcular total del mes
+            total_mes = Venta.objects.filter(
+                business=business,
+                estado='completada',
+                fecha_creacion__year=anio,
+                fecha_creacion__month=mes
+            ).aggregate(total=Sum('total'))['total'] or 0
+
+            grupos_semanas = []
+            for semana in sorted(jerarquia[anio][mes].keys(), reverse=True):
+                grupos_dias = []
+                total_semana = 0
+
+                for fecha_dia in sorted(jerarquia[anio][mes][semana].keys(), reverse=True):
+                    actividades_dia = jerarquia[anio][mes][semana][fecha_dia]
+
+                    # Calcular total del día
+                    total_dia = Venta.objects.filter(
+                        business=business,
+                        estado='completada',
+                        fecha_creacion__date=fecha_dia
+                    ).aggregate(total=Sum('total'))['total'] or 0
+
+                    total_semana += total_dia
+
+                    # Preparar actividades del día
+                    actividades_formateadas = []
+                    for actividad in actividades_dia:
+                        if actividad['tipo'] == 'venta':
+                            venta = actividad['venta']
+                            usuario_nombre = f"{venta.usuario.first_name} {venta.usuario.last_name}".strip() or venta.usuario.username
+
+                            actividades_formateadas.append({
+                                'tipo': 'venta',
+                                'id': venta.id,
+                                'fecha': venta.fecha_creacion.isoformat(),
+                                'titulo': f"💰 Venta #{venta.folio}",
+                                'usuario': usuario_nombre,
+                                'total': float(venta.total),
+                                'metodo_pago': venta.get_metodo_pago_display(),
+                                'productos': [
+                                    {
+                                        'nombre': detalle.producto.nombre,
+                                        'cantidad': detalle.cantidad,
+                                        'precio_unitario': float(detalle.precio_unitario),
+                                        'subtotal': float(detalle.subtotal)
+                                    }
+                                    for detalle in venta.detalles.all()
+                                ],
+                                'movimientos_stock': [
+                                    {
+                                        'producto': mov.producto.nombre,
+                                        'stock_anterior': mov.stock_anterior,
+                                        'cantidad': mov.cantidad,
+                                        'stock_nuevo': mov.stock_nuevo
+                                    }
+                                    for mov in venta.movimientos_stock.all()
+                                ]
+                            })
+                        else:
+                            movimiento = actividad['movimiento']
+                            usuario_nombre = f"{movimiento.usuario.first_name} {movimiento.usuario.last_name}".strip() or movimiento.usuario.username
+
+                            iconos_tipo = {
+                                'entrada': '📦⬆️',
+                                'compra': '🛒',
+                                'ajuste': '⚖️',
+                                'salida': '📦⬇️',
+                                'merma': '💸',
+                                'devolucion': '↩️'
+                            }
+
+                            actividades_formateadas.append({
+                                'tipo': 'movimiento_stock',
+                                'id': movimiento.id,
+                                'fecha': movimiento.fecha_movimiento.isoformat(),
+                                'titulo': f"{iconos_tipo.get(movimiento.tipo_movimiento, '📦')} {movimiento.get_tipo_movimiento_display()}",
+                                'usuario': usuario_nombre,
+                                'motivo': movimiento.motivo,
+                                'producto': {
+                                    'nombre': movimiento.producto.nombre,
+                                    'codigo': movimiento.producto.codigo,
+                                    'stock_anterior': movimiento.stock_anterior,
+                                    'cantidad_movida': movimiento.cantidad,
+                                    'stock_nuevo': movimiento.stock_nuevo
+                                }
+                            })
+
+                    grupos_dias.append({
+                        'tipo': 'dia',
+                        'fecha': fecha_dia.isoformat(),
+                        'titulo': fecha_dia.strftime('%d/%m/%Y'),
+                        'es_hoy': fecha_dia == hoy,
+                        'total': float(total_dia),
+                        'actividades': actividades_formateadas
+                    })
+
+                grupos_semanas.append({
+                    'tipo': 'semana',
+                    'titulo': f"Semana {semana}",
+                    'total': float(total_semana),
+                    'dias': grupos_dias
+                })
+
+            meses_es = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+            nombre_mes = meses_es[mes]
+            grupos_meses.append({
+                'tipo': 'mes',
+                'titulo': f"{nombre_mes} {anio}",
+                'total': float(total_mes),
+                'semanas': grupos_semanas
+            })
+
+        grupos_anios.append({
+            'tipo': 'anio',
+            'titulo': str(anio),
+            'total': float(total_anio),
+            'meses': grupos_meses
+        })
+
+    return JsonResponse({
+        'es_vista_jerarquica': True,
+        'grupos_jerarquicos': grupos_anios,
+        'total_del_dia': float(total_del_dia)
+    })
+
+
 @csrf_exempt
 @login_required
 def registro_completo_api(request):
@@ -1532,6 +1735,7 @@ def registro_completo_api(request):
         fecha_inicio = request.GET.get('fecha_inicio')
         fecha_fin = request.GET.get('fecha_fin')
         limite = int(request.GET.get('limite', 50))
+        vista_agrupada = request.GET.get('agrupada', 'true').lower() == 'true'
 
         # Nuevos filtros de fecha compatible con frontend existente
         dia = request.GET.get('dia')
@@ -1609,6 +1813,10 @@ def registro_completo_api(request):
         ventas = ventas_query.order_by('-fecha_creacion')
         movimientos = movimientos_query.order_by('-fecha_movimiento')
 
+        # Si no hay filtros específicos, crear vista agrupada jerárquica
+        if vista_agrupada and not dia and not mes and not anio and not producto_filtro:
+            return crear_vista_agrupada_jerarquica(business, ventas, movimientos)
+
         # Crear lista unificada de actividades
         actividades = []
 
@@ -1677,6 +1885,20 @@ def registro_completo_api(request):
         # Ordenar todo por fecha (más reciente primero)
         actividades.sort(key=lambda x: x['fecha'], reverse=True)
 
+        # Calcular total del día actual usando timezone de México
+        from django.db.models import Sum
+        from zoneinfo import ZoneInfo
+        mexico_tz = ZoneInfo('America/Mexico_City')
+        ahora_mexico = timezone.now().astimezone(mexico_tz)
+        hoy = ahora_mexico.date()
+
+        ventas_hoy = Venta.objects.filter(
+            business=business,
+            estado='completada',
+            fecha_creacion__date=hoy
+        )
+        total_del_dia = ventas_hoy.aggregate(total=Sum('total'))['total'] or 0
+
         # Limitar resultados
         if limite > 0:
             actividades = actividades[:limite]
@@ -1685,7 +1907,8 @@ def registro_completo_api(request):
             'actividades': actividades,
             'total_actividades': len(actividades),
             'fecha_inicio': fecha_inicio,
-            'fecha_fin': fecha_fin
+            'fecha_fin': fecha_fin,
+            'total_del_dia': float(total_del_dia)
         })
 
     except Exception as e:

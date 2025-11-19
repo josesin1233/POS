@@ -189,33 +189,33 @@
     </div>
 
     <!-- Filters -->
-    <div class="modern-card p-6 mb-6">
-      <form id="filtro-form" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por día:</label>
-          <input type="date" id="filtro-dia" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
+    <div class="modern-card p-4 mb-6">
+      <form id="filtro-form" class="flex flex-wrap items-end gap-3">
+        <div class="flex-1 min-w-32">
+          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Día:</label>
+          <input type="date" id="filtro-dia" class="w-full p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por mes:</label>
-          <input type="month" id="filtro-mes" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
+        <div class="flex-1 min-w-32">
+          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Mes:</label>
+          <input type="month" id="filtro-mes" class="w-full p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por año:</label>
-          <input type="number" id="filtro-anio" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Ej. 2025" min="2000" />
+        <div class="flex-1 min-w-24">
+          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Año:</label>
+          <input type="number" id="filtro-anio" class="w-full p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="2025" min="2000" />
         </div>
-        <div>
-          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por producto:</label>
-          <div class="flex space-x-2">
-            <input type="text" id="filtro-producto" class="flex-1 p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Código o nombre del producto" />
+        <div class="flex-1 min-w-48">
+          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Producto:</label>
+          <div class="flex space-x-1">
+            <input type="text" id="filtro-producto" class="flex-1 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Código o nombre" />
             <button type="button" onclick="openScanner('filtro-producto')"
-                    class="modern-button flex items-center justify-center px-3"
-                    style="min-width: 50px;">
+                    class="modern-button flex items-center justify-center px-2 text-sm"
+                    style="min-width: 36px;">
               🔍
             </button>
           </div>
         </div>
-        <div class="flex items-end">
-          <button type="submit" class="modern-button primary w-full">Aplicar filtro</button>
+        <div>
+          <button type="submit" class="modern-button primary px-4 py-2 text-sm">Filtrar</button>
         </div>
       </form>
     </div>
@@ -307,8 +307,10 @@
         totalDiaSpan.textContent = formatearPesos(data.total_del_dia);
       }
 
-      // Nueva estructura: mostrar actividades unificadas
-      if (data.actividades && data.actividades.length > 0) {
+      // Verificar si es vista jerárquica
+      if (data.es_vista_jerarquica && data.grupos_jerarquicos) {
+        renderizarVistaJerarquica(data.grupos_jerarquicos);
+      } else if (data.actividades && data.actividades.length > 0) {
         data.actividades.forEach(actividad => {
           const fecha = new Date(actividad.fecha).toLocaleString('es-MX');
 
@@ -564,6 +566,200 @@
       
       if (totalDiaSpan) {
         totalDiaSpan.textContent = "$0.00";
+      }
+    }
+  }
+
+  // Renderizar vista jerárquica con años → meses → semanas → días
+  function renderizarVistaJerarquica(gruposAnios) {
+    tabla.innerHTML = "";
+
+    gruposAnios.forEach(anio => {
+      // Header del año
+      const anioHeader = document.createElement("tr");
+      anioHeader.style.background = "linear-gradient(135deg, #1a365d 0%, #2d4a6b 100%)";
+      anioHeader.style.color = "white";
+      anioHeader.style.cursor = "pointer";
+      anioHeader.onclick = () => toggleGrupoJerarquico('anio', anio.titulo);
+      anioHeader.innerHTML = `
+        <td colspan="6" class="p-4 font-bold text-center text-lg">
+          📅 ${anio.titulo} - Total: ${formatearPesos(anio.total)}
+          <span id="toggle-anio-${anio.titulo}" style="float: right;">▼</span>
+        </td>
+      `;
+      tabla.appendChild(anioHeader);
+
+      // Container del año
+      const anioContainer = document.createElement("tbody");
+      anioContainer.id = `grupo-anio-${anio.titulo}`;
+      anioContainer.style.display = anio.titulo === new Date().getFullYear().toString() ? 'table-row-group' : 'none';
+
+      anio.meses.forEach(mes => {
+        // Header del mes
+        const mesHeader = document.createElement("tr");
+        mesHeader.style.background = "linear-gradient(135deg, #2a5a2a 0%, #1a4a1a 100%)";
+        mesHeader.style.color = "#90EE90";
+        mesHeader.style.cursor = "pointer";
+        mesHeader.onclick = () => toggleGrupoJerarquico('mes', `${anio.titulo}-${mes.titulo}`);
+        mesHeader.innerHTML = `
+          <td colspan="6" class="p-3 font-semibold text-center">
+            📊 ${mes.titulo} - Total: ${formatearPesos(mes.total)}
+            <span id="toggle-mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
+          </td>
+        `;
+        anioContainer.appendChild(mesHeader);
+
+        // Container del mes
+        const mesContainer = document.createElement("tbody");
+        mesContainer.id = `grupo-mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}`;
+        mesContainer.style.display = 'none';
+
+        mes.semanas.forEach(semana => {
+          // Header de la semana
+          const semanaHeader = document.createElement("tr");
+          semanaHeader.style.background = "linear-gradient(135deg, #4a4a2a 0%, #3a3a1a 100%)";
+          semanaHeader.style.color = "#FFD700";
+          semanaHeader.style.cursor = "pointer";
+          semanaHeader.onclick = () => toggleGrupoJerarquico('semana', `${anio.titulo}-${mes.titulo}-${semana.titulo}`);
+          semanaHeader.innerHTML = `
+            <td colspan="6" class="p-2 font-medium text-center text-sm">
+              📋 ${semana.titulo} - Total: ${formatearPesos(semana.total)}
+              <span id="toggle-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}" style="float: right;">▶</span>
+            </td>
+          `;
+          mesContainer.appendChild(semanaHeader);
+
+          // Container de la semana
+          const semanaContainer = document.createElement("tbody");
+          semanaContainer.id = `grupo-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}`;
+          semanaContainer.style.display = 'none';
+
+          semana.dias.forEach(dia => {
+            // Header del día
+            const diaHeader = document.createElement("tr");
+            diaHeader.style.background = dia.es_hoy ? "linear-gradient(135deg, #0066cc 0%, #0044aa 100%)" : "var(--bg-tertiary)";
+            diaHeader.style.color = dia.es_hoy ? "white" : "var(--accent-blue)";
+            diaHeader.style.cursor = "pointer";
+            diaHeader.onclick = () => toggleGrupoJerarquico('dia', `${anio.titulo}-${mes.titulo}-${semana.titulo}-${dia.titulo}`);
+            diaHeader.innerHTML = `
+              <td colspan="6" class="p-3 font-semibold" style="border-bottom: 1px solid var(--border-color);">
+                ${dia.es_hoy ? '⭐' : '📍'} ${dia.titulo} - Total: ${formatearPesos(dia.total)}
+                ${dia.es_hoy ? ' (HOY)' : ''}
+                <span id="toggle-dia-${dia.fecha.replace(/-/g, '')}" style="float: right;">▶</span>
+              </td>
+            `;
+            semanaContainer.appendChild(diaHeader);
+
+            // Container del día
+            const diaContainer = document.createElement("tbody");
+            diaContainer.id = `grupo-dia-${dia.fecha.replace(/-/g, '')}`;
+            diaContainer.style.display = dia.es_hoy ? 'table-row-group' : 'none';
+
+            // Actividades del día
+            dia.actividades.forEach(actividad => {
+              if (actividad.tipo === 'venta') {
+                // Agregar productos de la venta
+                actividad.productos.forEach(producto => {
+                  const movimiento = actividad.movimientos_stock ?
+                    actividad.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
+
+                  const stockInfo = movimiento ?
+                    `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '⏳ Sin registro';
+
+                  const fila = document.createElement("tr");
+                  fila.style.borderBottom = "1px solid var(--border-color)";
+                  fila.style.transition = "background-color 0.2s ease";
+                  fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
+                  fila.onmouseleave = () => fila.style.background = "transparent";
+                  fila.innerHTML = `
+                    <td class="p-2 text-sm" style="color: var(--text-primary);">${producto.nombre}</td>
+                    <td class="p-2 text-center text-sm" style="color: var(--text-primary);">${producto.cantidad}</td>
+                    <td class="p-2 text-right font-mono text-sm" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
+                    <td class="p-2 text-right font-semibold text-sm" style="color: var(--accent-blue);">${formatearPesos(producto.subtotal)}</td>
+                    <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">💰 ${actividad.usuario}</td>
+                    <td class="p-2 text-xs font-mono text-center" style="color: var(--accent-green);">${stockInfo}</td>
+                  `;
+                  diaContainer.appendChild(fila);
+                });
+              } else if (actividad.tipo === 'movimiento_stock') {
+                const cantidad_text = actividad.producto.cantidad_movida > 0 ?
+                  `+${actividad.producto.cantidad_movida}` :
+                  `${actividad.producto.cantidad_movida}`;
+
+                const fila = document.createElement("tr");
+                fila.style.borderBottom = "1px solid var(--border-color)";
+                fila.style.background = "rgba(144, 238, 144, 0.05)";
+                fila.innerHTML = `
+                  <td class="p-2 text-sm" style="color: var(--text-primary);">${actividad.producto.nombre}</td>
+                  <td class="p-2 text-center font-bold text-sm" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</td>
+                  <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
+                  <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
+                  <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">📦 ${actividad.usuario}</td>
+                  <td class="p-2 text-xs font-mono text-center font-bold" style="color: var(--accent-green);">
+                    📦 ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
+                  </td>
+                `;
+                diaContainer.appendChild(fila);
+              }
+            });
+
+            semanaContainer.appendChild(diaContainer);
+          });
+
+          mesContainer.appendChild(semanaContainer);
+        });
+
+        anioContainer.appendChild(mesContainer);
+      });
+
+      tabla.appendChild(anioContainer);
+    });
+  }
+
+  // Toggle grupos jerárquicos
+  function toggleGrupoJerarquico(tipo, identificador) {
+    let grupoId, toggleId, simboloAbierto, simboloCerrado;
+
+    switch(tipo) {
+      case 'anio':
+        grupoId = `grupo-anio-${identificador}`;
+        toggleId = `toggle-anio-${identificador}`;
+        simboloAbierto = '▲';
+        simboloCerrado = '▼';
+        break;
+      case 'mes':
+        const [anio, mes] = identificador.split('-', 2);
+        grupoId = `grupo-mes-${anio}-${mes.replace(/\s+/g, '-')}`;
+        toggleId = `toggle-mes-${anio}-${mes.replace(/\s+/g, '-')}`;
+        simboloAbierto = '▲';
+        simboloCerrado = '▼';
+        break;
+      case 'semana':
+        const partes = identificador.split('-');
+        grupoId = `grupo-semana-${partes.join('-').replace(/\s+/g, '-')}`;
+        toggleId = `toggle-semana-${partes.join('-').replace(/\s+/g, '-')}`;
+        simboloAbierto = '▼';
+        simboloCerrado = '▶';
+        break;
+      case 'dia':
+        const [a, m, s, d] = identificador.split('-');
+        grupoId = `grupo-dia-${d.replace(/-/g, '')}`;
+        toggleId = `toggle-dia-${d.replace(/-/g, '')}`;
+        simboloAbierto = '▼';
+        simboloCerrado = '▶';
+        break;
+    }
+
+    const grupo = document.getElementById(grupoId);
+    const toggle = document.getElementById(toggleId);
+
+    if (grupo && toggle) {
+      if (grupo.style.display === 'none') {
+        grupo.style.display = 'table-row-group';
+        toggle.textContent = simboloAbierto;
+      } else {
+        grupo.style.display = 'none';
+        toggle.textContent = simboloCerrado;
       }
     }
   }
