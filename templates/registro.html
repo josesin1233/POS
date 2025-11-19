@@ -449,12 +449,9 @@
                 const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
 
                 fila.innerHTML = `
-                  <td class="p-3" style="color: var(--text-primary);">${detalle.producto.nombre}</td>
-                  <td class="p-3 text-center" style="color: var(--text-primary);">${detalle.cantidad}</td>
-                  <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(detalle.precio_unitario)}</td>
-                  <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(detalle.cantidad * detalle.precio_unitario)}</td>
-                  <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">-</td>
-                  <td class="p-3 text-sm font-mono text-center" style="color: var(--accent-green);">${stockDisplay}</td>
+                  <td colspan="6" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
+                    ${detalle.producto.nombre} | Cant: ${detalle.cantidad} | ${formatearPesos(detalle.precio_unitario)} | Total: ${formatearPesos(detalle.cantidad * detalle.precio_unitario)} | ${stockDisplay}
+                  </td>
                 `;
                 grupoContainer.appendChild(fila);
               });
@@ -512,12 +509,9 @@
               const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
 
               fila.innerHTML = `
-                <td class="p-3" style="color: var(--text-primary);">${p.nombre_producto}</td>
-                <td class="p-3 text-center" style="color: var(--text-primary);">${p.cantidad_vendida}</td>
-                <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(p.precio_unitario)}</td>
-                <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(p.total)}</td>
-                <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">-</td>
-                <td class="p-3 text-sm font-mono text-center" style="color: var(--accent-green);">${stockDisplay}</td>
+                <td colspan="6" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
+                  ${p.nombre_producto} | Cant: ${p.cantidad_vendida} | ${formatearPesos(p.precio_unitario)} | Total: ${formatearPesos(p.total)} | ${stockDisplay}
+                </td>
               `;
               tabla.appendChild(fila);
             });
