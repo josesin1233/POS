@@ -226,15 +226,15 @@
         <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Historial de Ventas</h3>
       </div>
       <div class="overflow-auto" style="max-height: 70vh;">
-        <table class="w-full text-sm text-left" id="tabla-ventas">
+        <table class="text-sm text-left" id="tabla-ventas" style="width: auto; min-width: 100%; table-layout: auto;">
           <thead style="background: var(--bg-tertiary); color: var(--text-primary); border-bottom: 2px solid var(--border-color);" class="sticky top-0">
             <tr>
-              <th class="p-3 font-medium">Producto</th>
-              <th class="p-3 font-medium text-center">Cantidad</th>
-              <th class="p-3 font-medium text-right">Precio Unitario</th>
-              <th class="p-3 font-medium text-right">Total</th>
-              <th class="p-3 font-medium text-center">Código</th>
-              <th class="p-3 font-medium text-center">Stock</th>
+              <th class="p-3 font-medium" style="min-width: 200px;">Producto/Venta</th>
+              <th class="p-3 font-medium text-center" style="min-width: 80px;">Cantidad</th>
+              <th class="p-3 font-medium text-right" style="min-width: 100px;">Precio/Método</th>
+              <th class="p-3 font-medium text-right" style="min-width: 100px;">Total</th>
+              <th class="p-3 font-medium text-center" style="min-width: 100px;">Usuario</th>
+              <th class="p-3 font-medium text-center" style="min-width: 120px;">Fecha/Stock</th>
             </tr>
           </thead>
           <tbody id="tabla-ventas-body"></tbody>
@@ -582,10 +582,15 @@
       anioHeader.style.cursor = "pointer";
       anioHeader.onclick = () => toggleGrupoJerarquico('anio', anio.titulo);
       anioHeader.innerHTML = `
-        <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
+        <td class="p-3 font-medium" style="color: var(--text-primary);">
           ${anio.titulo} - Total: ${formatearPesos(anio.total)}
           <span id="toggle-anio-${anio.titulo}" style="float: right;">▼</span>
         </td>
+        <td class="p-3"></td>
+        <td class="p-3"></td>
+        <td class="p-3"></td>
+        <td class="p-3"></td>
+        <td class="p-3"></td>
       `;
       tabla.appendChild(anioHeader);
 
@@ -602,10 +607,15 @@
         mesHeader.style.cursor = "pointer";
         mesHeader.onclick = () => toggleGrupoJerarquico('mes', `${anio.titulo}-${mes.titulo}`);
         mesHeader.innerHTML = `
-          <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
+          <td class="p-3 font-medium" style="color: var(--text-primary); padding-left: 2rem;">
             ${mes.titulo} - Total: ${formatearPesos(mes.total)}
             <span id="toggle-mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
           </td>
+          <td class="p-3"></td>
+          <td class="p-3"></td>
+          <td class="p-3"></td>
+          <td class="p-3"></td>
+          <td class="p-3"></td>
         `;
         anioContainer.appendChild(mesHeader);
 
@@ -627,10 +637,15 @@
           semanaHeader.style.cursor = "pointer";
           semanaHeader.onclick = () => toggleGrupoJerarquico('semana', `${anio.titulo}-${mes.titulo}-${semana.titulo}`);
           semanaHeader.innerHTML = `
-            <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
+            <td class="p-3 font-medium" style="color: var(--text-primary); padding-left: 3rem;">
               ${semana.titulo} - Total: ${formatearPesos(semana.total)}
               <span id="toggle-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
             </td>
+            <td class="p-3"></td>
+            <td class="p-3"></td>
+            <td class="p-3"></td>
+            <td class="p-3"></td>
+            <td class="p-3"></td>
           `;
           mesContainer.appendChild(semanaHeader);
 
@@ -649,10 +664,15 @@
             diaHeader.style.cursor = "pointer";
             diaHeader.onclick = () => toggleGrupoJerarquico('dia', `${anio.titulo}-${mes.titulo}-${semana.titulo}-${dia.titulo}`);
             diaHeader.innerHTML = `
-              <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
+              <td class="p-3 font-medium" style="color: var(--text-primary); padding-left: 4rem;">
                 ${dia.titulo} - Total: ${formatearPesos(dia.total)}${dia.es_hoy ? ' (HOY)' : ''}
                 <span id="toggle-dia-${dia.fecha.replace(/-/g, '')}" style="float: right;">▼</span>
               </td>
+              <td class="p-3"></td>
+              <td class="p-3"></td>
+              <td class="p-3"></td>
+              <td class="p-3"></td>
+              <td class="p-3"></td>
             `;
             semanaContainer.appendChild(diaHeader);
 
@@ -661,52 +681,92 @@
             diaContainer.id = `grupo-dia-${dia.fecha.replace(/-/g, '')}`;
             diaContainer.style.display = dia.es_hoy ? 'table-row-group' : 'none';
 
-            // Actividades del día
-            dia.actividades.forEach(actividad => {
-              if (actividad.tipo === 'venta') {
-                // Agregar productos de la venta
-                actividad.productos.forEach(producto => {
-                  const movimiento = actividad.movimientos_stock ?
-                    actividad.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
+            // Agrupar ventas y mostrarlas primero
+            const ventas = dia.actividades.filter(actividad => actividad.tipo === 'venta');
+            const movimientos = dia.actividades.filter(actividad => actividad.tipo === 'movimiento_stock');
 
-                  const stockInfo = movimiento ?
-                    `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '⏳ Sin registro';
+            // Mostrar cada venta como un header clickeable
+            ventas.forEach((venta, index) => {
+              const ventaId = `venta-${dia.fecha.replace(/-/g, '')}-${index}`;
+              const fecha = new Date(venta.fecha).toLocaleString('es-MX', {
+                hour: '2-digit',
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              });
 
-                  const fila = document.createElement("tr");
-                  fila.style.borderBottom = "1px solid var(--border-color)";
-                  fila.style.transition = "background-color 0.2s ease";
-                  fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
-                  fila.onmouseleave = () => fila.style.background = "transparent";
-                  fila.innerHTML = `
-                    <td class="p-2 text-sm" style="color: var(--text-primary);">${producto.nombre}</td>
-                    <td class="p-2 text-center text-sm" style="color: var(--text-primary);">${producto.cantidad}</td>
-                    <td class="p-2 text-right font-mono text-sm" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
-                    <td class="p-2 text-right font-semibold text-sm" style="color: var(--accent-blue);">${formatearPesos(producto.subtotal)}</td>
-                    <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
-                    <td class="p-2 text-xs font-mono text-center" style="color: var(--accent-green);">${stockInfo}</td>
-                  `;
-                  diaContainer.appendChild(fila);
-                });
-              } else if (actividad.tipo === 'movimiento_stock') {
-                const cantidad_text = actividad.producto.cantidad_movida > 0 ?
-                  `+${actividad.producto.cantidad_movida}` :
-                  `${actividad.producto.cantidad_movida}`;
+              // Header de la venta
+              const ventaHeader = document.createElement("tr");
+              ventaHeader.style.background = "rgba(0, 123, 255, 0.1)";
+              ventaHeader.style.borderBottom = "1px solid var(--border-color)";
+              ventaHeader.style.cursor = "pointer";
+              ventaHeader.onclick = () => toggleVenta(ventaId);
+              ventaHeader.innerHTML = `
+                <td class="p-2 text-sm font-medium" style="color: var(--accent-blue); padding-left: 5rem;">
+                  Venta #${venta.id} - ${formatearPesos(venta.total)}
+                  <span id="toggle-${ventaId}" style="float: right;">▼</span>
+                </td>
+                <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${venta.productos.length} items</td>
+                <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${venta.metodo_pago}</td>
+                <td class="p-2 text-xs text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(venta.total)}</td>
+                <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${venta.usuario}</td>
+                <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${fecha}</td>
+              `;
+              diaContainer.appendChild(ventaHeader);
+
+              // Container de productos de la venta
+              const ventaContainer = document.createElement("tbody");
+              ventaContainer.id = ventaId;
+              ventaContainer.style.display = 'none';
+
+              // Productos de la venta
+              venta.productos.forEach(producto => {
+                const movimiento = venta.movimientos_stock ?
+                  venta.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
+
+                const stockInfo = movimiento ?
+                  `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '⏳ Sin registro';
 
                 const fila = document.createElement("tr");
                 fila.style.borderBottom = "1px solid var(--border-color)";
-                fila.style.background = "rgba(144, 238, 144, 0.05)";
+                fila.style.transition = "background-color 0.2s ease";
+                fila.style.background = "rgba(0, 123, 255, 0.02)";
+                fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
+                fila.onmouseleave = () => fila.style.background = "rgba(0, 123, 255, 0.02)";
                 fila.innerHTML = `
-                  <td class="p-2 text-sm" style="color: var(--text-primary);">${actividad.producto.nombre}</td>
-                  <td class="p-2 text-center font-bold text-sm" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</td>
-                  <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
-                  <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
-                  <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
-                  <td class="p-2 text-xs font-mono text-center font-bold" style="color: var(--accent-green);">
-                    ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
-                  </td>
+                  <td class="p-2 text-sm" style="color: var(--text-primary); padding-left: 6rem;">${producto.nombre}</td>
+                  <td class="p-2 text-center text-sm" style="color: var(--text-primary);">${producto.cantidad}</td>
+                  <td class="p-2 text-right font-mono text-sm" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
+                  <td class="p-2 text-right font-semibold text-sm" style="color: var(--accent-blue);">${formatearPesos(producto.subtotal)}</td>
+                  <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${producto.codigo}</td>
+                  <td class="p-2 text-xs font-mono text-center" style="color: var(--accent-green);">${stockInfo}</td>
                 `;
-                diaContainer.appendChild(fila);
-              }
+                ventaContainer.appendChild(fila);
+              });
+              diaContainer.appendChild(ventaContainer);
+            });
+
+            // Mostrar movimientos de stock independientes
+            movimientos.forEach(actividad => {
+              const cantidad_text = actividad.producto.cantidad_movida > 0 ?
+                `+${actividad.producto.cantidad_movida}` :
+                `${actividad.producto.cantidad_movida}`;
+
+              const fila = document.createElement("tr");
+              fila.style.borderBottom = "1px solid var(--border-color)";
+              fila.style.background = "rgba(144, 238, 144, 0.05)";
+              fila.innerHTML = `
+                <td class="p-2 text-sm" style="color: var(--text-primary); padding-left: 5rem;">${actividad.producto.nombre}</td>
+                <td class="p-2 text-center font-bold text-sm" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</td>
+                <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
+                <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
+                <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
+                <td class="p-2 text-xs font-mono text-center font-bold" style="color: var(--accent-green);">
+                  ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
+                </td>
+              `;
+              diaContainer.appendChild(fila);
             });
 
             semanaContainer.appendChild(diaContainer);
@@ -766,6 +826,21 @@
       } else {
         grupo.style.display = 'none';
         toggle.textContent = simboloCerrado;
+      }
+    }
+  }
+
+  function toggleVenta(ventaId) {
+    const venta = document.getElementById(ventaId);
+    const toggle = document.getElementById(`toggle-${ventaId}`);
+
+    if (venta && toggle) {
+      if (venta.style.display === 'none') {
+        venta.style.display = 'table-row-group';
+        toggle.textContent = '▲';
+      } else {
+        venta.style.display = 'none';
+        toggle.textContent = '▼';
       }
     }
   }
