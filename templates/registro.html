@@ -577,13 +577,13 @@
     gruposAnios.forEach(anio => {
       // Header del año
       const anioHeader = document.createElement("tr");
-      anioHeader.style.background = "linear-gradient(135deg, #1a365d 0%, #2d4a6b 100%)";
-      anioHeader.style.color = "white";
+      anioHeader.style.background = "var(--bg-tertiary)";
+      anioHeader.style.borderBottom = "1px solid var(--border-color)";
       anioHeader.style.cursor = "pointer";
       anioHeader.onclick = () => toggleGrupoJerarquico('anio', anio.titulo);
       anioHeader.innerHTML = `
-        <td colspan="6" class="p-4 font-bold text-center text-lg">
-          📅 ${anio.titulo} - Total: ${formatearPesos(anio.total)}
+        <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
+          ${anio.titulo} - Total: ${formatearPesos(anio.total)}
           <span id="toggle-anio-${anio.titulo}" style="float: right;">▼</span>
         </td>
       `;
@@ -597,13 +597,13 @@
       anio.meses.forEach(mes => {
         // Header del mes
         const mesHeader = document.createElement("tr");
-        mesHeader.style.background = "linear-gradient(135deg, #2a5a2a 0%, #1a4a1a 100%)";
-        mesHeader.style.color = "#90EE90";
+        mesHeader.style.background = "var(--bg-tertiary)";
+        mesHeader.style.borderBottom = "1px solid var(--border-color)";
         mesHeader.style.cursor = "pointer";
         mesHeader.onclick = () => toggleGrupoJerarquico('mes', `${anio.titulo}-${mes.titulo}`);
         mesHeader.innerHTML = `
-          <td colspan="6" class="p-3 font-semibold text-center">
-            📊 ${mes.titulo} - Total: ${formatearPesos(mes.total)}
+          <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
+            ${mes.titulo} - Total: ${formatearPesos(mes.total)}
             <span id="toggle-mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
           </td>
         `;
@@ -612,19 +612,24 @@
         // Container del mes
         const mesContainer = document.createElement("tbody");
         mesContainer.id = `grupo-mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}`;
-        mesContainer.style.display = 'none';
+        // Mostrar si es el mes actual y el año actual
+        const esAnioActual = anio.titulo === new Date().getFullYear().toString();
+        const esMesActual = esAnioActual && mes.semanas.some(semana =>
+          semana.dias.some(dia => dia.es_hoy)
+        );
+        mesContainer.style.display = esMesActual ? 'table-row-group' : 'none';
 
         mes.semanas.forEach(semana => {
           // Header de la semana
           const semanaHeader = document.createElement("tr");
-          semanaHeader.style.background = "linear-gradient(135deg, #4a4a2a 0%, #3a3a1a 100%)";
-          semanaHeader.style.color = "#FFD700";
+          semanaHeader.style.background = "var(--bg-tertiary)";
+          semanaHeader.style.borderBottom = "1px solid var(--border-color)";
           semanaHeader.style.cursor = "pointer";
           semanaHeader.onclick = () => toggleGrupoJerarquico('semana', `${anio.titulo}-${mes.titulo}-${semana.titulo}`);
           semanaHeader.innerHTML = `
-            <td colspan="6" class="p-2 font-medium text-center text-sm">
-              📋 ${semana.titulo} - Total: ${formatearPesos(semana.total)}
-              <span id="toggle-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}" style="float: right;">▶</span>
+            <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
+              ${semana.titulo} - Total: ${formatearPesos(semana.total)}
+              <span id="toggle-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
             </td>
           `;
           mesContainer.appendChild(semanaHeader);
@@ -632,20 +637,21 @@
           // Container de la semana
           const semanaContainer = document.createElement("tbody");
           semanaContainer.id = `grupo-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}`;
-          semanaContainer.style.display = 'none';
+          // Mostrar si es la semana actual
+          const esSemanaActual = esMesActual && semana.dias.some(dia => dia.es_hoy);
+          semanaContainer.style.display = esSemanaActual ? 'table-row-group' : 'none';
 
           semana.dias.forEach(dia => {
             // Header del día
             const diaHeader = document.createElement("tr");
-            diaHeader.style.background = dia.es_hoy ? "linear-gradient(135deg, #0066cc 0%, #0044aa 100%)" : "var(--bg-tertiary)";
-            diaHeader.style.color = dia.es_hoy ? "white" : "var(--accent-blue)";
+            diaHeader.style.background = "var(--bg-tertiary)";
+            diaHeader.style.borderBottom = "1px solid var(--border-color)";
             diaHeader.style.cursor = "pointer";
             diaHeader.onclick = () => toggleGrupoJerarquico('dia', `${anio.titulo}-${mes.titulo}-${semana.titulo}-${dia.titulo}`);
             diaHeader.innerHTML = `
-              <td colspan="6" class="p-3 font-semibold" style="border-bottom: 1px solid var(--border-color);">
-                ${dia.es_hoy ? '⭐' : '📍'} ${dia.titulo} - Total: ${formatearPesos(dia.total)}
-                ${dia.es_hoy ? ' (HOY)' : ''}
-                <span id="toggle-dia-${dia.fecha.replace(/-/g, '')}" style="float: right;">▶</span>
+              <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
+                ${dia.titulo} - Total: ${formatearPesos(dia.total)}${dia.es_hoy ? ' (HOY)' : ''}
+                <span id="toggle-dia-${dia.fecha.replace(/-/g, '')}" style="float: right;">▼</span>
               </td>
             `;
             semanaContainer.appendChild(diaHeader);
@@ -676,7 +682,7 @@
                     <td class="p-2 text-center text-sm" style="color: var(--text-primary);">${producto.cantidad}</td>
                     <td class="p-2 text-right font-mono text-sm" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
                     <td class="p-2 text-right font-semibold text-sm" style="color: var(--accent-blue);">${formatearPesos(producto.subtotal)}</td>
-                    <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">💰 ${actividad.usuario}</td>
+                    <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
                     <td class="p-2 text-xs font-mono text-center" style="color: var(--accent-green);">${stockInfo}</td>
                   `;
                   diaContainer.appendChild(fila);
@@ -694,9 +700,9 @@
                   <td class="p-2 text-center font-bold text-sm" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</td>
                   <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
                   <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
-                  <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">📦 ${actividad.usuario}</td>
+                  <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
                   <td class="p-2 text-xs font-mono text-center font-bold" style="color: var(--accent-green);">
-                    📦 ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
+                    ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
                   </td>
                 `;
                 diaContainer.appendChild(fila);
@@ -738,15 +744,15 @@
         const partes = identificador.split('-');
         grupoId = `grupo-semana-${partes.join('-').replace(/\s+/g, '-')}`;
         toggleId = `toggle-semana-${partes.join('-').replace(/\s+/g, '-')}`;
-        simboloAbierto = '▼';
-        simboloCerrado = '▶';
+        simboloAbierto = '▲';
+        simboloCerrado = '▼';
         break;
       case 'dia':
         const [a, m, s, d] = identificador.split('-');
         grupoId = `grupo-dia-${d.replace(/-/g, '')}`;
         toggleId = `toggle-dia-${d.replace(/-/g, '')}`;
-        simboloAbierto = '▼';
-        simboloCerrado = '▶';
+        simboloAbierto = '▲';
+        simboloCerrado = '▼';
         break;
     }
 
