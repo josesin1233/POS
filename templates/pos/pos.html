@@ -1558,21 +1558,8 @@
     // Inicializar businessId
     initializeBusinessId();
     
-    // Inicializar sistema de alertas SOLO para notificaciones manuales de venta
-    if (typeof StockAlertSystem !== 'undefined' && !window.stockAlerts) {
-      try {
-        window.stockAlerts = new StockAlertSystem();
-        window.stockAlerts.init({
-          checkInterval: 0, // Sin chequeos automáticos
-          alertDuration: 10000,  // 10 segundos
-          sound: false,  // Sin sonido
-          enabled: false  // Deshabilitado por defecto
-        });
-        console.log('Sistema de alertas de stock inicializado para POS');
-      } catch (error) {
-        console.error('Error inicializando alertas de stock:', error);
-      }
-    }
+    // El sistema de alertas ya se inicializa globalmente más arriba, no es necesario reinicializar
+    console.log('Sistema de alertas de stock ya inicializado globalmente');
   </script>
 </body>
 </html>

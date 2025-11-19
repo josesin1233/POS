@@ -294,7 +294,11 @@ def agregar_carrito(request):
     try:
         if not request.user.is_authenticated:
             return JsonResponse({'error': 'Autenticación requerida'}, status=401)
-        
+
+        # Verificar que hay contenido en el body
+        if not request.body:
+            return JsonResponse({'error': 'Datos requeridos'}, status=400)
+
         data = json.loads(request.body)
         codigo = data.get('codigo', '').strip()
         cantidad = int(data.get('cantidad', 1))
