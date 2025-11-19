@@ -342,12 +342,9 @@
               fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
               fila.onmouseleave = () => fila.style.background = "transparent";
               fila.innerHTML = `
-                <td class="p-3" style="color: var(--text-primary);">${producto.nombre}</td>
-                <td class="p-3 text-center" style="color: var(--text-primary);">${producto.cantidad}</td>
-                <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
-                <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(producto.subtotal)}</td>
-                <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">-</td>
-                <td class="p-3 text-sm font-mono text-center" style="color: var(--accent-green);">${stockInfo}</td>
+                <td colspan="6" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
+                  ${producto.nombre} | Cant: ${producto.cantidad} | ${formatearPesos(producto.precio_unitario)} | Total: ${formatearPesos(producto.subtotal)} | ${stockInfo}
+                </td>
               `;
               tabla.appendChild(fila);
             });
@@ -374,13 +371,8 @@
             fila.style.borderBottom = "1px solid var(--border-color)";
             fila.style.background = "rgba(144, 238, 144, 0.05)";
             fila.innerHTML = `
-              <td class="p-3" style="color: var(--text-primary);">${actividad.producto.nombre}</td>
-              <td class="p-3 text-center font-bold" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</td>
-              <td class="p-3 text-center" style="color: var(--text-secondary);">-</td>
-              <td class="p-3 text-center" style="color: var(--text-secondary);">-</td>
-              <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">${actividad.producto.codigo}</td>
-              <td class="p-3 text-sm font-mono text-center font-bold" style="color: var(--accent-green);">
-                📦 ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
+              <td colspan="6" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
+                ${actividad.producto.nombre} | Movimiento: <span style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</span> | Código: ${actividad.producto.codigo} | Stock: ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
               </td>
             `;
             tabla.appendChild(fila);
@@ -710,12 +702,9 @@
                 fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
                 fila.onmouseleave = () => fila.style.background = "rgba(0, 123, 255, 0.02)";
                 fila.innerHTML = `
-                  <td class="p-2 text-sm" style="color: var(--text-primary); padding-left: 6rem;">${producto.nombre}</td>
-                  <td class="p-2 text-center text-sm" style="color: var(--text-primary);">${producto.cantidad}</td>
-                  <td class="p-2 text-right font-mono text-sm" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
-                  <td class="p-2 text-right font-semibold text-sm" style="color: var(--accent-blue);">${formatearPesos(producto.subtotal)}</td>
-                  <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${venta.usuario}</td>
-                  <td class="p-2 text-xs font-mono text-center" style="color: var(--accent-green);">${stockInfo}</td>
+                  <td colspan="6" class="p-2 text-sm" style="color: var(--text-primary); padding-left: 6rem;">
+                    ${producto.nombre} | Cant: ${producto.cantidad} | ${formatearPesos(producto.precio_unitario)} | Total: ${formatearPesos(producto.subtotal)} | ${venta.usuario} | ${stockInfo}
+                  </td>
                 `;
                 ventaContainer.appendChild(fila);
               });
@@ -732,13 +721,8 @@
               fila.style.borderBottom = "1px solid var(--border-color)";
               fila.style.background = "rgba(144, 238, 144, 0.05)";
               fila.innerHTML = `
-                <td class="p-2 text-sm" style="color: var(--text-primary); padding-left: 5rem;">${actividad.producto.nombre}</td>
-                <td class="p-2 text-center font-bold text-sm" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</td>
-                <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
-                <td class="p-2 text-center text-sm" style="color: var(--text-secondary);">-</td>
-                <td class="p-2 text-xs text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
-                <td class="p-2 text-xs font-mono text-center font-bold" style="color: var(--accent-green);">
-                  ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
+                <td colspan="6" class="p-2 text-sm" style="color: var(--text-primary); padding-left: 5rem;">
+                  ${actividad.producto.nombre} | Movimiento: <span style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</span> | ${actividad.usuario} | Stock: ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
                 </td>
               `;
               diaContainer.appendChild(fila);
