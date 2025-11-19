@@ -188,32 +188,35 @@
       </div>
     </div>
 
-    <!-- Filters - Compacto -->
-    <div class="modern-card p-3 mb-4">
-      <form id="filtro-form" class="flex flex-wrap gap-3 items-end">
-        <div class="flex-shrink-0">
-          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Día:</label>
-          <input type="date" id="filtro-dia" class="w-32 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
+    <!-- Filters -->
+    <div class="modern-card p-6 mb-6">
+      <form id="filtro-form" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por día:</label>
+          <input type="date" id="filtro-dia" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
         </div>
-        <div class="flex-shrink-0">
-          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Mes:</label>
-          <input type="month" id="filtro-mes" class="w-32 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por mes:</label>
+          <input type="month" id="filtro-mes" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" />
         </div>
-        <div class="flex-shrink-0">
-          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Año:</label>
-          <input type="number" id="filtro-anio" class="w-20 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="2025" min="2000" />
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por año:</label>
+          <input type="number" id="filtro-anio" class="w-full p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Ej. 2025" min="2000" />
         </div>
-        <div class="flex-1 min-w-48">
-          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Producto:</label>
-          <div class="flex gap-1 relative">
-            <input type="text" id="filtro-producto" class="flex-1 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Escribe para buscar..." />
-            <div id="loading-indicator" class="absolute right-12 top-2 hidden">
-              <span class="text-blue-400 text-xs">🔍</span>
-            </div>
-            <button type="button" onclick="openScanner('filtro-producto')" class="modern-button flex items-center justify-center px-2 text-sm" style="min-width: 32px; height: 34px;">📷</button>
+        <div>
+          <label class="block text-sm font-medium mb-2" style="color: var(--text-secondary);">Filtrar por producto:</label>
+          <div class="flex space-x-2">
+            <input type="text" id="filtro-producto" class="flex-1 p-3 rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Código o nombre del producto" />
+            <button type="button" onclick="openScanner('filtro-producto')"
+                    class="modern-button flex items-center justify-center px-3"
+                    style="min-width: 50px;">
+              🔍
+            </button>
           </div>
         </div>
-        <button type="submit" class="modern-button primary px-4 py-2 text-sm">Filtrar</button>
+        <div class="flex items-end">
+          <button type="submit" class="modern-button primary w-full">Aplicar filtro</button>
+        </div>
       </form>
     </div>
 
@@ -257,12 +260,6 @@
   async function cargarVentas(queryParams = "") {
     try {
       console.log('[DEBUG] Cargando ventas con queryParams:', queryParams);
-
-      // Mostrar indicador de carga si es búsqueda por producto
-      const loadingIndicator = document.getElementById('loading-indicator');
-      if (queryParams.includes('producto')) {
-        loadingIndicator?.classList.remove('hidden');
-      }
       
       // Get CSRF token
       function getCookie(name) {
@@ -280,21 +277,9 @@
         return cookieValue;
       }
       
-      // Intentar primero la nueva API unificada, con fallback a la original
-      let apiUrl = `/registro/completo/${queryParams}`;
-      let useNewAPI = true;
-
-      // Si solo hay filtros de fecha sin producto, usar API original para mejor compatibilidad
-      if (!queryParams.includes('producto') && queryParams) {
-        apiUrl = `/ventas/api/${queryParams}`;
-        useNewAPI = false;
-      } else if (!queryParams) {
-        apiUrl = `/ventas/api/`;
-        useNewAPI = false;
-      }
-
-      console.log('[DEBUG] Haciendo fetch a:', apiUrl, 'Nueva API:', useNewAPI);
-      const res = await fetch(apiUrl, {
+      // Usar la nueva API unificada que incluye movimientos de inventario
+      console.log('[DEBUG] Haciendo fetch a:', `/registro/completo/${queryParams}`);
+      const res = await fetch(`/registro/completo/${queryParams}`, {
         method: 'GET',
         credentials: 'same-origin',
         headers: {
@@ -313,37 +298,17 @@
       }
       
       const data = await res.json();
-      console.log('[DEBUG] Respuesta de la API:', data);
 
       tabla.innerHTML = "";
 
-      // Para el total del día, necesitamos obtenerlo de la API original por ahora
-      try {
-        const resTotal = await fetch('/ventas/api/', {
-          method: 'GET',
-          credentials: 'same-origin',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': getCookie('csrftoken')
-          }
-        });
-        if (resTotal.ok) {
-          const dataTotal = await resTotal.json();
-          if (dataTotal.total_del_dia !== undefined) {
-            totalDiaSpan.textContent = formatearPesos(dataTotal.total_del_dia);
-          }
-        }
-      } catch (e) {
-        console.log('No se pudo obtener el total del día:', e);
-        if (totalDiaSpan) {
-          totalDiaSpan.textContent = "$0.00";
-        }
+      // Para el total del día, usaremos la nueva API de ventas original como fallback
+      // TODO: Implementar cálculo de total del día en la nueva API
+      if (data.total_del_dia !== undefined) {
+        totalDiaSpan.textContent = formatearPesos(data.total_del_dia);
       }
 
-      // Manejar respuesta según el tipo de API
-      if (useNewAPI && data.actividades) {
-        // Nueva estructura: mostrar actividades unificadas
-        if (data.actividades.length > 0) {
+      // Nueva estructura: mostrar actividades unificadas
+      if (data.actividades && data.actividades.length > 0) {
         data.actividades.forEach(actividad => {
           const fecha = new Date(actividad.fecha).toLocaleString('es-MX');
 
@@ -419,28 +384,21 @@
             tabla.appendChild(fila);
           }
         });
-        } else {
-          // No hay actividades en nueva API
-          const filaVacia = document.createElement("tr");
-          filaVacia.innerHTML = `
-            <td colspan="6" class="p-6 text-center" style="color: var(--text-secondary);">
-              No hay actividades registradas en el período seleccionado
-            </td>
-          `;
-          tabla.appendChild(filaVacia);
-        }
       } else {
-        // Usar API original - código existente
-        console.log('[DEBUG] Usando API original, es_agrupado:', data.es_agrupado);
+        // No hay actividades
+        const filaVacia = document.createElement("tr");
+        filaVacia.innerHTML = `
+          <td colspan="6" class="p-6 text-center" style="color: var(--text-secondary);">
+            No hay actividades registradas en el período seleccionado
+          </td>
+        `;
+        tabla.appendChild(filaVacia);
+      }
 
-        // Mostrar total del día de la respuesta original
-        if (data.total_del_dia !== undefined) {
-          totalDiaSpan.textContent = formatearPesos(data.total_del_dia);
-        }
-
-        if (data.es_agrupado) {
-          // Vista agrupada (sin filtros)
-          if (data.grupos && data.grupos.length > 0) {
+      // Resto del código para compatibilidad con versión anterior
+      if (false && data.es_agrupado) {
+        // Vista agrupada (sin filtros)
+        if (data.grupos && data.grupos.length > 0) {
           data.grupos.forEach(grupo => {
             // Header del grupo con total
             const grupoHeader = document.createElement("tr");
@@ -580,73 +538,7 @@
           `;
           tabla.appendChild(filaVacia);
         }
-        } else {
-          // Vista con filtros específicos - API original
-          const ventas = data.ventas || [];
-          if (ventas.length > 0) {
-            ventas.forEach(venta => {
-              const fecha = new Date(venta.fecha).toLocaleString('es-MX');
-
-              // Fila resumen de venta
-              const filaHeader = document.createElement("tr");
-              filaHeader.style.background = "var(--bg-tertiary)";
-              filaHeader.style.borderBottom = "1px solid var(--border-color)";
-              filaHeader.innerHTML = `
-                <td colspan="6" class="p-3 font-semibold" style="color: var(--accent-blue);">
-                  💰 Venta #${venta.folio || venta.id} del ${fecha} - Total: ${formatearPesos(venta.total_venta)}
-                  ${venta.usuario ? `- 👤 ${venta.usuario.nombre_completo}` : ''}
-                  ${venta.metodo_pago ? `- 💳 ${venta.metodo_pago}` : ''}
-                </td>
-              `;
-              tabla.appendChild(filaHeader);
-
-              // Filas por producto
-              venta.productos.forEach(p => {
-                const fila = document.createElement("tr");
-                fila.style.borderBottom = "1px solid var(--border-color)";
-                fila.style.transition = "background-color 0.2s ease";
-                fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
-                fila.onmouseleave = () => fila.style.background = "transparent";
-
-                // Buscar movimiento de stock para este producto
-                const movimiento = venta.movimientos_stock ?
-                  venta.movimientos_stock.find(mov => mov.producto === p.nombre_producto) : null;
-
-                const stockInfo = movimiento ?
-                  `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '';
-
-                // Detectar si es una venta antigua (sin movimientos de stock)
-                const esVentaAntigua = !venta.movimientos_stock || venta.movimientos_stock.length === 0;
-                const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
-
-                fila.innerHTML = `
-                  <td class="p-3" style="color: var(--text-primary);">${p.nombre_producto}</td>
-                  <td class="p-3 text-center" style="color: var(--text-primary);">${p.cantidad_vendida}</td>
-                  <td class="p-3 text-right font-mono" style="color: var(--text-primary);">${formatearPesos(p.precio_unitario)}</td>
-                  <td class="p-3 text-right font-semibold" style="color: var(--accent-blue);">${formatearPesos(p.total)}</td>
-                  <td class="p-3 text-sm text-center font-mono" style="color: var(--text-secondary);">-</td>
-                  <td class="p-3 text-sm font-mono text-center" style="color: var(--accent-green);">${stockDisplay}</td>
-                `;
-                tabla.appendChild(fila);
-              });
-            });
-          } else {
-            // No sales found
-            const filaVacia = document.createElement("tr");
-            filaVacia.innerHTML = `
-              <td colspan="6" class="p-6 text-center" style="color: var(--text-secondary);">
-                No se encontraron ventas para los filtros seleccionados
-              </td>
-            `;
-            tabla.appendChild(filaVacia);
-          }
-        }
       }
-
-      // Ocultar indicador de carga
-      const loadingIndicator = document.getElementById('loading-indicator');
-      loadingIndicator?.classList.add('hidden');
-
     } catch (error) {
       console.error("Error al cargar ventas:", error);
       console.error("Detalles del error:", error.message);
@@ -673,10 +565,6 @@
       if (totalDiaSpan) {
         totalDiaSpan.textContent = "$0.00";
       }
-
-      // Ocultar indicador de carga en caso de error
-      const loadingIndicator = document.getElementById('loading-indicator');
-      loadingIndicator?.classList.add('hidden');
     }
   }
 
@@ -688,11 +576,7 @@
   // Handle filter form submission
   formFiltro.addEventListener("submit", e => {
     e.preventDefault();
-    aplicarFiltros();
-  });
 
-  // Función centralizada para aplicar filtros
-  function aplicarFiltros() {
     const dia = document.getElementById("filtro-dia").value;
     const mes = document.getElementById("filtro-mes").value;
     const anio = document.getElementById("filtro-anio").value;
@@ -706,37 +590,6 @@
 
     const queryString = params.toString();
     cargarVentas(queryString ? "?" + queryString : "");
-  }
-
-  // Búsqueda en tiempo real para el campo de producto
-  let timeoutId = null;
-  const filtroProducto = document.getElementById("filtro-producto");
-
-  filtroProducto.addEventListener("input", function() {
-    // Cancelar búsqueda anterior si existe
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
-    const valorActual = this.value.trim();
-
-    // Si está vacío, buscar inmediatamente para mostrar todo
-    if (valorActual === '') {
-      console.log('🔍 Campo vacío - mostrando todas las actividades');
-      aplicarFiltros();
-      return;
-    }
-
-    // Si tiene menos de 2 caracteres, no buscar aún
-    if (valorActual.length < 2) {
-      return;
-    }
-
-    // Esperar 300ms después del último keystroke para buscar
-    timeoutId = setTimeout(() => {
-      console.log('🔍 Búsqueda en tiempo real activada:', valorActual);
-      aplicarFiltros();
-    }, 300);
   });
 
   // Toggle grupos (expandir/colapsar)
