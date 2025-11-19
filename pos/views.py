@@ -292,14 +292,23 @@ def buscar_productos_sugerencias(request):
 def agregar_carrito(request):
     """API para agregar al carrito real - REQUIERE autenticación"""
     try:
+        logger.info(f"agregar_carrito: method={request.method}, user={request.user}, authenticated={request.user.is_authenticated}")
+
         if not request.user.is_authenticated:
+            logger.warning("agregar_carrito: Usuario no autenticado")
             return JsonResponse({'error': 'Autenticación requerida'}, status=401)
 
         # Verificar que hay contenido en el body
         if not request.body:
+            logger.warning("agregar_carrito: No hay datos en el body")
             return JsonResponse({'error': 'Datos requeridos'}, status=400)
 
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+            logger.info(f"agregar_carrito: datos recibidos: {data}")
+        except json.JSONDecodeError as e:
+            logger.error(f"agregar_carrito: Error decodificando JSON: {e}")
+            return JsonResponse({'error': 'JSON inválido'}, status=400)
         codigo = data.get('codigo', '').strip()
         cantidad = int(data.get('cantidad', 1))
         
