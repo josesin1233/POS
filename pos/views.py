@@ -1233,8 +1233,7 @@ def productos_poco_stock_api(request):
             # Criterios para stock bajo:
             # 1. Sin stock (crítico)
             # 2. Menos del stock mínimo configurado
-            # 3. Menos de 5 unidades (advertencia)
-            if producto.stock <= 0 or producto.stock < stock_minimo or producto.stock <= 5:
+            if producto.stock <= 0 or producto.stock < stock_minimo:
                 productos_bajo_stock.append({
                     'codigo': producto.codigo,
                     'nombre': producto.nombre,
