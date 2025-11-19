@@ -27,7 +27,6 @@ urlpatterns = [
     
     # Global API endpoints (used by templates)
     path('producto/', buscar_producto, name='buscar_producto_global'),
-    path('agregar/', agregar_carrito, name='agregar_carrito_global'),
     
     # Ventas API directo para registro template
     path('ventas/api/', ventas_api, name='ventas_api_global'),
