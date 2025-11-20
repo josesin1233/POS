@@ -473,3 +473,48 @@ def process_paypal_payment(data, registration):
     #     raise Exception(f"Error de PayPal: {payment.error}")
 
     pass
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def complete_business_registration(request):
+    """Complete business registration after successful payment"""
+    try:
+        data = json.loads(request.body)
+        registration_id = data.get('registration_id')
+
+        # Get the registration record
+        registration = SubscriptionRegistration.objects.get(id=registration_id)
+
+        # Update business information
+        registration.business_name = data.get('business_name')
+        registration.business_type = data.get('business_type')
+        registration.rfc = data.get('rfc', '')
+        registration.address = data.get('address')
+        registration.city = data.get('city')
+        registration.state = data.get('state')
+        registration.postal_code = data.get('postal_code')
+        registration.status = 'completed'
+        registration.save()
+
+        # Create user account and other setup can happen here
+        # For now, just mark as completed
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Registro completado exitosamente',
+            'registration_id': registration.id
+        })
+
+    except SubscriptionRegistration.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Registro no encontrado'
+        }, status=404)
+
+    except Exception as e:
+        logger.error(f"Error completing business registration: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Error interno del servidor'
+        }, status=500)

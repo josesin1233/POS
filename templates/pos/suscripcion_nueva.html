@@ -260,14 +260,86 @@
             </div>
         </div>
 
-        <!-- Registration Form (initially hidden) -->
-        <div class="max-w-2xl mx-auto form-container" id="registration-section">
-            <div class="registration-form">
+        <!-- User Info + Payment Form (initially hidden) -->
+        <div class="max-w-2xl mx-auto form-container" id="payment-section">
+            <div class="payment-form">
                 <h3 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">
-                    Información de Registro
+                    Información de Usuario y Pago
                 </h3>
 
-                <form id="registration-form">
+                <div id="plan-summary" class="mb-6 p-4 rounded-lg" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                    <!-- Plan summary will be inserted here -->
+                </div>
+
+                <!-- User Info Form -->
+                <form id="user-info-form">
+                    <div class="grid md:grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Nombre *
+                            </label>
+                            <input type="text" name="admin_first_name" required
+                                   class="modern-input w-full" placeholder="Juan">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Apellido *
+                            </label>
+                            <input type="text" name="admin_last_name" required
+                                   class="modern-input w-full" placeholder="Pérez">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Email *
+                            </label>
+                            <input type="email" name="contact_email" required
+                                   class="modern-input w-full" placeholder="juan@gmail.com">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Teléfono *
+                            </label>
+                            <input type="tel" name="contact_phone" required
+                                   class="modern-input w-full" placeholder="5551234567">
+                        </div>
+                    </div>
+
+                    <!-- Payment Section -->
+                    <h4 class="text-xl font-bold mb-4" style="color: var(--text-primary);">
+                        Información de Pago
+                    </h4>
+
+                    <div id="payment-element" class="mb-6">
+                        <!-- Stripe Payment Element will be inserted here -->
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" onclick="hideForms()"
+                                class="flex-1 py-4 px-6 rounded-lg font-semibold border-2"
+                                style="background: transparent; border-color: var(--border-color); color: var(--text-primary);">
+                            ← Cambiar Plan
+                        </button>
+                        <button type="submit" id="submit-payment"
+                                class="flex-1 btn-plan-select py-4">
+                            <span id="button-text">Pagar Ahora</span>
+                            <div id="spinner" class="hidden">Procesando...</div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Business Info Form (shown after successful payment) -->
+        <div class="max-w-2xl mx-auto hidden" id="business-section">
+            <div class="registration-form">
+                <h3 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">
+                    ¡Pago Exitoso! Completa la información de tu negocio
+                </h3>
+
+                <form id="business-form">
                     <div class="grid md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
@@ -293,22 +365,6 @@
 
                         <div>
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Nombre del Administrador *
-                            </label>
-                            <input type="text" name="admin_first_name" required
-                                   class="modern-input w-full" placeholder="Juan">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Apellido *
-                            </label>
-                            <input type="text" name="admin_last_name" required
-                                   class="modern-input w-full" placeholder="Pérez">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
                                 Usuario (Login) *
                             </label>
                             <input type="text" name="admin_username" required
@@ -321,22 +377,6 @@
                             </label>
                             <input type="password" name="admin_password" required
                                    class="modern-input w-full" placeholder="••••••••">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Email de Contacto *
-                            </label>
-                            <input type="email" name="contact_email" required
-                                   class="modern-input w-full" placeholder="juan@gmail.com">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Teléfono *
-                            </label>
-                            <input type="tel" name="contact_phone" required
-                                   class="modern-input w-full" placeholder="5551234567">
                         </div>
 
                         <div class="md:col-span-2">
@@ -367,46 +407,7 @@
 
                     <div class="text-center mt-8">
                         <button type="submit" class="btn-plan-select px-12 py-4">
-                            Continuar al Pago
-                        </button>
-                        <div class="mt-4">
-                            <button type="button" onclick="hideForms()"
-                                    class="text-sm px-6 py-2 rounded-lg border"
-                                    style="background: transparent; border-color: var(--border-color); color: var(--text-secondary);">
-                                ← Cambiar Plan
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Payment Form (initially hidden) -->
-        <div class="max-w-2xl mx-auto hidden" id="payment-section">
-            <div class="payment-form">
-                <h3 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">
-                    Información de Pago
-                </h3>
-
-                <div id="plan-summary" class="mb-6 p-4 rounded-lg" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                    <!-- Plan summary will be inserted here -->
-                </div>
-
-                <form id="payment-form">
-                    <div id="payment-element" class="mb-6">
-                        <!-- Stripe Payment Element will be inserted here -->
-                    </div>
-
-                    <div class="flex gap-4">
-                        <button type="button" onclick="goBackToRegistration()"
-                                class="flex-1 py-4 px-6 rounded-lg font-semibold border-2"
-                                style="background: transparent; border-color: var(--border-color); color: var(--text-primary);">
-                            ← Regresar
-                        </button>
-                        <button type="submit" id="submit-payment"
-                                class="flex-1 btn-plan-select py-4">
-                            <span id="button-text">Pagar Ahora</span>
-                            <div id="spinner" class="hidden">Procesando...</div>
+                            Completar Registro
                         </button>
                     </div>
                 </form>
@@ -546,8 +547,7 @@
             return;
         }
 
-        // Hide registration, show payment
-        document.getElementById('registration-section').classList.add('hidden');
+        // Show payment form after plan selection
         document.getElementById('payment-section').classList.remove('hidden');
 
         // Update plan summary
@@ -605,15 +605,16 @@
         currentStep = 'payment';
     }
 
-    function goBackToRegistration() {
+    function goBackToPlans() {
         document.getElementById('payment-section').classList.add('hidden');
-        document.getElementById('registration-section').classList.add('show');
-        currentStep = 'registration';
+        document.getElementById('business-section').classList.add('hidden');
+        selectedPlan = null;
+        currentStep = 'plan_selection';
 
-        // Scroll to registration form
-        document.getElementById('registration-section').scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
+        // Reset plan selection
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.classList.remove('border-blue-400', 'bg-blue-900/20');
+            card.classList.add('border-gray-600');
         });
     }
 
@@ -635,10 +636,22 @@
         spinner.classList.remove('hidden');
 
         try {
-            const {error} = await stripe.confirmPayment({
+            // Get user info from form
+            const userName = document.getElementById('user-name').value;
+            const userEmail = document.getElementById('user-email').value;
+            const userPhone = document.getElementById('user-phone').value;
+
+            const {error, paymentIntent} = await stripe.confirmPayment({
                 elements,
+                redirect: 'if_required',
                 confirmParams: {
-                    return_url: window.location.origin + '/suscripcion/confirmada/',
+                    payment_method_data: {
+                        billing_details: {
+                            name: userName,
+                            email: userEmail,
+                            phone: userPhone,
+                        }
+                    }
                 },
             });
 
@@ -646,6 +659,15 @@
                 console.error('Payment error:', error);
                 alert('Error en el pago: ' + error.message);
 
+                submitButton.disabled = false;
+                buttonText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+                // Payment successful - show business form
+                console.log('Payment successful:', paymentIntent);
+                showBusinessForm();
+            } else {
+                alert('El pago está siendo procesado...');
                 submitButton.disabled = false;
                 buttonText.classList.remove('hidden');
                 spinner.classList.add('hidden');
@@ -659,5 +681,84 @@
             spinner.classList.add('hidden');
         }
     });
+
+    // Show business form after successful payment
+    function showBusinessForm() {
+        document.getElementById('payment-section').classList.add('hidden');
+        document.getElementById('business-section').classList.remove('hidden');
+        currentStep = 'business';
+
+        // Scroll to business form
+        document.getElementById('business-section').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+
+    // Handle business form submission
+    document.getElementById('business-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitButton = document.getElementById('submit-business');
+        const buttonText = submitButton.querySelector('span');
+        submitButton.disabled = true;
+        buttonText.textContent = 'Completando registro...';
+
+        try {
+            // Get business info from form
+            const businessData = {
+                business_name: document.getElementById('business-name').value,
+                business_type: document.getElementById('business-type').value,
+                rfc: document.getElementById('rfc').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                postal_code: document.getElementById('postal-code').value,
+                registration_id: registrationId
+            };
+
+            // Send business data to backend
+            const response = await fetch('/api/suscripcion/completar-negocio/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(businessData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Registration complete - redirect to success page
+                window.location.href = '/suscripcion/confirmada/';
+            } else {
+                alert('Error completando el registro: ' + (result.error || 'Error desconocido'));
+                submitButton.disabled = false;
+                buttonText.textContent = 'Completar Registro';
+            }
+        } catch (error) {
+            console.error('Business registration error:', error);
+            alert('Error completando el registro. Inténtalo de nuevo.');
+            submitButton.disabled = false;
+            buttonText.textContent = 'Completar Registro';
+        }
+    });
+
+    // Helper function to get CSRF cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 {% endblock %}

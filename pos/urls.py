@@ -131,6 +131,9 @@ urlpatterns = [
     # API para procesar pagos
     path('api/suscripcion/pago/', subscription_views.process_payment, name='process_payment'),
 
+    # API para completar registro de negocio
+    path('api/suscripcion/completar-negocio/', subscription_views.complete_business_registration, name='complete_business_registration'),
+
     # Webhook para gateway de pagos
     path('webhook/pagos/', subscription_views.payment_webhook, name='payment_webhook'),
 
