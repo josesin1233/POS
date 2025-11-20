@@ -1,572 +1,612 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suscribirse - POS MÉXICO</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://js.stripe.com/v3/"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #6B46C1 0%, #9333EA 50%, #C026D3 100%);
-        }
-        .plan-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-        .plan-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
-        }
-        .plan-featured {
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-    </style>
-</head>
-<body class="min-h-screen text-white">
+{% extends 'base_production.html' %}
+{% load static %}
 
-    <!-- Navigation Header -->
-    <header class="bg-black/20 backdrop-blur-sm">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <!-- Logo POS MÉXICO -->
-                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                        <span class="text-white font-bold text-xl">P</span>
-                    </div>
-                    <span class="text-2xl font-bold text-white">
-                        POS MÉXICO
-                    </span>
-                </div>
-                <div class="text-sm text-white/80">
-                    Control total desde cualquier dispositivo con internet.
-                </div>
+{% block title %}Suscripciones - DulcePOS{% endblock %}
+
+{% block extra_css %}
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+    /* Subscription specific styles with dark theme */
+    .subscription-container {
+        background-color: var(--bg-secondary);
+        min-height: 100vh;
+    }
+
+    .plan-card {
+        background: #0a0a0a;
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .plan-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+        border-color: var(--accent-blue);
+    }
+
+    .plan-card.selected {
+        border-color: var(--accent-green);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+    }
+
+    .plan-featured {
+        border-color: var(--accent-green);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.2);
+    }
+
+    .plan-featured::before {
+        content: 'MÁS POPULAR';
+        position: absolute;
+        top: -1px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent-green);
+        color: #000000;
+        padding: 4px 16px;
+        border-radius: 0 0 12px 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-plan-select {
+        background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
+        border: 2px solid var(--accent-blue);
+        color: #000000;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-plan-select:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+    }
+
+    .btn-plan-select.selected {
+        background: linear-gradient(135deg, var(--accent-green) 0%, #00cc66 100%);
+        border-color: var(--accent-green);
+    }
+
+    .modern-input {
+        background: var(--bg-tertiary);
+        border: 2px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 12px 16px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .modern-input:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+
+    .modern-input::placeholder {
+        color: var(--text-secondary);
+    }
+
+    .registration-form {
+        background: #0a0a0a;
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 32px;
+    }
+
+    .payment-form {
+        background: #0a0a0a;
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 32px;
+    }
+
+    /* Stripe Payment Element styling */
+    .StripeElement {
+        background: var(--bg-tertiary) !important;
+        border: 2px solid var(--border-color) !important;
+        border-radius: 12px !important;
+        padding: 12px !important;
+    }
+
+    .StripeElement--focus {
+        border-color: var(--accent-blue) !important;
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1) !important;
+    }
+
+    /* Navigation header styles */
+    .nav-header {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+        border-bottom: 2px solid var(--border-color);
+        padding: 16px 0;
+    }
+
+    .nav-brand {
+        color: var(--accent-blue);
+        font-weight: 700;
+        font-size: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .nav-links a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .nav-links a:hover {
+        color: var(--accent-blue);
+        background: rgba(0, 212, 255, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Navigation Header -->
+<div class="nav-header">
+    <div class="container mx-auto px-6">
+        <div class="flex justify-between items-center">
+            <div class="nav-brand">
+                DulcePOS
+            </div>
+            <div class="nav-links flex space-x-4">
+                <a href="/punto_de_venta/">🏪 POS</a>
+                <a href="/inventario/">📦 Inventario</a>
+                <a href="/caja/">💰 Caja</a>
+                <a href="/registro/">📊 Registro</a>
+                <a href="/accounts/login/">🔐 Login</a>
             </div>
         </div>
-    </header>
+    </div>
+</div>
 
-    <main class="container mx-auto px-6 py-12">
-        <!-- Hero Section -->
-        <div class="text-center mb-16">
-            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">
-                Todo tu negocio al alcance de tu
-                <span class="gradient-text">teléfono</span>
+<div class="subscription-container">
+    <div class="container mx-auto px-6 py-12">
+
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4" style="color: var(--text-primary);">
+                Elige tu Plan de Suscripción
             </h1>
-            <p class="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed mb-8">
-                (tus datos son privados y solo tu tienes acceso)
+            <p class="text-xl" style="color: var(--text-secondary);">
+                Selecciona el plan que mejor se adapte a tu negocio
             </p>
-
-            <!-- Important Notice -->
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 max-w-2xl mx-auto mb-12">
-                <h3 class="text-xl font-semibold text-white mb-3">
-                    📢 Aviso Importante
-                </h3>
-                <p class="text-white/90">
-                    El pago desde la web no está disponible por el momento. Después de seleccionar tu plan,
-                    te contactaremos para finalizar tu suscripción de forma segura.
-                </p>
-            </div>
         </div>
 
         <!-- Plans Section -->
-        <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
 
             <!-- Plan Estándar -->
-            <div class="plan-card bg-white/10 backdrop-blur-sm rounded-3xl p-8 relative">
-                <!-- Plan Header -->
-                <div class="text-center mb-6">
-                    <div class="bg-white/20 rounded-full px-6 py-3 inline-block mb-4">
-                        <span class="text-white font-semibold text-lg">Estándar</span>
-                    </div>
+            <div class="plan-card" id="plan-estandar">
+                <div class="p-8">
                     <div class="text-center mb-6">
-                        <span class="text-6xl font-bold text-white">$149</span>
-                        <span class="text-white/80 text-xl">/mes</span>
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl"
+                             style="background: linear-gradient(135deg, var(--accent-blue), #0099cc);">
+                            🏪
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Estándar</h3>
+                        <div class="text-4xl font-bold mb-2" style="color: var(--accent-blue);">$149</div>
+                        <div style="color: var(--text-secondary);">/mes</div>
                     </div>
-                    <div class="bg-yellow-400 text-purple-900 px-4 py-2 rounded-full text-sm font-semibold mb-6">
-                        POR TIEMPO LIMITADO
-                    </div>
-                </div>
 
-                <!-- Features -->
-                <div class="space-y-4 mb-8">
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Escáner de barras desde la cámara de cualquier dispositivo</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Cada vez que vendes algo, el sistema descuenta el producto, actualiza tu inventario y lleva el control del dinero que entra.</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">El programa te dice qué productos tienen poco stock.</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Fácil de usar, listo para usar en un día.</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Hasta dos Usuarios simultáneos sin jerarquía.</span>
-                    </div>
-                </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> 1 usuario
+                        </li>
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> 500 productos
+                        </li>
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Sistema POS completo
+                        </li>
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Control de inventario
+                        </li>
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Reportes básicos
+                        </li>
+                    </ul>
 
-                <!-- CTA Button -->
-                <button
-                    onclick="selectPlan('estandar', 149)"
-                    class="w-full bg-white/20 hover:bg-white/30 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 border border-white/30 hover:border-white/50"
-                >
-                    Seleccionar - $149/mes
-                </button>
+                    <button onclick="selectPlan('estandar', 149)" class="btn-plan-select w-full">
+                        Seleccionar Plan
+                    </button>
+                </div>
             </div>
 
             <!-- Plan Pro -->
-            <div class="plan-card plan-featured bg-white/15 backdrop-blur-sm rounded-3xl p-8 relative">
-                <!-- Plan Header -->
-                <div class="text-center mb-6">
-                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-6 py-3 inline-block mb-4">
-                        <span class="text-purple-900 font-semibold text-lg">Pro</span>
-                    </div>
+            <div class="plan-card plan-featured" id="plan-pro">
+                <div class="p-8 pt-12">
                     <div class="text-center mb-6">
-                        <span class="text-6xl font-bold text-white">$249</span>
-                        <span class="text-white/80 text-xl">/mes</span>
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl"
+                             style="background: linear-gradient(135deg, var(--accent-green), #00cc66);">
+                            🚀
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Pro</h3>
+                        <div class="text-4xl font-bold mb-2" style="color: var(--accent-green);">$249</div>
+                        <div style="color: var(--text-secondary);">/mes</div>
                     </div>
-                </div>
 
-                <!-- Features -->
-                <div class="space-y-4 mb-8">
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm font-semibold">TODAS las características del plan estándar</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Puedes escoger cuáles usuarios pueden cambiar precios, eliminar productos, cerrar cajas, etc.</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Genera tickets listos para enviar o imprimir.</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Sistema de reconocimiento de clientes para recompensas por puntos ganados en compras.</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Atención técnica prioritaria.</span>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <span class="text-green-400 font-bold">•</span>
-                        <span class="text-white/90 text-sm">Hasta 4 usuarios simultáneos</span>
-                    </div>
-                </div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Todo del plan Estándar
+                        </li>
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Hasta 5 usuarios
+                        </li>
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Productos ilimitados
+                        </li>
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Reportes avanzados
+                        </li>
+                        <li class="flex items-center" style="color: var(--text-primary);">
+                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Multi-sucursal
+                        </li>
+                    </ul>
 
-                <!-- CTA Button -->
-                <button
-                    onclick="selectPlan('pro', 249)"
-                    class="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-purple-900 font-bold py-4 px-6 rounded-2xl transition-all duration-300"
-                >
-                    Seleccionar - $249/mes
-                </button>
+                    <button onclick="selectPlan('pro', 249)" class="btn-plan-select w-full">
+                        Seleccionar Plan
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Additional Features -->
-        <div class="text-center mt-16">
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-md mx-auto">
-                <h3 class="text-xl font-semibold text-white mb-4">
-                    Genera tickets y registra movimientos en tu inventario
+        <!-- Registration Form -->
+        <div class="max-w-2xl mx-auto" id="registration-section">
+            <div class="registration-form">
+                <h3 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">
+                    Información de Registro
                 </h3>
-            </div>
-        </div>
 
-        <!-- Footer -->
-        <div class="text-center mt-12">
-            <p class="text-white/60 text-sm mb-4">
-                RECLAMA TU PRUEBA GRATIS SIN CUENTA AQUÍ
-            </p>
-            <div class="flex items-center justify-center space-x-4">
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 border-2 border-white/30 rounded-lg flex items-center justify-center">
-                        <span class="text-white text-lg">📷</span>
-                    </div>
-                    <span class="text-white/80 text-sm">@POS.MEXICO</span>
-                </div>
-            </div>
-        </div>
-    </main>
+                <form id="registration-form">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Nombre del Negocio *
+                            </label>
+                            <input type="text" name="business_name" required
+                                   class="modern-input w-full" placeholder="Mi Dulcería">
+                        </div>
 
-    <!-- Registration Modal -->
-    <div id="registration-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">Registro de Suscripción</h2>
-                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-3xl">&times;</button>
-                </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Tipo de Negocio *
+                            </label>
+                            <select name="business_type" required class="modern-input w-full">
+                                <option value="">Selecciona...</option>
+                                <option value="Dulcería">Dulcería</option>
+                                <option value="Tienda de Abarrotes">Tienda de Abarrotes</option>
+                                <option value="Farmacia">Farmacia</option>
+                                <option value="Papelería">Papelería</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
 
-                <form id="registration-form" class="space-y-6">
-                    <!-- Plan Selection Display -->
-                    <div id="selected-plan-display" class="bg-purple-50 rounded-xl p-4">
-                        <h3 class="font-semibold text-purple-800 mb-2">Plan Seleccionado</h3>
-                        <div id="plan-details" class="text-purple-600"></div>
-                    </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Nombre del Administrador *
+                            </label>
+                            <input type="text" name="admin_first_name" required
+                                   class="modern-input w-full" placeholder="Juan">
+                        </div>
 
-                    <!-- Privacy Notice -->
-                    <div class="bg-blue-50 rounded-xl p-4">
-                        <p class="text-blue-800 text-sm">
-                            🔒 <strong>Datos Privados:</strong> Toda tu información es completamente privada y segura. Solo tú tienes acceso a tus datos.
-                        </p>
-                    </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Apellido *
+                            </label>
+                            <input type="text" name="admin_last_name" required
+                                   class="modern-input w-full" placeholder="Pérez">
+                        </div>
 
-                    <!-- Datos Usuario -->
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Datos Usuario</h3>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario</label>
-                                <input type="text" id="admin_username" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                                <input type="password" id="admin_password" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                                <input type="text" id="admin_first_name" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Apellidos</label>
-                                <input type="text" id="admin_last_name" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-                                <input type="email" id="contact_email" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                                <input type="tel" id="contact_phone" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Usuario (Login) *
+                            </label>
+                            <input type="text" name="admin_username" required
+                                   class="modern-input w-full" placeholder="juan123">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Contraseña *
+                            </label>
+                            <input type="password" name="admin_password" required
+                                   class="modern-input w-full" placeholder="••••••••">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Email de Contacto *
+                            </label>
+                            <input type="email" name="contact_email" required
+                                   class="modern-input w-full" placeholder="juan@gmail.com">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Teléfono *
+                            </label>
+                            <input type="tel" name="contact_phone" required
+                                   class="modern-input w-full" placeholder="5551234567">
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Dirección *
+                            </label>
+                            <textarea name="address" required
+                                      class="modern-input w-full" rows="2"
+                                      placeholder="Calle Principal #123, Colonia Centro"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Estado *
+                            </label>
+                            <input type="text" name="state" required
+                                   class="modern-input w-full" placeholder="CDMX">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                País *
+                            </label>
+                            <input type="text" name="country" value="México" required
+                                   class="modern-input w-full" readonly>
                         </div>
                     </div>
 
-                    <!-- Datos Negocio -->
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Datos Negocio</h3>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Negocio</label>
-                                <input type="text" id="business_name" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Negocio</label>
-                                <select id="business_type" required
-                                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                                    <option value="">Selecciona...</option>
-                                    <option value="tienda">Tienda</option>
-                                    <option value="papeleria">Papelería</option>
-                                    <option value="abarrotes">Abarrotes</option>
-                                    <option value="farmacia">Farmacia</option>
-                                    <option value="restaurant">Restaurante</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                                <textarea id="address" required rows="3"
-                                          class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                                <input type="text" id="state" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
-                                <input type="text" id="country" value="México" required
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payment Section -->
-                    <div id="payment-section" style="display: none;">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Información de Pago</h3>
-
-                        <!-- Payment Element Container -->
-                        <div id="payment-element" class="mb-4">
-                            <!-- Stripe Payment Element will be mounted here -->
-                        </div>
-
-                        <!-- Payment Errors -->
-                        <div id="payment-errors" role="alert" class="text-red-600 text-sm mb-4 hidden"></div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="pt-4">
-                        <button type="submit" id="submit-btn"
-                                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-4 px-6 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300">
-                            <span id="btn-text">Continuar con el Pago</span>
-                            <span id="btn-loading" style="display: none;">Procesando...</span>
+                    <div class="text-center mt-8">
+                        <button type="submit" class="btn-plan-select px-12 py-4">
+                            Continuar al Pago
                         </button>
-                        <p class="text-center text-sm text-gray-600 mt-3" id="submit-notice">
-                            Haz clic para proceder con el pago seguro mediante Stripe.
-                        </p>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
 
-    <script>
-        // Initialize Stripe
-        const stripe = Stripe('{{ stripe_publishable_key }}');
-        let elements = null;
-        let paymentElement = null;
-        let clientSecret = null;
-        let registrationId = null;
+        <!-- Payment Form (initially hidden) -->
+        <div class="max-w-2xl mx-auto hidden" id="payment-section">
+            <div class="payment-form">
+                <h3 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">
+                    Información de Pago
+                </h3>
 
-        let selectedPlan = null;
-        let selectedPrice = 0;
-        let currentStep = 'registration'; // 'registration' or 'payment'
-
-        function selectPlan(planName, price) {
-            selectedPlan = planName;
-            selectedPrice = price;
-
-            // Update modal content
-            const planDetails = document.getElementById('plan-details');
-            const planDisplayName = planName === 'estandar' ? 'Estándar' : 'Pro';
-            planDetails.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <span class="font-semibold">${planDisplayName}</span>
-                    <span class="text-lg font-bold">$${price}/mes</span>
+                <div id="plan-summary" class="mb-6 p-4 rounded-lg" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                    <!-- Plan summary will be inserted here -->
                 </div>
-            `;
 
-            // Show modal
-            document.getElementById('registration-modal').classList.remove('hidden');
+                <form id="payment-form">
+                    <div id="payment-element" class="mb-6">
+                        <!-- Stripe Payment Element will be inserted here -->
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" onclick="goBackToRegistration()"
+                                class="flex-1 py-4 px-6 rounded-lg font-semibold border-2"
+                                style="background: transparent; border-color: var(--border-color); color: var(--text-primary);">
+                            ← Regresar
+                        </button>
+                        <button type="submit" id="submit-payment"
+                                class="flex-1 btn-plan-select py-4">
+                            <span id="button-text">Pagar Ahora</span>
+                            <div id="spinner" class="hidden">Procesando...</div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Global variables - initialize properly
+    var selectedPlan = null;
+    var selectedPrice = 0;
+    var currentStep = 'registration';
+    var stripe = null;
+    var elements = null;
+    var paymentElement = null;
+    var clientSecret = null;
+    var registrationId = null;
+
+    // Initialize Stripe only if key is available
+    document.addEventListener('DOMContentLoaded', function() {
+        const stripeKey = '{{ stripe_publishable_key }}';
+        if (stripeKey && stripeKey.trim() !== '') {
+            stripe = Stripe(stripeKey);
+        } else {
+            console.warn('Stripe publishable key not configured');
         }
+    });
 
-        function closeModal() {
-            document.getElementById('registration-modal').classList.add('hidden');
-        }
+    function selectPlan(planName, price) {
+        selectedPlan = planName;
+        selectedPrice = price;
 
-        async function initializePayment(clientSecret) {
-            elements = stripe.elements({
-                clientSecret: clientSecret,
-                appearance: {
-                    theme: 'stripe',
-                    variables: {
-                        colorPrimary: '#9333EA',
-                        colorBackground: '#ffffff',
-                        colorText: '#1f2937',
-                        colorDanger: '#dc2626',
-                        fontFamily: 'Poppins, sans-serif',
-                        spacingUnit: '8px',
-                        borderRadius: '12px'
-                    }
-                }
-            });
-
-            paymentElement = elements.create('payment');
-            paymentElement.mount('#payment-element');
-
-            paymentElement.on('ready', () => {
-                console.log('Payment Element ready');
-            });
-
-            paymentElement.on('change', (event) => {
-                const errorElement = document.getElementById('payment-errors');
-                if (event.error) {
-                    errorElement.textContent = event.error.message;
-                    errorElement.classList.remove('hidden');
-                } else {
-                    errorElement.classList.add('hidden');
-                }
-            });
-        }
-
-        // Handle form submission
-        document.getElementById('registration-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const submitBtn = document.getElementById('submit-btn');
-            const btnText = document.getElementById('btn-text');
-            const btnLoading = document.getElementById('btn-loading');
-
-            try {
-                btnText.style.display = 'none';
-                btnLoading.style.display = 'inline';
-                submitBtn.disabled = true;
-
-                if (currentStep === 'registration') {
-                    // Step 1: Register user and get client secret
-                    const formData = {
-                        // Plan data
-                        selected_plan: selectedPlan,
-                        plan_price: selectedPrice,
-
-                        // User data
-                        admin_username: document.getElementById('admin_username').value,
-                        admin_password: document.getElementById('admin_password').value,
-                        admin_first_name: document.getElementById('admin_first_name').value,
-                        admin_last_name: document.getElementById('admin_last_name').value,
-                        contact_email: document.getElementById('contact_email').value,
-                        contact_phone: document.getElementById('contact_phone').value,
-
-                        // Business data
-                        business_name: document.getElementById('business_name').value,
-                        business_type: document.getElementById('business_type').value,
-                        address: document.getElementById('address').value,
-                        state: document.getElementById('state').value,
-                        country: document.getElementById('country').value
-                    };
-
-                    // Register subscription
-                    const registerResponse = await fetch('/api/suscripcion/registrar/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCsrfToken()
-                        },
-                        body: JSON.stringify(formData)
-                    });
-
-                    const registerResult = await registerResponse.json();
-
-                    if (!registerResponse.ok) {
-                        throw new Error(registerResult.error || 'Error al registrar');
-                    }
-
-                    registrationId = registerResult.registration_id;
-
-                    // Get Stripe client secret
-                    const paymentResponse = await fetch('/api/suscripcion/pago/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCsrfToken()
-                        },
-                        body: JSON.stringify({
-                            registration_id: registrationId,
-                            payment_method: 'stripe'
-                        })
-                    });
-
-                    const paymentResult = await paymentResponse.json();
-
-                    if (!paymentResponse.ok) {
-                        throw new Error(paymentResult.error || 'Error al preparar pago');
-                    }
-
-                    clientSecret = paymentResult.client_secret;
-
-                    // Initialize Payment Element
-                    await initializePayment(clientSecret);
-
-                    // Show payment section
-                    document.getElementById('payment-section').style.display = 'block';
-                    btnText.textContent = 'Completar Pago';
-                    document.getElementById('submit-notice').textContent = 'Completa tu información de pago para activar tu suscripción.';
-                    currentStep = 'payment';
-
-                } else if (currentStep === 'payment') {
-                    // Step 2: Confirm payment
-                    const {error} = await stripe.confirmPayment({
-                        elements,
-                        confirmParams: {
-                            return_url: window.location.origin + '/suscripcion/confirmada/',
-                        },
-                    });
-
-                    if (error) {
-                        const errorElement = document.getElementById('payment-errors');
-                        errorElement.textContent = error.message;
-                        errorElement.classList.remove('hidden');
-                    }
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error: ' + error.message);
-            } finally {
-                btnText.style.display = 'inline';
-                btnLoading.style.display = 'none';
-                submitBtn.disabled = false;
-            }
+        // Update visual selection
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.classList.remove('selected');
+            card.querySelector('.btn-plan-select').classList.remove('selected');
         });
 
-        // Get CSRF token
-        function getCsrfToken() {
-            return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        document.getElementById('plan-' + planName).classList.add('selected');
+        document.getElementById('plan-' + planName).querySelector('.btn-plan-select').classList.add('selected');
+
+        // Update form hidden field
+        const form = document.getElementById('registration-form');
+        let planInput = form.querySelector('input[name="selected_plan"]');
+        if (!planInput) {
+            planInput = document.createElement('input');
+            planInput.type = 'hidden';
+            planInput.name = 'selected_plan';
+            form.appendChild(planInput);
+        }
+        planInput.value = planName;
+
+        console.log('Plan selected:', planName, price);
+    }
+
+    // Handle registration form submission
+    document.getElementById('registration-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!selectedPlan) {
+            alert('Por favor selecciona un plan');
+            return;
         }
 
-        // Close modal on outside click
-        document.getElementById('registration-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        data.selected_plan = selectedPlan;
+
+        try {
+            const response = await fetch('/api/suscripcion/registrar/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                registrationId = result.registration_id;
+                showPaymentSection();
+            } else {
+                alert('Error: ' + result.error);
             }
-        });
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conexión. Inténtalo de nuevo.');
+        }
+    });
 
-        // Check for preselected plan from URL
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const preselectedPlan = urlParams.get('plan');
+    async function showPaymentSection() {
+        if (!stripe) {
+            alert('Error: Configuración de pagos no disponible');
+            return;
+        }
 
-            if (preselectedPlan) {
-                // Map URL plan names to our internal names
-                const planMapping = {
-                    'estandar': 'Estándar',
-                    'intermedio': 'Intermedio',
-                    'pro': 'Pro'
-                };
+        // Hide registration, show payment
+        document.getElementById('registration-section').classList.add('hidden');
+        document.getElementById('payment-section').classList.remove('hidden');
 
-                const planName = planMapping[preselectedPlan];
-                if (planName) {
-                    // Auto-select the plan
-                    const planButtons = document.querySelectorAll('.plan-card');
-                    planButtons.forEach(card => {
-                        const title = card.querySelector('h3')?.textContent?.trim();
-                        if (title === planName) {
-                            // Remove previous selections
-                            document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
-                            // Select this plan
-                            card.classList.add('selected');
-                            selectedPlan = planName;
+        // Update plan summary
+        const planName = selectedPlan === 'estandar' ? 'Estándar' : 'Pro';
+        document.getElementById('plan-summary').innerHTML = `
+            <div class="flex justify-between items-center">
+                <span style="color: var(--text-primary); font-weight: 600;">Plan ${planName}</span>
+                <span style="color: var(--accent-green); font-size: 1.5rem; font-weight: bold;">$${selectedPrice}/mes</span>
+            </div>
+        `;
 
-                            // Update modal button text
-                            document.getElementById('start-subscription').textContent = `Continuar con ${planName}`;
+        // Setup Stripe payment
+        try {
+            const paymentResponse = await fetch('/api/suscripcion/pago/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    registration_id: registrationId,
+                    payment_method: 'stripe'
+                })
+            });
 
-                            // Optional: Open modal automatically
-                            // openModal();
+            const paymentResult = await paymentResponse.json();
+
+            if (paymentResult.success) {
+                clientSecret = paymentResult.client_secret;
+
+                elements = stripe.elements({
+                    clientSecret: clientSecret,
+                    appearance: {
+                        theme: 'night',
+                        variables: {
+                            colorPrimary: '#00d4ff',
+                            colorBackground: '#1a1a1a',
+                            colorText: '#ffffff',
+                            colorDanger: '#ff4444',
+                            borderRadius: '12px'
                         }
-                    });
-                }
+                    }
+                });
+
+                paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+
+            } else {
+                alert('Error configurando pago: ' + paymentResult.error);
             }
-        });
-    </script>
+        } catch (error) {
+            console.error('Error setting up payment:', error);
+            alert('Error configurando el pago. Inténtalo de nuevo.');
+        }
 
-    <!-- CSRF Token -->
-    {% csrf_token %}
+        currentStep = 'payment';
+    }
 
-</body>
-</html>
+    function goBackToRegistration() {
+        document.getElementById('payment-section').classList.add('hidden');
+        document.getElementById('registration-section').classList.remove('hidden');
+        currentStep = 'registration';
+    }
+
+    // Handle payment form submission
+    document.getElementById('payment-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!stripe || !elements) {
+            alert('Error: Sistema de pagos no disponible');
+            return;
+        }
+
+        const submitButton = document.getElementById('submit-payment');
+        const buttonText = document.getElementById('button-text');
+        const spinner = document.getElementById('spinner');
+
+        submitButton.disabled = true;
+        buttonText.classList.add('hidden');
+        spinner.classList.remove('hidden');
+
+        try {
+            const {error} = await stripe.confirmPayment({
+                elements,
+                confirmParams: {
+                    return_url: window.location.origin + '/suscripcion/confirmada/',
+                },
+            });
+
+            if (error) {
+                console.error('Payment error:', error);
+                alert('Error en el pago: ' + error.message);
+
+                submitButton.disabled = false;
+                buttonText.classList.remove('hidden');
+                spinner.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Payment processing error:', error);
+            alert('Error procesando el pago. Inténtalo de nuevo.');
+
+            submitButton.disabled = false;
+            buttonText.classList.remove('hidden');
+            spinner.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}
