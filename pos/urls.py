@@ -119,8 +119,8 @@ urlpatterns = [
     # Página principal de suscripción (unificada)
     path('suscripcion/', subscription_views.subscription_page, name='subscription_page'),
 
-    # Ver planes disponibles
-    path('planes/', views.planes_view, name='planes'),
+    # Ver planes disponibles (DISABLED - view not implemented)
+    # path('planes/', views.planes_view, name='planes'),
 
     # API para obtener planes de suscripción
     path('api/plans/', subscription_views.get_subscription_plans, name='get_subscription_plans'),
