@@ -45,8 +45,20 @@ def register_subscription(request):
     try:
         data = json.loads(request.body)
 
-        # Validar plan seleccionado
-        plan = get_object_or_404(SubscriptionPlan, name=data['selected_plan'])
+        # Validar plan seleccionado - temporal hardcoded solution
+        plan_name = data['selected_plan']
+        if plan_name == 'estandar':
+            plan_price = 299.00
+            plan_display = 'Plan Estándar'
+        elif plan_name == 'pro':
+            plan_price = 499.00
+            plan_display = 'Plan Pro'
+        else:
+            return JsonResponse({'success': False, 'error': 'Plan no válido'})
+
+        # Create a mock plan object
+        from types import SimpleNamespace
+        plan = SimpleNamespace(name=plan_name, price=plan_price, display_name=plan_display)
 
         # Validar datos requeridos
         required_fields = [

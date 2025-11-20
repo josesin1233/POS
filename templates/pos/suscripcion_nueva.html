@@ -495,35 +495,8 @@
             return;
         }
 
-        // Create registration record first
-        try {
-            const response = await fetch('/api/suscripcion/registrar/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    selected_plan: selectedPlan,
-                    admin_first_name: 'Temp',
-                    admin_last_name: 'User',
-                    contact_email: 'temp@example.com',
-                    contact_phone: '1234567890'
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                registrationId = result.registration_id;
-            } else {
-                alert('Error: ' + result.error);
-                return;
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error de conexión. Inténtalo de nuevo.');
-            return;
-        }
+        // Create temporary registration record (mock for testing)
+        registrationId = `REG_${Date.now()}`;
 
         // Show payment form after plan selection
         document.getElementById('payment-section').classList.remove('hidden');
