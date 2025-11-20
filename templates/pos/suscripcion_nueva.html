@@ -194,7 +194,7 @@
                             🏪
                         </div>
                         <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Estándar</h3>
-                        <div class="text-4xl font-bold mb-2" style="color: var(--accent-blue);">$149</div>
+                        <div class="text-4xl font-bold mb-2" style="color: var(--accent-blue);">$299</div>
                         <div style="color: var(--text-secondary);">/mes</div>
                     </div>
 
@@ -216,7 +216,7 @@
                         </li>
                     </ul>
 
-                    <button onclick="selectPlan('estandar', 149)" class="btn-plan-select w-full">
+                    <button onclick="selectPlan('estandar', 299)" class="btn-plan-select w-full">
                         Seleccionar Plan
                     </button>
                 </div>
@@ -231,7 +231,7 @@
                             🚀
                         </div>
                         <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Pro</h3>
-                        <div class="text-4xl font-bold mb-2" style="color: var(--accent-green);">$249</div>
+                        <div class="text-4xl font-bold mb-2" style="color: var(--accent-green);">$499</div>
                         <div style="color: var(--text-secondary);">/mes</div>
                     </div>
 
@@ -253,7 +253,7 @@
                         </li>
                     </ul>
 
-                    <button onclick="selectPlan('pro', 249)" class="btn-plan-select w-full">
+                    <button onclick="selectPlan('pro', 499)" class="btn-plan-select w-full">
                         Seleccionar Plan
                     </button>
                 </div>
@@ -272,13 +272,13 @@
                 </div>
 
                 <!-- User Info Form -->
-                <form id="user-info-form">
+                <form id="payment-form">
                     <div class="grid md:grid-cols-2 gap-6 mb-8">
                         <div>
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
                                 Nombre *
                             </label>
-                            <input type="text" name="admin_first_name" required
+                            <input type="text" name="admin_first_name" id="user-name" required
                                    class="modern-input w-full" placeholder="Juan">
                         </div>
 
@@ -294,7 +294,7 @@
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
                                 Email *
                             </label>
-                            <input type="email" name="contact_email" required
+                            <input type="email" name="contact_email" id="user-email" required
                                    class="modern-input w-full" placeholder="juan@gmail.com">
                         </div>
 
@@ -302,7 +302,7 @@
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
                                 Teléfono *
                             </label>
-                            <input type="tel" name="contact_phone" required
+                            <input type="tel" name="contact_phone" id="user-phone" required
                                    class="modern-input w-full" placeholder="5551234567">
                         </div>
                     </div>
@@ -317,7 +317,7 @@
                     </div>
 
                     <div class="flex gap-4">
-                        <button type="button" onclick="hideForms()"
+                        <button type="button" onclick="goBackToPlans()"
                                 class="flex-1 py-4 px-6 rounded-lg font-semibold border-2"
                                 style="background: transparent; border-color: var(--border-color); color: var(--text-primary);">
                             ← Cambiar Plan
@@ -345,7 +345,7 @@
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
                                 Nombre del Negocio *
                             </label>
-                            <input type="text" name="business_name" required
+                            <input type="text" name="business_name" id="business-name" required
                                    class="modern-input w-full" placeholder="Mi Dulcería">
                         </div>
 
@@ -353,7 +353,7 @@
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
                                 Tipo de Negocio *
                             </label>
-                            <select name="business_type" required class="modern-input w-full">
+                            <select name="business_type" id="business-type" required class="modern-input w-full">
                                 <option value="">Selecciona...</option>
                                 <option value="Dulcería">Dulcería</option>
                                 <option value="Tienda de Abarrotes">Tienda de Abarrotes</option>
@@ -383,31 +383,47 @@
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
                                 Dirección *
                             </label>
-                            <textarea name="address" required
+                            <textarea name="address" id="address" required
                                       class="modern-input w-full" rows="2"
                                       placeholder="Calle Principal #123, Colonia Centro"></textarea>
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                Ciudad *
+                            </label>
+                            <input type="text" name="city" id="city" required
+                                   class="modern-input w-full" placeholder="Ciudad de México">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
                                 Estado *
                             </label>
-                            <input type="text" name="state" required
+                            <input type="text" name="state" id="state" required
                                    class="modern-input w-full" placeholder="CDMX">
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                País *
+                                Código Postal *
                             </label>
-                            <input type="text" name="country" value="México" required
-                                   class="modern-input w-full" readonly>
+                            <input type="text" name="postal_code" id="postal-code" required
+                                   class="modern-input w-full" placeholder="01000">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
+                                RFC (Opcional)
+                            </label>
+                            <input type="text" name="rfc" id="rfc"
+                                   class="modern-input w-full" placeholder="XAXX010101000">
                         </div>
                     </div>
 
                     <div class="text-center mt-8">
-                        <button type="submit" class="btn-plan-select px-12 py-4">
-                            Completar Registro
+                        <button type="submit" id="submit-business" class="btn-plan-select px-12 py-4">
+                            <span>Completar Registro</span>
                         </button>
                     </div>
                 </form>
@@ -445,105 +461,58 @@
         // Update visual selection
         document.querySelectorAll('.plan-card').forEach(card => {
             card.classList.remove('selected');
-            card.querySelector('.btn-plan-select').classList.remove('selected');
+            const btn = card.querySelector('.btn-plan-select');
+            if (btn) btn.classList.remove('selected');
         });
 
-        document.getElementById('plan-' + planName).classList.add('selected');
-        document.getElementById('plan-' + planName).querySelector('.btn-plan-select').classList.add('selected');
-
-        // Update form hidden field
-        const form = document.getElementById('registration-form');
-        let planInput = form.querySelector('input[name="selected_plan"]');
-        if (!planInput) {
-            planInput = document.createElement('input');
-            planInput.type = 'hidden';
-            planInput.name = 'selected_plan';
-            form.appendChild(planInput);
+        const selectedCard = document.getElementById('plan-' + planName);
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+            const selectedBtn = selectedCard.querySelector('.btn-plan-select');
+            if (selectedBtn) selectedBtn.classList.add('selected');
         }
-        planInput.value = planName;
 
-        // Show registration form with animation
-        showRegistrationForm();
+        // Show payment form with animation
+        showPaymentSection();
 
         console.log('Plan selected:', planName, price);
     }
 
-    function showRegistrationForm() {
-        const formContainer = document.getElementById('registration-section');
-        formContainer.classList.add('show');
 
-        // Smooth scroll to form after animation starts
-        setTimeout(() => {
-            formContainer.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }, 100);
-    }
 
-    function hideForms() {
-        // Hide registration form
-        document.getElementById('registration-section').classList.remove('show');
-
-        // Hide payment form if visible
-        document.getElementById('payment-section').classList.add('hidden');
-
-        // Clear plan selection visually
-        document.querySelectorAll('.plan-card').forEach(card => {
-            card.classList.remove('selected');
-            card.querySelector('.btn-plan-select').classList.remove('selected');
-        });
-
-        // Clear selected plan
-        selectedPlan = null;
-        selectedPrice = 0;
-
-        // Scroll back to plans
-        document.querySelector('.grid').scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
-
-    // Handle registration form submission
-    document.getElementById('registration-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        if (!selectedPlan) {
-            alert('Por favor selecciona un plan');
+    async function showPaymentSection() {
+        if (!stripe) {
+            alert('Error: Configuración de pagos no disponible');
             return;
         }
 
-        const formData = new FormData(this);
-        const data = Object.fromEntries(formData.entries());
-        data.selected_plan = selectedPlan;
-
+        // Create registration record first
         try {
             const response = await fetch('/api/suscripcion/registrar/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    selected_plan: selectedPlan,
+                    admin_first_name: 'Temp',
+                    admin_last_name: 'User',
+                    contact_email: 'temp@example.com',
+                    contact_phone: '1234567890'
+                })
             });
 
             const result = await response.json();
 
             if (result.success) {
                 registrationId = result.registration_id;
-                showPaymentSection();
             } else {
                 alert('Error: ' + result.error);
+                return;
             }
         } catch (error) {
             console.error('Error:', error);
             alert('Error de conexión. Inténtalo de nuevo.');
-        }
-    });
-
-    async function showPaymentSection() {
-        if (!stripe) {
-            alert('Error: Configuración de pagos no disponible');
             return;
         }
 
