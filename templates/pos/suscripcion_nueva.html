@@ -447,10 +447,18 @@
     // Initialize Stripe only if key is available
     document.addEventListener('DOMContentLoaded', function() {
         const stripeKey = '{{ stripe_publishable_key }}';
-        if (stripeKey && stripeKey.trim() !== '') {
-            stripe = Stripe(stripeKey);
+        console.log('Stripe key loaded:', stripeKey ? stripeKey.substring(0, 20) + '...' : 'EMPTY');
+        console.log('Stripe library available:', typeof Stripe !== 'undefined');
+
+        if (stripeKey && stripeKey.trim() !== '' && typeof Stripe !== 'undefined') {
+            try {
+                stripe = Stripe(stripeKey);
+                console.log('Stripe initialized successfully');
+            } catch (error) {
+                console.error('Stripe initialization error:', error);
+            }
         } else {
-            console.warn('Stripe publishable key not configured');
+            console.warn('Stripe publishable key not configured or Stripe library not loaded');
         }
     });
 
