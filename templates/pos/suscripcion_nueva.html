@@ -34,23 +34,7 @@
     }
 
     .plan-featured {
-        border-color: var(--accent-green);
-        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.2);
-    }
-
-    .plan-featured::before {
-        content: 'MÁS POPULAR';
-        position: absolute;
-        top: -1px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--accent-green);
-        color: #000000;
-        padding: 4px 16px;
-        border-radius: 0 0 12px 12px;
-        font-size: 0.75rem;
-        font-weight: bold;
-        letter-spacing: 0.5px;
+        /* Removed "MÁS POPULAR" styling */
     }
 
     .btn-plan-select {
@@ -149,6 +133,20 @@
         color: var(--accent-blue);
         background: rgba(0, 212, 255, 0.1);
     }
+
+    /* Form animation */
+    .form-container {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: all 0.5s ease;
+    }
+
+    .form-container.show {
+        max-height: 2000px;
+        opacity: 1;
+        margin-top: 48px;
+    }
 </style>
 {% endblock %}
 
@@ -225,8 +223,8 @@
             </div>
 
             <!-- Plan Pro -->
-            <div class="plan-card plan-featured" id="plan-pro">
-                <div class="p-8 pt-12">
+            <div class="plan-card" id="plan-pro">
+                <div class="p-8">
                     <div class="text-center mb-6">
                         <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl"
                              style="background: linear-gradient(135deg, var(--accent-green), #00cc66);">
@@ -262,8 +260,8 @@
             </div>
         </div>
 
-        <!-- Registration Form -->
-        <div class="max-w-2xl mx-auto" id="registration-section">
+        <!-- Registration Form (initially hidden) -->
+        <div class="max-w-2xl mx-auto form-container" id="registration-section">
             <div class="registration-form">
                 <h3 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">
                     Información de Registro
@@ -371,6 +369,13 @@
                         <button type="submit" class="btn-plan-select px-12 py-4">
                             Continuar al Pago
                         </button>
+                        <div class="mt-4">
+                            <button type="button" onclick="hideForms()"
+                                    class="text-sm px-6 py-2 rounded-lg border"
+                                    style="background: transparent; border-color: var(--border-color); color: var(--text-secondary);">
+                                ← Cambiar Plan
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -456,7 +461,47 @@
         }
         planInput.value = planName;
 
+        // Show registration form with animation
+        showRegistrationForm();
+
         console.log('Plan selected:', planName, price);
+    }
+
+    function showRegistrationForm() {
+        const formContainer = document.getElementById('registration-section');
+        formContainer.classList.add('show');
+
+        // Smooth scroll to form after animation starts
+        setTimeout(() => {
+            formContainer.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 100);
+    }
+
+    function hideForms() {
+        // Hide registration form
+        document.getElementById('registration-section').classList.remove('show');
+
+        // Hide payment form if visible
+        document.getElementById('payment-section').classList.add('hidden');
+
+        // Clear plan selection visually
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.classList.remove('selected');
+            card.querySelector('.btn-plan-select').classList.remove('selected');
+        });
+
+        // Clear selected plan
+        selectedPlan = null;
+        selectedPrice = 0;
+
+        // Scroll back to plans
+        document.querySelector('.grid').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
     }
 
     // Handle registration form submission
@@ -562,8 +607,14 @@
 
     function goBackToRegistration() {
         document.getElementById('payment-section').classList.add('hidden');
-        document.getElementById('registration-section').classList.remove('hidden');
+        document.getElementById('registration-section').classList.add('show');
         currentStep = 'registration';
+
+        // Scroll to registration form
+        document.getElementById('registration-section').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
     }
 
     // Handle payment form submission
