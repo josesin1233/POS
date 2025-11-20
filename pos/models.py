@@ -731,3 +731,177 @@ class Suscripcion(models.Model):
     
     def __str__(self):
         return f"{self.business.nombre} - {self.plan} ({self.estado})"
+
+
+class SubscriptionPlan(models.Model):
+    """Planes de suscripción disponibles"""
+
+    name = models.CharField(max_length=50, unique=True)
+    display_name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Configuraciones del plan
+    max_concurrent_users = models.IntegerField(default=2)
+    duration_days = models.IntegerField(default=30)
+
+    # Jerarquía de planes
+    hierarchy_level = models.IntegerField(default=1)  # 1=básico, 2=intermedio, 3=avanzado
+
+    # Estado
+    is_active = models.BooleanField(default=True)
+    is_promotional = models.BooleanField(default=False)
+    promotional_text = models.CharField(max_length=100, blank=True)
+
+    # Metadatos
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Plan de Suscripción"
+        verbose_name_plural = "Planes de Suscripción"
+        ordering = ['hierarchy_level', 'price']
+
+    def __str__(self):
+        return f"{self.display_name} (${self.price})"
+
+
+class PlanFeature(models.Model):
+    """Características/funcionalidades de cada plan"""
+
+    plan = models.ForeignKey(
+        SubscriptionPlan,
+        on_delete=models.CASCADE,
+        related_name='features'
+    )
+
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    feature_key = models.CharField(max_length=50)  # Para verificar en código
+
+    # Orden de aparición
+    display_order = models.IntegerField(default=1)
+
+    class Meta:
+        verbose_name = "Característica del Plan"
+        verbose_name_plural = "Características del Plan"
+        ordering = ['display_order']
+
+    def __str__(self):
+        return f"{self.plan.name} - {self.name}"
+
+
+class PaymentTransaction(models.Model):
+    """Transacciones de pago"""
+
+    STATUS_CHOICES = [
+        ('pending', 'Pendiente'),
+        ('processing', 'Procesando'),
+        ('completed', 'Completado'),
+        ('failed', 'Fallido'),
+        ('refunded', 'Reembolsado'),
+        ('cancelled', 'Cancelado'),
+    ]
+
+    GATEWAY_CHOICES = [
+        ('stripe', 'Stripe'),
+        ('paypal', 'PayPal'),
+        ('mercadopago', 'Mercado Pago'),
+        ('manual', 'Manual'),
+    ]
+
+    # Identificadores
+    transaction_id = models.CharField(max_length=200, unique=True)
+    gateway_transaction_id = models.CharField(max_length=200, blank=True, null=True)
+
+    # Relaciones
+    business = models.ForeignKey(
+        Business,
+        on_delete=models.CASCADE,
+        related_name='payment_transactions'
+    )
+    subscription = models.ForeignKey(
+        'Suscripcion',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='payment_transactions'
+    )
+    plan = models.ForeignKey(
+        SubscriptionPlan,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    # Datos de pago
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default='MXN')
+    gateway = models.CharField(max_length=20, choices=GATEWAY_CHOICES)
+    payment_method = models.CharField(max_length=50, blank=True)
+
+    # Estados
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    # Datos del gateway
+    gateway_response = models.JSONField(blank=True, null=True)
+
+    # Fechas
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Transacción de Pago"
+        verbose_name_plural = "Transacciones de Pago"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.transaction_id} - {self.business.name} (${self.amount})"
+
+
+class SubscriptionRegistration(models.Model):
+    """Registro temporal antes de completar pago"""
+
+    # Datos del formulario de registro
+    business_name = models.CharField(max_length=100)
+    business_type = models.CharField(max_length=50)
+    address = models.TextField()
+    state = models.CharField(max_length=50)
+    country = models.CharField(max_length=50, default='México')
+
+    # Datos de contacto
+    contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=15)
+
+    # Datos del usuario administrador
+    admin_username = models.CharField(max_length=150)
+    admin_password = models.CharField(max_length=200)  # Hash de la contraseña
+    admin_first_name = models.CharField(max_length=150)
+    admin_last_name = models.CharField(max_length=150)
+
+    # Plan seleccionado
+    selected_plan = models.ForeignKey(
+        SubscriptionPlan,
+        on_delete=models.CASCADE
+    )
+
+    # Estado del registro
+    is_completed = models.BooleanField(default=False)
+    payment_transaction = models.ForeignKey(
+        PaymentTransaction,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    # Fechas
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Registro de Suscripción"
+        verbose_name_plural = "Registros de Suscripción"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.business_name} - {self.selected_plan.name}"

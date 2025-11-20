@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(./venv/Scripts/python.exe:*)",
-      "Bash(set DATABASE_URL=postgresql://postgres:OykkZteCWzCQzNiPuoIzJXjEvYUpoTBp@postgres.railway.internal:5432/railway)"
+      "Bash(set DATABASE_URL=postgresql://postgres:OykkZteCWzCQzNiPuoIzJXjEvYUpoTBp@postgres.railway.internal:5432/railway)",
+      "Bash(printf \"timezone.now\\n\")",
+      "Bash(printf \"y\\n\")",
+      "Bash(start http://localhost:8000/suscripcion/)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": [],

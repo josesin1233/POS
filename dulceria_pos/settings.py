@@ -335,3 +335,18 @@ if not DEBUG:
     EMAIL_SUBJECT_PREFIX = '[POS Mexico] '
 
 WSGI_APPLICATION = 'dulceria_pos.wsgi.application'
+
+# ====================================
+# STRIPE CONFIGURATION
+# ====================================
+
+# Stripe API Keys (configure in environment variables)
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', '')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+
+# Stripe Webhook Secret (for production)
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+
+# Stripe Settings
+STRIPE_CURRENCY = 'mxn'  # Mexican Pesos
+STRIPE_API_VERSION = '2025-11-17.clover'  # Latest API version

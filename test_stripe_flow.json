@@ -1,0 +1,14 @@
+{
+    "selected_plan": "estandar",
+    "admin_username": "teststripe456",
+    "admin_password": "test12345",
+    "admin_first_name": "Juan",
+    "admin_last_name": "Pérez",
+    "contact_email": "test.stripe456@example.com",
+    "contact_phone": "5555551234",
+    "business_name": "Dulcería Stripe Test",
+    "business_type": "Dulcería",
+    "address": "Calle Stripe 123",
+    "state": "CDMX",
+    "country": "México"
+}

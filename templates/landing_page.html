@@ -275,11 +275,11 @@
                 class="tab-active px-4 py-2 rounded-lg font-semibold text-sm transition-all">
           🏪 DEMO
         </button>
-        <button onclick="mostrarTab('planes')" id="tab-planes"
+        <button onclick="window.location.href='/planes/'" id="tab-planes"
                 class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
           💰 PLANES
         </button>
-        <button onclick="mostrarTab('suscripcion')" id="tab-suscripcion"
+        <button onclick="window.location.href='/suscripcion/'" id="tab-suscripcion"
                 class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
           📋 SUSCRIBIRSE
         </button>
@@ -312,7 +312,7 @@
             </div>
           </div>
           <div class="w-full lg:w-auto">
-            <button onclick="mostrarTab('suscripcion')" class="btn-cart-v1 w-full lg:w-auto px-3 lg:px-4 py-2 rounded-lg font-bold text-xs lg:text-sm transition-all">
+            <button onclick="window.location.href='/suscripcion/'" class="btn-cart-v1 w-full lg:w-auto px-3 lg:px-4 py-2 rounded-lg font-bold text-xs lg:text-sm transition-all">
               💳 ¡SUSCRÍBETE AHORA!
             </button>
           </div>
@@ -367,7 +367,7 @@
                         class="flex-1 process-btn py-2 lg:py-3 rounded-lg font-bold text-xs lg:text-sm transition-all">
                   Simular Cobro
                 </button>
-                <button onclick="mostrarTab('suscripcion')" 
+                <button onclick="window.location.href='/suscripcion/'"
                         class="ticket-btn px-4 lg:px-6 py-2 lg:py-3 rounded-lg font-bold text-xs lg:text-sm transition-all">
                   ¡Comprar Ahora!
                 </button>
@@ -498,7 +498,7 @@
             </li>
           </ul>
           
-          <button onclick="seleccionarPlan('basico', 299)" 
+          <button onclick="window.location.href='/suscripcion/?plan=estandar'"
                   class="btn-add-v1 w-full py-3 rounded-lg font-bold">
             Seleccionar Plan
           </button>
@@ -511,8 +511,8 @@
           </div>
           
           <div class="text-center mb-6 mt-4">
-            <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">INTERMEDIO</h3>
-            <div class="text-4xl font-bold mb-1" style="color: #ff4499;">$449</div>
+            <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">PRO</h3>
+            <div class="text-4xl font-bold mb-1" style="color: #ff4499;">$249</div>
             <div style="color: var(--text-secondary);">/mes</div>
           </div>
           
@@ -540,55 +540,12 @@
             </li>
           </ul>
           
-          <button onclick="seleccionarPlan('intermedio', 449)" 
+          <button onclick="window.location.href='/suscripcion/?plan=pro'"
                   class="btn-cart-v1 w-full py-3 rounded-lg font-bold">
             Seleccionar Plan
           </button>
         </div>
 
-        <!-- Plan Profesional -->
-        <div class="cart-container rounded-2xl shadow-xl p-8 relative">
-          <div class="text-center mb-6">
-            <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">PROFESIONAL</h3>
-            <div class="text-4xl font-bold mb-1" style="color: #8b5cf6;">$699</div>
-            <div style="color: var(--text-secondary);">/mes</div>
-          </div>
-          
-          <ul class="space-y-3 mb-8">
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: var(--accent-green);">✓</span> 2 usuarios
-            </li>
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: var(--accent-green);">✓</span> 500 productos
-            </li>
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: var(--accent-green);">✓</span> 2 sucursales
-            </li>
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: var(--accent-green);">✓</span> Todo lo anterior +
-            </li>
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: #8b5cf6;">★</span> Tickets profesionales
-            </li>
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: #8b5cf6;">★</span> Control de cajas
-            </li>
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: #8b5cf6;">★</span> Dashboard completo
-            </li>
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: #8b5cf6;">★</span> Soporte prioritario
-            </li>
-            <li class="flex items-center gap-2" style="color: var(--text-primary);">
-              <span style="color: #8b5cf6;">★</span> Ventas ilimitadas
-            </li>
-          </ul>
-          
-          <button onclick="seleccionarPlan('profesional', 699)" 
-                  class="process-btn w-full py-3 rounded-lg font-bold">
-            Seleccionar Plan
-          </button>
-        </div>
       </div>
     </div>
 

@@ -2036,3 +2036,69 @@ def movimientos_stock_api(request):
             'error': f'Error interno: {str(e)}',
             'movimientos': []
         }, status=500)
+
+
+# ========================
+# VISTAS DE SUSCRIPCION
+# ========================
+
+def planes_view(request):
+    """Vista para mostrar planes de suscripción"""
+    planes = {
+        'estandar': {
+            'nombre': 'Estándar',
+            'precio': 149,
+            'usuarios': 1,
+            'productos': 500,
+            'caracteristicas': [
+                'Sistema POS completo',
+                'Control de inventario',
+                'Reportes básicos',
+                'Soporte por email',
+                'Backup automático'
+            ]
+        },
+        'pro': {
+            'nombre': 'Pro',
+            'precio': 249,
+            'usuarios': 3,
+            'productos': 2000,
+            'caracteristicas': [
+                'Todo lo del plan Estándar',
+                'Múltiples usuarios',
+                'Reportes avanzados',
+                'Soporte prioritario',
+                'API para integraciones',
+                'Análisis de ventas'
+            ]
+        },
+        'intermedio': {
+            'nombre': 'Intermedio',
+            'precio': 199,
+            'usuarios': 2,
+            'productos': 1000,
+            'caracteristicas': [
+                'Sistema POS completo',
+                'Control de inventario avanzado',
+                'Reportes detallados',
+                'Soporte por chat',
+                'Multi-sucursal',
+                'Dashboard de métricas'
+            ]
+        }
+    }
+
+    return render(request, 'pos/planes.html', {'planes': planes})
+
+
+def confirmar_suscripcion(request):
+    """Vista para confirmación de suscripción"""
+    session_id = request.GET.get('session_id', 'POSMEXICO-2024')
+    fecha = timezone.now().strftime('%d de %B, %Y')
+
+    context = {
+        'session_id': session_id,
+        'fecha': fecha
+    }
+
+    return render(request, 'pos/confirmar_suscripcion.html', context)

@@ -4,6 +4,7 @@ URLs del módulo POS - Sistema para Dulcerías México
 
 from django.urls import path
 from . import views
+from . import subscription_views
 
 app_name = 'pos'
 
@@ -110,4 +111,29 @@ urlpatterns = [
 
     # API unificada: registro completo de ventas + movimientos de inventario
     path('registro/completo/', views.registro_completo_api, name='registro_completo_api'),
+
+    # ========================
+    # SISTEMA DE SUSCRIPCIONES
+    # ========================
+
+    # Página principal de suscripción (unificada)
+    path('suscripcion/', subscription_views.subscription_page, name='subscription_page'),
+
+    # Ver planes disponibles
+    path('planes/', views.planes_view, name='planes'),
+
+    # API para obtener planes de suscripción
+    path('api/plans/', subscription_views.get_subscription_plans, name='get_subscription_plans'),
+
+    # API para registrar nueva suscripción
+    path('api/suscripcion/registrar/', subscription_views.register_subscription, name='register_subscription'),
+
+    # API para procesar pagos
+    path('api/suscripcion/pago/', subscription_views.process_payment, name='process_payment'),
+
+    # Webhook para gateway de pagos
+    path('webhook/pagos/', subscription_views.payment_webhook, name='payment_webhook'),
+
+    # Confirmación de suscripción
+    path('suscripcion/confirmada/', views.confirmar_suscripcion, name='confirmar_suscripcion'),
 ]
