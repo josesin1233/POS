@@ -446,7 +446,8 @@
 
     // Initialize Stripe only if key is available
     document.addEventListener('DOMContentLoaded', function() {
-        const stripeKey = '{{ stripe_publishable_key }}';
+        // Temporary hardcoded key for testing
+        const stripeKey = 'pk_test_51SVIpEPYEj8hTUzF27uSE7odPYyGdwqqw0H16Oo2zcWvok6SdTXGP8TShnpAjhaBq9qm4M8JTVthuayRzug9O0nc006H1zBCYV';
         console.log('Stripe key loaded:', stripeKey ? stripeKey.substring(0, 20) + '...' : 'EMPTY');
         console.log('Stripe library available:', typeof Stripe !== 'undefined');
 
