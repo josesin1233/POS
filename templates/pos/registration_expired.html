@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Link Expirado - POS Dulcería México</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #000000; color: #ffffff; }
+        .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; text-align: center; }
+        .error-card { background: #111111; border-radius: 16px; padding: 40px; border: 1px solid #333333; }
+        .btn-primary { background: linear-gradient(135deg, #00d4ff, #0088cc); color: white; padding: 14px 28px; border: none; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block; margin: 10px; transition: all 0.3s ease; }
+        .btn-primary:hover { transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-card">
+            <div style="font-size: 72px; margin-bottom: 20px;">⏰</div>
+            <h1 style="color: #ff9800; margin-bottom: 20px; font-size: 32px;">Link Expirado</h1>
+            <p style="font-size: 18px; margin-bottom: 30px; color: #cccccc;">
+                Este enlace de registro ha expirado.<br>
+                Los enlaces tienen una validez de 72 horas por seguridad.
+            </p>
+
+            <div style="background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); color: #ff9800; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                <h3 style="margin-bottom: 15px;">💡 ¿Qué puedes hacer?</h3>
+                <ul style="text-align: left; margin-left: 20px; line-height: 1.8;">
+                    <li>Contacta a nuestro equipo de soporte</li>
+                    <li>Solicitaremos un nuevo enlace para ti</li>
+                    <li>Tu información de pago sigue siendo válida</li>
+                </ul>
+            </div>
+
+            <div style="margin: 30px 0;">
+                <a href="/suscripcion/" class="btn-primary">
+                    📞 Contactar Soporte
+                </a>
+                <a href="/" class="btn-primary" style="background: rgba(255, 255, 255, 0.1); color: #ffffff;">
+                    🏠 Ir al Inicio
+                </a>
+            </div>
+
+            <div style="font-size: 14px; color: #666666; margin-top: 30px;">
+                <p>Soporte: soporte@dulcepos.mx • WhatsApp: +52 55 1234 5678</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -112,16 +112,18 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
-MIDDLEWARE = [ 
+MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware', 
+    'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware', 
-    'django.middleware.common.CommonMiddleware', 
-    'django.middleware.csrf.CsrfViewMiddleware', 
-    'django.contrib.auth.middleware.AuthenticationMiddleware', 
-    'django.contrib.messages.middleware.MessageMiddleware', 
-    'django.middleware.clickjacking.XFrameOptionsMiddleware', 
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'pos.middleware.AdminIPRestrictionMiddleware',
+    'pos.middleware.AdminSecurityHeadersMiddleware',
 ] 
 
 ROOT_URLCONF = 'dulceria_pos.urls' 
@@ -350,3 +352,27 @@ STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
 # Stripe Settings
 STRIPE_CURRENCY = 'mxn'  # Mexican Pesos
 STRIPE_API_VERSION = '2025-11-17.clover'  # Latest API version
+
+# ====================================
+# ADMIN SECURITY CONFIGURATION
+# ====================================
+
+# IPs permitidas para acceder al Django Admin
+# En desarrollo, todas las IPs están permitidas
+# En producción, solo estas IPs pueden acceder al admin
+ADMIN_ALLOWED_IPS = [
+    '127.0.0.1',
+    'localhost',
+    '::1',  # IPv6 localhost
+    # Agregar IPs específicas aquí para producción
+    # Ejemplo:
+    # '192.168.1.100',  # IP fija del administrador
+    # '203.0.113.42',   # IP pública del administrador
+]
+
+# URL personalizada del admin (para mayor seguridad)
+ADMIN_URL_PATH = os.getenv('ADMIN_URL_PATH', 'admin/')
+
+# Rate limiting para admin (intentos de login)
+ADMIN_LOGIN_ATTEMPTS = int(os.getenv('ADMIN_LOGIN_ATTEMPTS', '5'))
+ADMIN_LOGIN_TIMEOUT = int(os.getenv('ADMIN_LOGIN_TIMEOUT', '300'))  # 5 minutos

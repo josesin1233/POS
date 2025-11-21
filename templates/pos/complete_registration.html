@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Completar Registro - POS Dulcería México</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    <link rel="alternate icon" href="{% static 'favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #000000; color: #ffffff; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-container { background: #111111; border-radius: 16px; padding: 40px; border: 1px solid #333333; }
+        .btn-primary { background: linear-gradient(135deg, #00d4ff, #0088cc); color: white; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
+        .btn-primary:hover { background: linear-gradient(135deg, #0088cc, #0066aa); transform: translateY(-1px); }
+        .input-field { width: 100%; padding: 12px; background: #1a1a1a; border: 2px solid #333333; border-radius: 8px; color: #ffffff; }
+        .input-field:focus { border-color: #00d4ff; box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1); outline: none; }
+        .success-message { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #22c55e; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+        .error-message { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+        .timeline-info { background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); color: #00d4ff; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+        .timer { font-weight: bold; color: #ff9800; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav style="background: #111111; border-bottom: 1px solid #333333;">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
+            <div style="font-size: 18px; font-weight: bold; color: #00d4ff;">DulcePOS - COMPLETAR REGISTRO</div>
+            <div style="color: #666666; font-size: 14px;">Paso final de tu suscripción</div>
+        </div>
+    </nav>
+
+    <main class="container" style="margin-top: 40px;">
+        <!-- Información del usuario -->
+        <div class="timeline-info">
+            <h2 style="margin-bottom: 10px;">✅ ¡Hola {{ registration.full_name }}!</h2>
+            <p style="margin-bottom: 5px;">Tu pago ha sido confirmado y tu cuenta está lista.</p>
+            <p style="color: #cccccc;">Email: {{ registration.email }} • Teléfono: {{ registration.phone }}</p>
+            {% if token_expires_in %}
+                <p style="margin-top: 10px;">
+                    ⏰ Este enlace expira en: <span class="timer">{{ token_expires_in|floatformat:1 }} horas</span>
+                </p>
+            {% endif %}
+        </div>
+
+        <!-- Mensajes -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}success-message{% else %}error-message{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Formulario de completar registro -->
+        <div class="form-container">
+            <h1 style="text-align: center; margin-bottom: 30px; font-size: 24px; color: #ffffff;">
+                🏪 Configurar tu negocio y cuenta
+            </h1>
+
+            <form method="post" style="space-y: 24px;">
+                {% csrf_token %}
+
+                <!-- Información del negocio -->
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px; font-size: 18px;">📍 Información del negocio</h3>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Nombre del negocio *</label>
+                        <input type="text" name="business_name" required class="input-field"
+                               placeholder="Ejemplo: Dulcería La Esperanza">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Dirección completa *</label>
+                        <input type="text" name="business_address" required class="input-field"
+                               placeholder="Calle, número, colonia, código postal">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Tipo de negocio</label>
+                        <select name="business_type" class="input-field">
+                            <option value="dulceria">🍭 Dulcería</option>
+                            <option value="abarrotes">🛒 Abarrotes</option>
+                            <option value="minisuper">🏪 Mini Super</option>
+                            <option value="papeleria">📚 Papelería</option>
+                            <option value="farmacia">💊 Farmacia</option>
+                            <option value="otro">🏢 Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Configurar acceso -->
+                <div style="margin-bottom: 30px;">
+                    <h3 style="color: #00d4ff; margin-bottom: 20px; font-size: 18px;">🔐 Configurar acceso</h3>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Contraseña *</label>
+                        <input type="password" name="password" required class="input-field"
+                               placeholder="Mínimo 8 caracteres" minlength="8">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Confirmar contraseña *</label>
+                        <input type="password" name="password_confirm" required class="input-field"
+                               placeholder="Repetir la contraseña">
+                    </div>
+                </div>
+
+                <!-- Información importante -->
+                <div style="background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); color: #ff9800; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                    <h4 style="margin-bottom: 10px;">📋 ¿Qué sucede después?</h4>
+                    <ul style="margin-left: 20px; line-height: 1.6;">
+                        <li>Se creará tu cuenta en el sistema POS</li>
+                        <li>Podrás acceder inmediatamente a todas las funciones</li>
+                        <li>Tendrás un panel completo para gestionar tu inventario</li>
+                        <li>Soporte técnico incluido en tu suscripción</li>
+                    </ul>
+                </div>
+
+                <!-- Botón de envío -->
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 16px;">
+                    🚀 Activar mi cuenta POS
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer style="text-align: center; padding: 40px; color: #666666; border-top: 1px solid #333333; margin-top: 60px;">
+        <p>© {{ "now"|date:"Y" }} DulcePOS México - Sistema POS para pequeños negocios</p>
+    </footer>
+
+    <script>
+        // Validación de contraseñas
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const password = document.querySelector('[name="password"]').value;
+            const confirm = document.querySelector('[name="password_confirm"]').value;
+
+            if (password !== confirm) {
+                e.preventDefault();
+                alert('Las contraseñas no coinciden');
+                return false;
+            }
+
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('La contraseña debe tener al menos 8 caracteres');
+                return false;
+            }
+        });
+
+        // Actualizar timer en tiempo real
+        {% if token_expires_in %}
+            let timeLeft = {{ token_expires_in|floatformat:2 }} * 3600; // convertir a segundos
+
+            function updateTimer() {
+                if (timeLeft <= 0) {
+                    document.querySelector('.timer').textContent = 'EXPIRADO';
+                    document.querySelector('.timer').style.color = '#ef4444';
+                    return;
+                }
+
+                const hours = Math.floor(timeLeft / 3600);
+                const minutes = Math.floor((timeLeft % 3600) / 60);
+
+                if (hours > 0) {
+                    document.querySelector('.timer').textContent = `${hours}h ${minutes}m`;
+                } else {
+                    document.querySelector('.timer').textContent = `${minutes} minutos`;
+                    if (minutes < 30) {
+                        document.querySelector('.timer').style.color = '#ef4444';
+                    }
+                }
+
+                timeLeft--;
+            }
+
+            // Actualizar cada minuto
+            setInterval(updateTimer, 60000);
+            updateTimer(); // Ejecutar inmediatamente
+        {% endif %}
+    </script>
+</body>
+</html>

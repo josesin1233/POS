@@ -905,3 +905,11 @@ class SubscriptionRegistration(models.Model):
 
     def __str__(self):
         return f"{self.business_name} - {self.selected_plan.name}"
+
+
+# ====================================
+# IMPORTAR MODELOS DE GESTIÓN DE USUARIOS
+# ====================================
+
+# Importar los nuevos modelos para gestión de usuarios
+from .models_user_management import UserRegistration, UserRegistrationLog

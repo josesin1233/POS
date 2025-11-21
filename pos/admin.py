@@ -191,3 +191,11 @@ class MovimientoStockAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related(
             'business', 'producto', 'usuario', 'venta'
         )
+
+
+# ====================================
+# ADMIN PARA GESTIÓN DE USUARIOS
+# ====================================
+
+# Importar los admin personalizados para gestión de usuarios
+from .admin_user_management import UserRegistrationAdmin, UserRegistrationLogAdmin

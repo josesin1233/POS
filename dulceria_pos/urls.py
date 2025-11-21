@@ -38,7 +38,10 @@ urlpatterns = [
     path('caja/api/cerrar/', caja_cerrar_api, name='caja_cerrar_api'),
     path('caja/api/gastos/', caja_gastos_api, name='caja_gastos_api'),
     
-    # Apps principales  
+    # Sistema de gestión de usuarios
+    path('', include('pos.urls_user_management')),  # Include user management URLs at root level
+
+    # Apps principales
     path('', include('pos.urls')),               # Include POS URLs at root level
     path('accounts/', include('accounts.urls')),
 ]

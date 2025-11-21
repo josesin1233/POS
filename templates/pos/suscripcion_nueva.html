@@ -165,6 +165,7 @@
         <!-- Formulario de contacto -->
         <div class="form-container rounded-2xl shadow-xl p-8 max-w-lg mx-auto">
           <form id="contact-form" class="space-y-6">
+            {% csrf_token %}
             <!-- Información del usuario -->
             <div class="space-y-4">
               <div>
@@ -278,6 +279,12 @@
       }, 4000);
     }
 
+    // Helper functions
+    function getCsrfToken() {
+      return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+             document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    }
+
     // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
       // Set dark mode by default
@@ -312,25 +319,43 @@
           return;
         }
 
-        // Simulate API call (replace with real endpoint)
-        setTimeout(() => {
+        // Send to real endpoint
+        fetch('/suscripcion/submit/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Show success message
+            mostrarNotificacion('✅ ¡Información enviada exitosamente! Te contactaremos pronto.', 'success');
+
+            // Clear form
+            document.getElementById('contact-form').reset();
+
+            // Additional info
+            setTimeout(() => {
+              mostrarNotificacion('📞 Mantente atento a tu teléfono y email', 'info');
+            }, 2000);
+          } else {
+            // Show error message
+            mostrarNotificacion('❌ ' + (data.error || 'Error al enviar la información'), 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          mostrarNotificacion('❌ Error de conexión. Por favor intenta de nuevo.', 'error');
+        })
+        .finally(() => {
           // Reset button
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           submitBtn.style.opacity = '1';
-
-          // Show success message
-          mostrarNotificacion('✅ ¡Información enviada exitosamente! Te contactaremos pronto.', 'success');
-
-          // Clear form
-          document.getElementById('contact-form').reset();
-
-          // Optional: redirect after success
-          setTimeout(() => {
-            mostrarNotificacion('📞 Mantente atento a tu teléfono y email', 'info');
-          }, 2000);
-
-        }, 1500); // Simulate network delay
+        });
       });
 
       // Add input focus effects
