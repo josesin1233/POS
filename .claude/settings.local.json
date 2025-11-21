@@ -6,7 +6,11 @@
       "Bash(printf \"timezone.now\\n\")",
       "Bash(printf \"y\\n\")",
       "Bash(start http://localhost:8000/suscripcion/)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(set DEBUG=True)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": [],

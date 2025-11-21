@@ -1,715 +1,421 @@
-{% extends 'base_production.html' %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Suscribirse - POS Dulcería México</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link rel="alternate icon" href="{% static 'favicon.ico' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw !important; max-width: 100vw !important; overflow-x: hidden; }
+    body { font-family: 'Inter', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-{% block title %}Suscripciones - DulcePOS{% endblock %}
-
-{% block extra_css %}
-<script src="https://js.stripe.com/v3/"></script>
-<style>
-    /* Subscription specific styles with dark theme */
-    .subscription-container {
-        background-color: var(--bg-secondary);
-        min-height: 100vh;
+    /* Dark/Light mode variables */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f9fafb;
+      --bg-tertiary: #f3f4f6;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --border-color: #e5e7eb;
+      --accent-blue: #2563eb;
+      --accent-green: #22c55e;
     }
 
-    .plan-card {
-        background: #0a0a0a;
-        border: 2px solid var(--border-color);
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
+    [data-theme="dark"] {
+      --bg-primary: #111111;
+      --bg-secondary: #000000;
+      --bg-tertiary: #1a1a1a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --border-color: #333333;
+      --accent-blue: #00d4ff;
+      --accent-green: #00ff88;
     }
 
-    .plan-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
-        border-color: var(--accent-blue);
+    body {
+      background-color: #000000;
+      color: var(--text-primary);
+      transition: background-color 0.3s, color 0.3s;
     }
 
-    .plan-card.selected {
-        border-color: var(--accent-green);
-        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+    body[data-theme="light"] {
+      background-color: var(--bg-secondary);
     }
 
-    .plan-featured {
-        /* Removed "MÁS POPULAR" styling */
+    body[data-theme="dark"] {
+      background-color: #000000;
     }
 
-    .btn-plan-select {
-        background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
-        border: 2px solid var(--accent-blue);
-        color: #000000;
-        font-weight: 600;
-        padding: 12px 24px;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    .bg-primary { background-color: var(--bg-primary); }
+    .bg-secondary { background-color: var(--bg-secondary); }
+    .bg-tertiary { background-color: var(--bg-tertiary); }
+    .text-primary { color: var(--text-primary); }
+    .text-secondary { color: var(--text-secondary); }
+    .border-primary { border-color: var(--border-color); }
+
+    /* Demo styles adapted to dark theme */
+    .tab-active {
+      background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
+      color: #000000;
+      border: 2px solid var(--accent-blue);
+      box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
     }
 
-    .btn-plan-select:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+    .tab-inactive {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      color: var(--text-primary);
+      transition: all 0.3s ease;
     }
 
-    .btn-plan-select.selected {
-        background: linear-gradient(135deg, var(--accent-green) 0%, #00cc66 100%);
-        border-color: var(--accent-green);
+    .tab-inactive:hover {
+      border-color: var(--accent-blue);
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+      box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2);
+      transform: translateY(-1px) scale(1.02);
     }
 
-    .modern-input {
-        background: var(--bg-tertiary);
-        border: 2px solid var(--border-color);
-        color: var(--text-primary);
-        padding: 12px 16px;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-    }
-
-    .modern-input:focus {
-        outline: none;
-        border-color: var(--accent-blue);
-        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
-    }
-
-    .modern-input::placeholder {
-        color: var(--text-secondary);
-    }
-
-    .registration-form {
-        background: #0a0a0a;
-        border: 2px solid var(--border-color);
-        border-radius: 16px;
-        padding: 32px;
-    }
-
-    .payment-form {
-        background: #0a0a0a;
-        border: 2px solid var(--border-color);
-        border-radius: 16px;
-        padding: 32px;
-    }
-
-    /* Stripe Payment Element styling */
-    .StripeElement {
-        background: var(--bg-tertiary) !important;
-        border: 2px solid var(--border-color) !important;
-        border-radius: 12px !important;
-        padding: 12px !important;
-    }
-
-    .StripeElement--focus {
-        border-color: var(--accent-blue) !important;
-        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1) !important;
-    }
-
-    /* Navigation header styles */
-    .nav-header {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-        border-bottom: 2px solid var(--border-color);
-        padding: 16px 0;
-    }
-
-    .nav-brand {
-        color: var(--accent-blue);
-        font-weight: 700;
-        font-size: 1.5rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .nav-links a {
-        color: var(--text-secondary);
-        text-decoration: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        font-weight: 500;
-    }
-
-    .nav-links a:hover {
-        color: var(--accent-blue);
-        background: rgba(0, 212, 255, 0.1);
-    }
-
-    /* Form animation */
+    /* Form container styling */
     .form-container {
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-        transition: all 0.5s ease;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
     }
 
-    .form-container.show {
-        max-height: 2000px;
-        opacity: 1;
-        margin-top: 48px;
+    /* Button variants */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-blue), #0088cc);
+      color: white;
+      font-weight: bold;
+      transition: all 0.3s ease;
     }
-</style>
-{% endblock %}
 
-{% block content %}
-<!-- Navigation Header -->
-<div class="nav-header">
-    <div class="container mx-auto px-6">
-        <div class="flex justify-between items-center">
-            <div class="nav-brand">
-                DulcePOS
-            </div>
-            <div class="nav-links flex space-x-4">
-                <a href="/punto_de_venta/">🏪 POS</a>
-                <a href="/inventario/">📦 Inventario</a>
-                <a href="/caja/">💰 Caja</a>
-                <a href="/registro/">📊 Registro</a>
-                <a href="/accounts/login/">🔐 Login</a>
-            </div>
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #0088cc, #0066aa);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--accent-green), #00cc66);
+      color: white;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, #00cc66, #00aa55);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- Navigation -->
+  <nav class="border-b shadow-sm" style="background-color: #111111; border-color: #333333;">
+    <div class="w-full px-4 py-1.5">
+      <div class="flex items-center justify-between">
+        <div class="text-lg font-bold text-primary">DulcePOS - SUSCRIPCIÓN</div>
+
+        <div class="flex items-center space-x-2">
+          <span class="text-secondary text-xs font-medium">¡Únete ya!</span>
         </div>
+      </div>
     </div>
-</div>
+  </nav>
 
-<div class="subscription-container">
-    <div class="container mx-auto px-6 py-12">
+  <!-- Tabs Navigation -->
+  <div class="border-b" style="background-color: #111111; border-color: #333333;">
+    <div class="w-full px-4 py-2">
+      <div class="flex flex-wrap gap-2">
+        <button onclick="window.location.href='/'" id="tab-demo"
+                class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
+          🏪 DEMO
+        </button>
+        <button onclick="mostrarTab('suscripcion')" id="tab-suscripcion"
+                class="tab-active px-4 py-2 rounded-lg font-semibold text-sm transition-all">
+          📋 SUSCRIBIRSE
+        </button>
+        <button onclick="window.location.href='/accounts/login/'" id="tab-login"
+                class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
+          🔐 INICIAR SESIÓN
+        </button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Contenido principal -->
+  <main class="w-screen p-0 m-0" style="background-color: #000000;">
+
+    <!-- TAB SUSCRIPCIÓN -->
+    <div id="content-suscripcion" class="tab-content">
+      <div class="max-w-4xl mx-auto p-4">
         <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold mb-4" style="color: var(--text-primary);">
-                Elige tu Plan de Suscripción
-            </h1>
-            <p class="text-xl" style="color: var(--text-secondary);">
-                Selecciona el plan que mejor se adapte a tu negocio
-            </p>
+        <div class="text-center mb-8">
+          <h1 class="text-4xl font-bold mb-4" style="color: var(--text-primary);">¡Regístrate para suscribirte!</h1>
+          <p class="text-xl" style="color: var(--text-secondary);">Déjanos tus datos y te contactaremos para activar tu plan</p>
         </div>
 
-        <!-- Plans Section -->
-        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+        <!-- Formulario de contacto -->
+        <div class="form-container rounded-2xl shadow-xl p-8 max-w-2xl mx-auto">
+          <form id="contact-form" class="space-y-6">
+            <!-- Información personal -->
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nombre completo *</label>
+                <input type="text" id="full-name" required
+                       class="w-full p-3 border-2 rounded-lg"
+                       style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                       placeholder="Tu nombre completo" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Email *</label>
+                <input type="email" id="email" required
+                       class="w-full p-3 border-2 rounded-lg"
+                       style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                       placeholder="tu@email.com" />
+              </div>
+            </div>
 
-            <!-- Plan Estándar -->
-            <div class="plan-card" id="plan-estandar">
-                <div class="p-8">
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl"
-                             style="background: linear-gradient(135deg, var(--accent-blue), #0099cc);">
-                            🏪
-                        </div>
-                        <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Estándar</h3>
-                        <div class="text-4xl font-bold mb-2" style="color: var(--accent-blue);">$299</div>
-                        <div style="color: var(--text-secondary);">/mes</div>
-                    </div>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Teléfono *</label>
+                <input type="tel" id="phone" required
+                       class="w-full p-3 border-2 rounded-lg"
+                       style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                       placeholder="56 1234 5678" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Ciudad *</label>
+                <input type="text" id="city" required
+                       class="w-full p-3 border-2 rounded-lg"
+                       style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                       placeholder="Ciudad donde vives" />
+              </div>
+            </div>
 
-                    <ul class="space-y-3 mb-8">
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> 1 usuario
-                        </li>
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> 500 productos
-                        </li>
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Sistema POS completo
-                        </li>
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Control de inventario
-                        </li>
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Reportes básicos
-                        </li>
-                    </ul>
+            <!-- Información del negocio -->
+            <div class="border-t pt-6" style="border-color: var(--border-color);">
+              <h3 class="text-lg font-semibold mb-4" style="color: var(--text-primary);">Información del negocio</h3>
 
-                    <button onclick="selectPlan('estandar', 299)" class="btn-plan-select w-full">
-                        Seleccionar Plan
-                    </button>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nombre del negocio *</label>
+                  <input type="text" id="business-name" required
+                         class="w-full p-3 border-2 rounded-lg"
+                         style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                         placeholder="Nombre de tu negocio" />
                 </div>
-            </div>
-
-            <!-- Plan Pro -->
-            <div class="plan-card" id="plan-pro">
-                <div class="p-8">
-                    <div class="text-center mb-6">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl"
-                             style="background: linear-gradient(135deg, var(--accent-green), #00cc66);">
-                            🚀
-                        </div>
-                        <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Pro</h3>
-                        <div class="text-4xl font-bold mb-2" style="color: var(--accent-green);">$499</div>
-                        <div style="color: var(--text-secondary);">/mes</div>
-                    </div>
-
-                    <ul class="space-y-3 mb-8">
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Todo del plan Estándar
-                        </li>
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Hasta 5 usuarios
-                        </li>
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Productos ilimitados
-                        </li>
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Reportes avanzados
-                        </li>
-                        <li class="flex items-center" style="color: var(--text-primary);">
-                            <span style="color: var(--accent-green);" class="mr-3">✓</span> Multi-sucursal
-                        </li>
-                    </ul>
-
-                    <button onclick="selectPlan('pro', 499)" class="btn-plan-select w-full">
-                        Seleccionar Plan
-                    </button>
+                <div>
+                  <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Tipo de negocio *</label>
+                  <select id="business-type" required
+                          class="w-full p-3 border-2 rounded-lg"
+                          style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
+                    <option value="">Selecciona tipo</option>
+                    <option value="dulceria">Dulcería</option>
+                    <option value="abarrotes">Abarrotes</option>
+                    <option value="farmacia">Farmacia</option>
+                    <option value="papeleria">Papelería</option>
+                    <option value="tienda_conveniencia">Tienda de conveniencia</option>
+                    <option value="otro">Otro</option>
+                  </select>
                 </div>
+              </div>
+
+              <div class="mt-4">
+                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Plan de interés *</label>
+                <select id="plan-interest" required
+                        class="w-full p-3 border-2 rounded-lg"
+                        style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
+                  <option value="">Selecciona un plan</option>
+                  <option value="estandar">Plan Estándar - $299/mes</option>
+                  <option value="pro">Plan Pro - $499/mes</option>
+                  <option value="no_seguro">No estoy seguro, me gustaría información</option>
+                </select>
+              </div>
+
+              <div class="mt-4">
+                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Comentarios adicionales</label>
+                <textarea id="comments" rows="3"
+                          class="w-full p-3 border-2 rounded-lg"
+                          style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
+                          placeholder="Cuéntanos más sobre tu negocio o necesidades específicas"></textarea>
+              </div>
             </div>
+
+            <!-- Botón de envío -->
+            <div class="pt-4">
+              <button type="submit" id="submit-btn"
+                      class="btn-success w-full py-3 px-6 rounded-lg font-bold text-lg transition-all">
+                📞 Enviar información y ser contactado
+              </button>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="mt-6 p-4 rounded-lg" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
+              <div class="text-center">
+                <p class="text-sm" style="color: var(--accent-green);">
+                  <strong>Te contactaremos en menos de 24 horas</strong><br>
+                  Nuestro equipo te ayudará a elegir el plan perfecto y a configurar tu sistema POS
+                </p>
+              </div>
+            </div>
+          </form>
         </div>
 
-        <!-- User Info + Payment Form (initially hidden) -->
-        <div class="max-w-2xl mx-auto form-container" id="payment-section">
-            <div class="payment-form">
-                <h3 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">
-                    Información de Usuario y Pago
-                </h3>
-
-                <div id="plan-summary" class="mb-6 p-4 rounded-lg" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                    <!-- Plan summary will be inserted here -->
-                </div>
-
-                <!-- User Info Form -->
-                <form id="payment-form">
-                    <div class="grid md:grid-cols-2 gap-6 mb-8">
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Nombre *
-                            </label>
-                            <input type="text" name="admin_first_name" id="user-name" required
-                                   class="modern-input w-full" placeholder="Juan">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Apellido *
-                            </label>
-                            <input type="text" name="admin_last_name" required
-                                   class="modern-input w-full" placeholder="Pérez">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Email *
-                            </label>
-                            <input type="email" name="contact_email" id="user-email" required
-                                   class="modern-input w-full" placeholder="juan@gmail.com">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Teléfono *
-                            </label>
-                            <input type="tel" name="contact_phone" id="user-phone" required
-                                   class="modern-input w-full" placeholder="5551234567">
-                        </div>
-                    </div>
-
-                    <!-- Payment Section -->
-                    <h4 class="text-xl font-bold mb-4" style="color: var(--text-primary);">
-                        Información de Pago
-                    </h4>
-
-                    <div id="payment-element" class="mb-6">
-                        <!-- Stripe Payment Element will be inserted here -->
-                    </div>
-
-                    <div class="flex gap-4">
-                        <button type="button" onclick="goBackToPlans()"
-                                class="flex-1 py-4 px-6 rounded-lg font-semibold border-2"
-                                style="background: transparent; border-color: var(--border-color); color: var(--text-primary);">
-                            ← Cambiar Plan
-                        </button>
-                        <button type="submit" id="submit-payment"
-                                class="flex-1 btn-plan-select py-4">
-                            <span id="button-text">Pagar Ahora</span>
-                            <div id="spinner" class="hidden">Procesando...</div>
-                        </button>
-                    </div>
-                </form>
+        <!-- Información de contacto directo -->
+        <div class="mt-8 text-center">
+          <div class="form-container rounded-2xl shadow-xl p-6 max-w-lg mx-auto">
+            <h3 class="text-xl font-bold mb-4" style="color: var(--text-primary);">¿Prefieres llamar directamente?</h3>
+            <div class="space-y-3">
+              <div class="text-2xl font-bold" style="color: var(--accent-green);">📱 56 3809 7287</div>
+              <a href="https://wa.me/5256380907287?text=Hola,%20quiero%20información%20sobre%20el%20POS"
+                 target="_blank"
+                 class="btn-primary inline-block px-6 py-3 rounded-lg font-bold transition-all">
+                💬 WhatsApp
+              </a>
             </div>
+          </div>
         </div>
-
-        <!-- Business Info Form (shown after successful payment) -->
-        <div class="max-w-2xl mx-auto hidden" id="business-section">
-            <div class="registration-form">
-                <h3 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">
-                    ¡Pago Exitoso! Completa la información de tu negocio
-                </h3>
-
-                <form id="business-form">
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Nombre del Negocio *
-                            </label>
-                            <input type="text" name="business_name" id="business-name" required
-                                   class="modern-input w-full" placeholder="Mi Dulcería">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Tipo de Negocio *
-                            </label>
-                            <select name="business_type" id="business-type" required class="modern-input w-full">
-                                <option value="">Selecciona...</option>
-                                <option value="Dulcería">Dulcería</option>
-                                <option value="Tienda de Abarrotes">Tienda de Abarrotes</option>
-                                <option value="Farmacia">Farmacia</option>
-                                <option value="Papelería">Papelería</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Usuario (Login) *
-                            </label>
-                            <input type="text" name="admin_username" required
-                                   class="modern-input w-full" placeholder="juan123">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Contraseña *
-                            </label>
-                            <input type="password" name="admin_password" required
-                                   class="modern-input w-full" placeholder="••••••••">
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Dirección *
-                            </label>
-                            <textarea name="address" id="address" required
-                                      class="modern-input w-full" rows="2"
-                                      placeholder="Calle Principal #123, Colonia Centro"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Ciudad *
-                            </label>
-                            <input type="text" name="city" id="city" required
-                                   class="modern-input w-full" placeholder="Ciudad de México">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Estado *
-                            </label>
-                            <input type="text" name="state" id="state" required
-                                   class="modern-input w-full" placeholder="CDMX">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                Código Postal *
-                            </label>
-                            <input type="text" name="postal_code" id="postal-code" required
-                                   class="modern-input w-full" placeholder="01000">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">
-                                RFC (Opcional)
-                            </label>
-                            <input type="text" name="rfc" id="rfc"
-                                   class="modern-input w-full" placeholder="XAXX010101000">
-                        </div>
-                    </div>
-
-                    <div class="text-center mt-8">
-                        <button type="submit" id="submit-business" class="btn-plan-select px-12 py-4">
-                            <span>Completar Registro</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
+      </div>
     </div>
-</div>
 
-<script>
-    // Global variables - initialize properly
-    var selectedPlan = null;
-    var selectedPrice = 0;
-    var currentStep = 'registration';
-    var stripe = null;
-    var elements = null;
-    var paymentElement = null;
-    var clientSecret = null;
-    var registrationId = null;
+  </main>
 
-    // Initialize Stripe only if key is available
+  <!-- SCRIPTS -->
+  <script>
+    // Función para mostrar tabs (compatibilidad)
+    function mostrarTab(tabName) {
+      // Ya estamos en la página de suscripción, no hacer nada
+    }
+
+    // Notificaciones
+    function mostrarNotificacion(mensaje, tipo = 'info') {
+      const colores = {
+        success: '#22c55e',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        info: '#3b82f6'
+      };
+
+      // Crear notificación simple
+      const notificacion = document.createElement('div');
+      notificacion.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${colores[tipo]};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        z-index: 1000;
+        font-weight: bold;
+        max-width: 400px;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+      `;
+      notificacion.textContent = mensaje;
+
+      document.body.appendChild(notificacion);
+
+      // Mostrar notificación
+      setTimeout(() => {
+        notificacion.style.transform = 'translateX(0)';
+      }, 100);
+
+      // Ocultar notificación después de 4 segundos
+      setTimeout(() => {
+        notificacion.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          if (document.body.contains(notificacion)) {
+            document.body.removeChild(notificacion);
+          }
+        }, 300);
+      }, 4000);
+    }
+
+    // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
-        // Temporary hardcoded key for testing
-        const stripeKey = 'pk_test_51SVIpEPYEj8hTUzF27uSE7odPYyGdwqqw0H16Oo2zcWvok6SdTXGP8TShnpAjhaBq9qm4M8JTVthuayRzug9O0nc006H1zBCYV';
-        console.log('Stripe key loaded:', stripeKey ? 'LOADED' : 'EMPTY');
-        console.log('Stripe library available:', typeof Stripe !== 'undefined');
+      // Set dark mode by default
+      document.body.dataset.theme = 'dark';
 
-        if (stripeKey && stripeKey.trim() !== '' && typeof Stripe !== 'undefined') {
-            try {
-                stripe = Stripe(stripeKey);
-                console.log('Stripe initialized successfully');
-            } catch (error) {
-                console.error('Stripe initialization error:', error);
-            }
-        } else {
-            console.warn('Stripe publishable key not configured or Stripe library not loaded');
-        }
-    });
-
-    function selectPlan(planName, price) {
-        selectedPlan = planName;
-        selectedPrice = price;
-
-        // Update visual selection
-        document.querySelectorAll('.plan-card').forEach(card => {
-            card.classList.remove('selected');
-            const btn = card.querySelector('.btn-plan-select');
-            if (btn) btn.classList.remove('selected');
-        });
-
-        const selectedCard = document.getElementById('plan-' + planName);
-        if (selectedCard) {
-            selectedCard.classList.add('selected');
-            const selectedBtn = selectedCard.querySelector('.btn-plan-select');
-            if (selectedBtn) selectedBtn.classList.add('selected');
-        }
-
-        // Show payment form with animation
-        showPaymentSection();
-
-        console.log('Plan selected:', planName, price);
-    }
-
-
-
-    async function showPaymentSection() {
-        if (!stripe) {
-            alert('Error: Configuración de pagos no disponible');
-            return;
-        }
-
-        // Create temporary registration record (mock for testing)
-        registrationId = `REG_${Date.now()}`;
-
-        // Show payment form after plan selection
-        document.getElementById('payment-section').classList.remove('hidden');
-
-        // Update plan summary
-        const planName = selectedPlan === 'estandar' ? 'Estándar' : 'Pro';
-        document.getElementById('plan-summary').innerHTML = `
-            <div class="flex justify-between items-center">
-                <span style="color: var(--text-primary); font-weight: 600;">Plan ${planName}</span>
-                <span style="color: var(--accent-green); font-size: 1.5rem; font-weight: bold;">$${selectedPrice}/mes</span>
-            </div>
-        `;
-
-        // Setup Stripe payment
-        try {
-            const paymentResponse = await fetch('/api/suscripcion/pago/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    registration_id: registrationId,
-                    payment_method: 'stripe'
-                })
-            });
-
-            const paymentResult = await paymentResponse.json();
-
-            if (paymentResult.success) {
-                clientSecret = paymentResult.client_secret;
-
-                elements = stripe.elements({
-                    clientSecret: clientSecret,
-                    appearance: {
-                        theme: 'night',
-                        variables: {
-                            colorPrimary: '#00d4ff',
-                            colorBackground: '#1a1a1a',
-                            colorText: '#ffffff',
-                            colorDanger: '#ff4444',
-                            borderRadius: '12px'
-                        }
-                    }
-                });
-
-                paymentElement = elements.create('payment');
-                paymentElement.mount('#payment-element');
-
-            } else {
-                alert('Error configurando pago: ' + paymentResult.error);
-            }
-        } catch (error) {
-            console.error('Error setting up payment:', error);
-            alert('Error configurando el pago. Inténtalo de nuevo.');
-        }
-
-        currentStep = 'payment';
-    }
-
-    function goBackToPlans() {
-        document.getElementById('payment-section').classList.add('hidden');
-        document.getElementById('business-section').classList.add('hidden');
-        selectedPlan = null;
-        currentStep = 'plan_selection';
-
-        // Reset plan selection
-        document.querySelectorAll('.plan-card').forEach(card => {
-            card.classList.remove('border-blue-400', 'bg-blue-900/20');
-            card.classList.add('border-gray-600');
-        });
-    }
-
-    // Handle payment form submission
-    document.getElementById('payment-form').addEventListener('submit', async function(e) {
+      // Handle contact form submission
+      document.getElementById('contact-form').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        if (!stripe || !elements) {
-            alert('Error: Sistema de pagos no disponible');
-            return;
+        const submitBtn = document.getElementById('submit-btn');
+        const originalText = submitBtn.textContent;
+
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.textContent = '📤 Enviando...';
+        submitBtn.style.opacity = '0.7';
+
+        // Get form data
+        const formData = {
+          full_name: document.getElementById('full-name').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          phone: document.getElementById('phone').value.trim(),
+          city: document.getElementById('city').value.trim(),
+          business_name: document.getElementById('business-name').value.trim(),
+          business_type: document.getElementById('business-type').value,
+          plan_interest: document.getElementById('plan-interest').value,
+          comments: document.getElementById('comments').value.trim()
+        };
+
+        // Basic validation
+        if (!formData.full_name || !formData.email || !formData.phone ||
+            !formData.city || !formData.business_name || !formData.business_type ||
+            !formData.plan_interest) {
+          mostrarNotificacion('❌ Por favor completa todos los campos obligatorios', 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+          submitBtn.style.opacity = '1';
+          return;
         }
 
-        const submitButton = document.getElementById('submit-payment');
-        const buttonText = document.getElementById('button-text');
-        const spinner = document.getElementById('spinner');
+        // Simulate API call (replace with real endpoint)
+        setTimeout(() => {
+          // Reset button
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+          submitBtn.style.opacity = '1';
 
-        submitButton.disabled = true;
-        buttonText.classList.add('hidden');
-        spinner.classList.remove('hidden');
+          // Show success message
+          mostrarNotificacion('✅ ¡Información enviada exitosamente! Te contactaremos pronto.', 'success');
 
-        try {
-            // Get user info from form
-            const userName = document.getElementById('user-name').value;
-            const userEmail = document.getElementById('user-email').value;
-            const userPhone = document.getElementById('user-phone').value;
+          // Clear form
+          document.getElementById('contact-form').reset();
 
-            const {error, paymentIntent} = await stripe.confirmPayment({
-                elements,
-                redirect: 'if_required',
-                confirmParams: {
-                    payment_method_data: {
-                        billing_details: {
-                            name: userName,
-                            email: userEmail,
-                            phone: userPhone,
-                        }
-                    }
-                },
-            });
+          // Optional: redirect after success
+          setTimeout(() => {
+            mostrarNotificacion('📞 Mantente atento a tu teléfono y email', 'info');
+          }, 2000);
 
-            if (error) {
-                console.error('Payment error:', error);
-                alert('Error en el pago: ' + error.message);
+        }, 1500); // Simulate network delay
+      });
 
-                submitButton.disabled = false;
-                buttonText.classList.remove('hidden');
-                spinner.classList.add('hidden');
-            } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-                // Payment successful - show business form
-                console.log('Payment successful:', paymentIntent);
-                showBusinessForm();
-            } else {
-                alert('El pago está siendo procesado...');
-                submitButton.disabled = false;
-                buttonText.classList.remove('hidden');
-                spinner.classList.add('hidden');
-            }
-        } catch (error) {
-            console.error('Payment processing error:', error);
-            alert('Error procesando el pago. Inténtalo de nuevo.');
-
-            submitButton.disabled = false;
-            buttonText.classList.remove('hidden');
-            spinner.classList.add('hidden');
-        }
-    });
-
-    // Show business form after successful payment
-    function showBusinessForm() {
-        document.getElementById('payment-section').classList.add('hidden');
-        document.getElementById('business-section').classList.remove('hidden');
-        currentStep = 'business';
-
-        // Scroll to business form
-        document.getElementById('business-section').scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
+      // Add input focus effects
+      const inputs = document.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+          this.style.borderColor = 'var(--accent-blue)';
+          this.style.boxShadow = '0 0 0 3px rgba(0, 212, 255, 0.1)';
         });
-    }
 
-    // Handle business form submission
-    document.getElementById('business-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const submitButton = document.getElementById('submit-business');
-        const buttonText = submitButton.querySelector('span');
-        submitButton.disabled = true;
-        buttonText.textContent = 'Completando registro...';
-
-        try {
-            // Get business info from form
-            const businessData = {
-                business_name: document.getElementById('business-name').value,
-                business_type: document.getElementById('business-type').value,
-                rfc: document.getElementById('rfc').value,
-                address: document.getElementById('address').value,
-                city: document.getElementById('city').value,
-                state: document.getElementById('state').value,
-                postal_code: document.getElementById('postal-code').value,
-                registration_id: registrationId
-            };
-
-            // Send business data to backend
-            const response = await fetch('/api/suscripcion/completar-negocio/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(businessData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                // Registration complete - redirect to success page
-                window.location.href = '/suscripcion/confirmada/';
-            } else {
-                alert('Error completando el registro: ' + (result.error || 'Error desconocido'));
-                submitButton.disabled = false;
-                buttonText.textContent = 'Completar Registro';
-            }
-        } catch (error) {
-            console.error('Business registration error:', error);
-            alert('Error completando el registro. Inténtalo de nuevo.');
-            submitButton.disabled = false;
-            buttonText.textContent = 'Completar Registro';
-        }
+        input.addEventListener('blur', function() {
+          this.style.borderColor = '#333333';
+          this.style.boxShadow = 'none';
+        });
+      });
     });
-
-    // Helper function to get CSRF cookie
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-</script>
-{% endblock %}
+  </script>
+</body>
+</html>
