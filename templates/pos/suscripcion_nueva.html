@@ -163,10 +163,10 @@
         </div>
 
         <!-- Formulario de contacto -->
-        <div class="form-container rounded-2xl shadow-xl p-8 max-w-2xl mx-auto">
+        <div class="form-container rounded-2xl shadow-xl p-8 max-w-lg mx-auto">
           <form id="contact-form" class="space-y-6">
-            <!-- Información personal -->
-            <div class="grid md:grid-cols-2 gap-6">
+            <!-- Información del usuario -->
+            <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nombre completo *</label>
                 <input type="text" id="full-name" required
@@ -174,6 +174,7 @@
                        style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
                        placeholder="Tu nombre completo" />
               </div>
+
               <div>
                 <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Email *</label>
                 <input type="email" id="email" required
@@ -181,9 +182,7 @@
                        style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
                        placeholder="tu@email.com" />
               </div>
-            </div>
 
-            <div class="grid md:grid-cols-2 gap-6">
               <div>
                 <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Teléfono *</label>
                 <input type="tel" id="phone" required
@@ -191,6 +190,7 @@
                        style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
                        placeholder="56 1234 5678" />
               </div>
+
               <div>
                 <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Ciudad *</label>
                 <input type="text" id="city" required
@@ -200,60 +200,11 @@
               </div>
             </div>
 
-            <!-- Información del negocio -->
-            <div class="border-t pt-6" style="border-color: var(--border-color);">
-              <h3 class="text-lg font-semibold mb-4" style="color: var(--text-primary);">Información del negocio</h3>
-
-              <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Nombre del negocio *</label>
-                  <input type="text" id="business-name" required
-                         class="w-full p-3 border-2 rounded-lg"
-                         style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
-                         placeholder="Nombre de tu negocio" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Tipo de negocio *</label>
-                  <select id="business-type" required
-                          class="w-full p-3 border-2 rounded-lg"
-                          style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
-                    <option value="">Selecciona tipo</option>
-                    <option value="dulceria">Dulcería</option>
-                    <option value="abarrotes">Abarrotes</option>
-                    <option value="farmacia">Farmacia</option>
-                    <option value="papeleria">Papelería</option>
-                    <option value="tienda_conveniencia">Tienda de conveniencia</option>
-                    <option value="otro">Otro</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="mt-4">
-                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Plan de interés *</label>
-                <select id="plan-interest" required
-                        class="w-full p-3 border-2 rounded-lg"
-                        style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
-                  <option value="">Selecciona un plan</option>
-                  <option value="estandar">Plan Estándar - $299/mes</option>
-                  <option value="pro">Plan Pro - $499/mes</option>
-                  <option value="no_seguro">No estoy seguro, me gustaría información</option>
-                </select>
-              </div>
-
-              <div class="mt-4">
-                <label class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Comentarios adicionales</label>
-                <textarea id="comments" rows="3"
-                          class="w-full p-3 border-2 rounded-lg"
-                          style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);"
-                          placeholder="Cuéntanos más sobre tu negocio o necesidades específicas"></textarea>
-              </div>
-            </div>
-
             <!-- Botón de envío -->
             <div class="pt-4">
               <button type="submit" id="submit-btn"
                       class="btn-success w-full py-3 px-6 rounded-lg font-bold text-lg transition-all">
-                📞 Enviar información y ser contactado
+                📞 Enviar información
               </button>
             </div>
 
@@ -261,28 +212,14 @@
             <div class="mt-6 p-4 rounded-lg" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
               <div class="text-center">
                 <p class="text-sm" style="color: var(--accent-green);">
-                  <strong>Te contactaremos en menos de 24 horas</strong><br>
-                  Nuestro equipo te ayudará a elegir el plan perfecto y a configurar tu sistema POS
+                  <strong>Te contactaremos pronto</strong><br>
+                  Nuestro equipo te ayudará con tu suscripción
                 </p>
               </div>
             </div>
           </form>
         </div>
 
-        <!-- Información de contacto directo -->
-        <div class="mt-8 text-center">
-          <div class="form-container rounded-2xl shadow-xl p-6 max-w-lg mx-auto">
-            <h3 class="text-xl font-bold mb-4" style="color: var(--text-primary);">¿Prefieres llamar directamente?</h3>
-            <div class="space-y-3">
-              <div class="text-2xl font-bold" style="color: var(--accent-green);">📱 56 3809 7287</div>
-              <a href="https://wa.me/5256380907287?text=Hola,%20quiero%20información%20sobre%20el%20POS"
-                 target="_blank"
-                 class="btn-primary inline-block px-6 py-3 rounded-lg font-bold transition-all">
-                💬 WhatsApp
-              </a>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -363,17 +300,11 @@
           full_name: document.getElementById('full-name').value.trim(),
           email: document.getElementById('email').value.trim(),
           phone: document.getElementById('phone').value.trim(),
-          city: document.getElementById('city').value.trim(),
-          business_name: document.getElementById('business-name').value.trim(),
-          business_type: document.getElementById('business-type').value,
-          plan_interest: document.getElementById('plan-interest').value,
-          comments: document.getElementById('comments').value.trim()
+          city: document.getElementById('city').value.trim()
         };
 
         // Basic validation
-        if (!formData.full_name || !formData.email || !formData.phone ||
-            !formData.city || !formData.business_name || !formData.business_type ||
-            !formData.plan_interest) {
+        if (!formData.full_name || !formData.email || !formData.phone || !formData.city) {
           mostrarNotificacion('❌ Por favor completa todos los campos obligatorios', 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
