@@ -587,32 +587,46 @@ class CustomAdminSite(BaseAdminSite):
     def index(self, request, extra_context=None):
         """Dashboard personalizado con estadísticas"""
         from .models import UserRegistration, Venta, Producto
+        from accounts.models import User, Business
         from django.db.models import Sum, Count
         from datetime import timedelta
-        
-        # Estadísticas de usuarios
-        total_usuarios = UserRegistration.objects.count()
+
+        # Estadísticas de usuarios del sistema (User model)
+        total_businesses = Business.objects.count()
+        total_users_system = User.objects.count()
+
+        # Estadísticas del proceso de registro (UserRegistration model)
+        total_registros = UserRegistration.objects.count()
         usuarios_nuevos = UserRegistration.objects.filter(status='nuevo').count()
         usuarios_pago = UserRegistration.objects.filter(
             status__in=['pago_pendiente', 'pago_completado']
         ).count()
-        usuarios_activos = UserRegistration.objects.filter(status='activo').count()
-        
+        usuarios_activos_registros = UserRegistration.objects.filter(status='activo').count()
+
+        # Contar por cada estado para debugging
+        status_counts = {}
+        for status_key, status_label in UserRegistration.STATUS_CHOICES:
+            count = UserRegistration.objects.filter(status=status_key).count()
+            if count > 0:
+                status_counts[status_label] = count
+
         # Últimos 5 registros
         ultimos_usuarios = UserRegistration.objects.order_by('-created_at')[:5]
-        
+
         context = {
             **self.each_context(request),
-            'total_usuarios': total_usuarios,
+            'total_usuarios': total_businesses,  # Negocios registrados
             'usuarios_nuevos': usuarios_nuevos,
             'usuarios_pago': usuarios_pago,
-            'usuarios_activos': usuarios_activos,
+            'usuarios_activos': total_users_system,  # Usuarios del sistema
             'ultimos_usuarios': ultimos_usuarios,
+            'status_counts': status_counts,  # Para debugging
+            'total_registros': total_registros,
         }
-        
+
         if extra_context:
             context.update(extra_context)
-            
+
         # Usar el template personalizado
         request.current_app = self.name
         return render(request, 'admin/index.html', context)
