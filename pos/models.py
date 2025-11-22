@@ -1104,8 +1104,9 @@ class UserRegistration(models.Model):
 
     def generate_registration_token(self):
         """Genera token único para registro"""
+        from datetime import timedelta
         self.registration_token = uuid.uuid4()
-        self.token_expires_at = timezone.now() + timezone.timedelta(hours=72)
+        self.token_expires_at = timezone.now() + timedelta(hours=72)
         self.token_used = False
 
     def get_registration_url(self):

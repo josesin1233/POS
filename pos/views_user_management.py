@@ -12,7 +12,7 @@ from django.core.validators import validate_email
 import json
 import logging
 
-from .models_user_management import UserRegistration, UserRegistrationLog
+from .models import UserRegistration, UserRegistrationLog
 from accounts.models import User, Business
 
 logger = logging.getLogger(__name__)
