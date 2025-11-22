@@ -13,7 +13,11 @@
       "Bash(git push:*)",
       "Bash(printf:*)",
       "Bash(git merge:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(cat:*)",
+      "Bash(python:*)",
+      "Bash(git rm:*)",
+      "Bash(ls -la \"C:\\Users\\josem\\Documents\\dulceria-pos\\templates\\admin\"\" 2>&1 || echo \"Directory does not exist \")"
     ],
     "deny": [],
     "ask": [],

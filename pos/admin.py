@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Producto, Venta, VentaDetalle, Categoria, Sucursal, MovimientoStock
 from django.utils.html import format_html
 from django.urls import path, reverse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.contrib import messages
 from django.utils import timezone
@@ -570,3 +570,66 @@ class UserRegistrationLogAdmin(admin.ModelAdmin):
         'created_at',
         'created_by',
     ]
+
+
+# ====================================
+# DASHBOARD PERSONALIZADO
+# ====================================
+
+from django.contrib.admin import AdminSite as BaseAdminSite
+from django.db.models import F
+
+class CustomAdminSite(BaseAdminSite):
+    site_header = "POS México - Panel Ejecutivo"
+    site_title = "POS México"
+    index_title = "Dashboard"
+
+    def index(self, request, extra_context=None):
+        """Dashboard personalizado con estadísticas"""
+        from .models import UserRegistration, Venta, Producto
+        from django.db.models import Sum, Count
+        from datetime import timedelta
+        
+        # Estadísticas de usuarios
+        total_usuarios = UserRegistration.objects.count()
+        usuarios_nuevos = UserRegistration.objects.filter(status='nuevo').count()
+        usuarios_pago = UserRegistration.objects.filter(
+            status__in=['pago_pendiente', 'pago_completado']
+        ).count()
+        usuarios_activos = UserRegistration.objects.filter(status='activo').count()
+        
+        # Últimos 5 registros
+        ultimos_usuarios = UserRegistration.objects.order_by('-created_at')[:5]
+        
+        context = {
+            **self.each_context(request),
+            'total_usuarios': total_usuarios,
+            'usuarios_nuevos': usuarios_nuevos,
+            'usuarios_pago': usuarios_pago,
+            'usuarios_activos': usuarios_activos,
+            'ultimos_usuarios': ultimos_usuarios,
+        }
+        
+        if extra_context:
+            context.update(extra_context)
+            
+        # Usar el template personalizado
+        request.current_app = self.name
+        return render(request, 'admin/index.html', context)
+
+# Reemplazar el admin site por defecto
+from django.contrib import admin as django_admin
+admin_site = CustomAdminSite(name='admin')
+
+# Re-registrar todos los modelos en el nuevo admin site
+admin_site.register(Categoria, CategoriaAdmin)
+admin_site.register(Sucursal, SucursalAdmin)
+admin_site.register(Producto, ProductoAdmin)
+admin_site.register(Venta, VentaAdmin)
+admin_site.register(VentaDetalle, VentaDetalleAdmin)
+admin_site.register(MovimientoStock, MovimientoStockAdmin)
+admin_site.register(UserRegistration, UserRegistrationAdmin)
+admin_site.register(UserRegistrationLog, UserRegistrationLogAdmin)
+
+# Importante: reemplazar django.admin.site con nuestro site personalizado
+django_admin.site = admin_site

@@ -1,9 +1,9 @@
-from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from pos.views import index_view, buscar_producto, agregar_carrito, ventas_api, caja_estado_api, caja_abrir_api, caja_cerrar_api, caja_gastos_api
 from django.shortcuts import render
+from pos.admin import admin_site  # Usar nuestro admin site personalizado
 import os
 
 def registro_view(request):
@@ -13,8 +13,8 @@ def caja_view(request):
     return render(request, 'caja.html')
 
 urlpatterns = [
-    # Admin
-    path('admin/', admin.site.urls),
+    # Admin personalizado
+    path('admin/', admin_site.urls),
     
     # Landing page as homepage
     path('', index_view, name='home'),
