@@ -364,10 +364,8 @@ ADMIN_ALLOWED_IPS = [
     '127.0.0.1',
     'localhost',
     '::1',  # IPv6 localhost
-    # Agregar IPs específicas aquí para producción
-    # Ejemplo:
-    # '192.168.1.100',  # IP fija del administrador
-    # '203.0.113.42',   # IP pública del administrador
+    # IPs autorizadas para administradores
+    '187.190.184.26',  # IP autorizada del administrador
 ]
 
 # URL personalizada del admin (para mayor seguridad)
