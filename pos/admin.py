@@ -1,6 +1,11 @@
 from django.contrib import admin
 from .models import Producto, Venta, VentaDetalle, Categoria, Sucursal, MovimientoStock
 from django.utils.html import format_html
+from django.urls import path, reverse
+from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
+from django.contrib import messages
+from django.utils import timezone
 
 # Configurar el admin site
 admin.site.site_header = "Administración POS México"
@@ -440,6 +445,98 @@ class UserRegistrationAdmin(admin.ModelAdmin):
             )
         return "No generado"
     registration_url_display.short_description = 'URL de registro'
+
+    def get_urls(self):
+        """Agregar URLs personalizadas para acciones del admin"""
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:registration_id>/advance/',
+                self.admin_site.admin_view(self.advance_status_view),
+                name='userregistration-advance',
+            ),
+            path(
+                '<int:registration_id>/copy-link/',
+                self.admin_site.admin_view(self.copy_link_view),
+                name='userregistration-copy-link',
+            ),
+        ]
+        return custom_urls + urls
+
+    def advance_status_view(self, request, registration_id):
+        """Vista para avanzar al siguiente estado"""
+        registration = get_object_or_404(UserRegistration, pk=registration_id)
+
+        # Guardar estado anterior para el mensaje
+        previous_status = registration.get_status_display()
+
+        # Intentar avanzar al siguiente estado
+        success = registration.advance_status()
+
+        if success:
+            # Crear log de la acción
+            UserRegistrationLog.objects.create(
+                registration=registration,
+                action='status_change',
+                description=f'Estado cambiado de "{previous_status}" a "{registration.get_status_display()}"',
+                created_by=request.user
+            )
+
+            messages.success(
+                request,
+                f'Estado actualizado a: {registration.get_status_display()}'
+            )
+        else:
+            messages.warning(
+                request,
+                'No hay siguiente estado disponible'
+            )
+
+        # Redirigir de vuelta a la lista o a la página de detalle
+        if request.GET.get('next') == 'detail':
+            return redirect('admin:pos_userregistration_change', registration_id)
+        return redirect('admin:pos_userregistration_changelist')
+
+    def copy_link_view(self, request, registration_id):
+        """Vista para obtener el link de registro (para copiar)"""
+        registration = get_object_or_404(UserRegistration, pk=registration_id)
+
+        # Verificar si tiene token
+        if not registration.registration_token:
+            return JsonResponse({
+                'error': 'Este registro no tiene un token generado aún'
+            }, status=400)
+
+        # Verificar si el token es válido
+        if not registration.is_token_valid():
+            return JsonResponse({
+                'error': 'El token ha expirado o ya fue usado'
+            }, status=400)
+
+        # Construir URL completa
+        registration_url = registration.get_registration_url()
+
+        # En producción, incluir el dominio completo
+        if request.is_secure():
+            protocol = 'https'
+        else:
+            protocol = 'http'
+
+        full_url = f"{protocol}://{request.get_host()}{registration_url}"
+
+        # Crear log de la acción
+        UserRegistrationLog.objects.create(
+            registration=registration,
+            action='link_copied',
+            description=f'Link de registro copiado por {request.user.username}',
+            created_by=request.user
+        )
+
+        return JsonResponse({
+            'url': full_url,
+            'expires_at': registration.token_expires_at.isoformat() if registration.token_expires_at else None,
+            'token': str(registration.registration_token)
+        })
 
 
 @admin.register(UserRegistrationLog)
