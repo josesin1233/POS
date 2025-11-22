@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('accounts', '0001_initial'),  # Adjust this if needed
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('pos', '0007_auto_20241028_1654'),  # Adjust to your last migration
+        ('pos', '0007_merge_0002_subscription_models_0006_movimientostock'),
     ]
 
     operations = [
