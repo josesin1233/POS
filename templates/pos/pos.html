@@ -1256,7 +1256,15 @@
         const modal = document.getElementById('modalMetodoPago');
         console.log('Modal encontrado:', modal);
         modal.style.setProperty('display', 'flex', 'important');
-        console.log('Modal display cambiado a flex', 'Computed style:', window.getComputedStyle(modal).display);
+
+        const computedStyle = window.getComputedStyle(modal);
+        console.log('Modal display cambiado a flex');
+        console.log('Computed style - display:', computedStyle.display);
+        console.log('Computed style - opacity:', computedStyle.opacity);
+        console.log('Computed style - visibility:', computedStyle.visibility);
+        console.log('Computed style - z-index:', computedStyle.zIndex);
+        console.log('Modal rect:', modal.getBoundingClientRect());
+        console.log('Modal offsetWidth:', modal.offsetWidth, 'offsetHeight:', modal.offsetHeight);
       } catch (error) {
         console.error('Error en cobrar():', error);
         alert('Error al procesar el cobro: ' + error.message);
