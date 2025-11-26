@@ -1235,15 +1235,32 @@
 
     // Cobrar - Abrir modal de método de pago
     async function cobrar() {
+      console.log('cobrar() llamado');
+
       if (carritoLocal.length === 0) {
         alert("Agrega productos antes de cobrar.");
         return;
       }
 
-      totalVenta = carritoLocal.reduce((sum, item) => sum + item.precio_total, 0);
+      console.log('Carrito:', carritoLocal);
 
-      // Mostrar modal de método de pago
-      document.getElementById('modalMetodoPago').style.display = 'flex';
+      try {
+        totalVenta = carritoLocal.reduce((sum, item) => {
+          console.log('Item:', item, 'precio_total:', item.precio_total);
+          return sum + (parseFloat(item.precio_total) || 0);
+        }, 0);
+
+        console.log('Total venta calculado:', totalVenta);
+
+        // Mostrar modal de método de pago
+        const modal = document.getElementById('modalMetodoPago');
+        console.log('Modal encontrado:', modal);
+        modal.style.display = 'flex';
+        console.log('Modal display cambiado a flex');
+      } catch (error) {
+        console.error('Error en cobrar():', error);
+        alert('Error al procesar el cobro: ' + error.message);
+      }
     }
 
     // Seleccionar método de pago
