@@ -356,45 +356,51 @@ def registrar_venta(request):
         data = json.loads(request.body)
         productos = data.get('productos', [])
         monto_pagado = Decimal(str(data.get('monto_pagado', 0)))
-        
+        metodo_pago = data.get('metodo_pago', 'efectivo')  # Recibir método de pago del frontend
+
+        # Validar método de pago
+        metodos_validos = ['efectivo', 'tarjeta', 'transferencia', 'credito', 'mixto']
+        if metodo_pago not in metodos_validos:
+            return JsonResponse({'error': 'Método de pago inválido'}, status=400)
+
         if not productos:
             return JsonResponse({'error': 'No hay productos'}, status=400)
-        
+
         business = request.user.business
         total_venta = Decimal('0')
         productos_venta = []
-        
+
         # Validar productos y calcular total
         for item in productos:
             codigo = item.get('codigo')
             cantidad = int(item.get('cantidad', 1))
-            
+
             try:
                 producto = Producto.objects.get(business=business, codigo=codigo)
             except Producto.DoesNotExist:
                 return JsonResponse({
                     'error': f'Producto {codigo} no encontrado'
                 }, status=404)
-            
+
             if producto.stock < cantidad:
                 return JsonResponse({
                     'error': f'Stock insuficiente para {producto.nombre}'
                 }, status=400)
-            
+
             subtotal = producto.precio * cantidad
             total_venta += subtotal
-            
+
             productos_venta.append({
                 'producto': producto,
                 'cantidad': cantidad,
                 'precio_unitario': producto.precio,
                 'subtotal': subtotal
             })
-        
+
         # Verificar pago
         if monto_pagado < total_venta:
             return JsonResponse({'error': 'Pago insuficiente'}, status=400)
-        
+
         # Obtener o crear sucursal principal
         sucursal = business.sucursales.filter(es_principal=True).first()
         if not sucursal:
@@ -406,7 +412,7 @@ def registrar_venta(request):
                 es_principal=True,
                 activa=True
             )
-        
+
         # Crear venta
         venta = Venta.objects.create(
             business=business,
@@ -416,7 +422,7 @@ def registrar_venta(request):
             total=total_venta,
             monto_pagado=monto_pagado,
             cambio=monto_pagado - total_venta,
-            metodo_pago='efectivo'  # Default, could be enhanced later
+            metodo_pago=metodo_pago  # Guardar método de pago recibido
         )
         
         # Crear detalles y actualizar stock CON REGISTRO DE MOVIMIENTOS

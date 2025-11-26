@@ -608,6 +608,68 @@
     </div>
   </div>
 
+  <!-- Modal: Selección de Método de Pago -->
+  <div id="modalMetodoPago" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center" style="z-index: 9999;">
+    <div class="rounded-xl border-2 p-6 max-w-md w-full mx-4" style="background-color: #0a0a0a; border-color: #333333;">
+      <h2 class="text-2xl font-bold mb-6 text-center" style="color: var(--text-primary);">💳 Método de Pago</h2>
+
+      <div class="space-y-3 mb-6">
+        <button onclick="seleccionarMetodoPago('efectivo')" class="w-full p-4 rounded-lg border-2 transition-all hover:border-green-500" style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
+          <div class="flex items-center justify-between">
+            <span class="text-lg font-semibold">💵 Efectivo</span>
+            <span class="text-sm" style="color: var(--text-secondary);">Con cambio</span>
+          </div>
+        </button>
+
+        <button onclick="seleccionarMetodoPago('transferencia')" class="w-full p-4 rounded-lg border-2 transition-all hover:border-blue-500" style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
+          <div class="flex items-center justify-between">
+            <span class="text-lg font-semibold">🏦 Transferencia</span>
+            <span class="text-sm" style="color: var(--text-secondary);">Sin cambio</span>
+          </div>
+        </button>
+
+        <button onclick="seleccionarMetodoPago('tarjeta')" class="w-full p-4 rounded-lg border-2 transition-all hover:border-purple-500" style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
+          <div class="flex items-center justify-between">
+            <span class="text-lg font-semibold">💳 Tarjeta</span>
+            <span class="text-sm" style="color: var(--text-secondary);">Sin cambio</span>
+          </div>
+        </button>
+      </div>
+
+      <button onclick="cerrarModalMetodoPago()" class="w-full p-3 rounded-lg font-semibold" style="background-color: #333333; color: var(--text-primary);">
+        Cancelar
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmación de Pago (Transferencia/Tarjeta) -->
+  <div id="modalConfirmacionPago" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center" style="z-index: 10000;">
+    <div class="rounded-xl border-2 p-6 max-w-md w-full mx-4" style="background-color: #0a0a0a; border-color: #333333;">
+      <h2 class="text-2xl font-bold mb-4 text-center" style="color: var(--text-primary);">⚠️ Confirmar Pago</h2>
+
+      <div class="mb-6 p-4 rounded-lg" style="background-color: #1a1a1a;">
+        <p class="text-center mb-2" style="color: var(--text-secondary);">Método de pago:</p>
+        <p class="text-xl font-bold text-center mb-4" style="color: var(--text-primary);" id="metodoConfirmacion"></p>
+
+        <p class="text-center mb-2" style="color: var(--text-secondary);">Total a cobrar:</p>
+        <p class="text-3xl font-bold text-center" style="color: #22c55e;" id="totalConfirmacion"></p>
+      </div>
+
+      <p class="text-center mb-6" style="color: var(--text-secondary);">
+        ¿Confirma que el pago fue <span class="font-semibold" style="color: var(--text-primary);">realizado correctamente</span>?
+      </p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="cancelarConfirmacionPago()" class="p-3 rounded-lg font-semibold" style="background-color: #ef4444; color: white;">
+          ❌ Cancelar
+        </button>
+        <button onclick="confirmarPago()" class="p-3 rounded-lg font-semibold" style="background-color: #22c55e; color: white;">
+          ✅ Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
 
     // Variables globales
@@ -1167,58 +1229,136 @@
       }
     }
 
-    // Cobrar
+    // Variables para manejo de pago
+    let metodoPagoSeleccionado = null;
+    let totalVenta = 0;
+
+    // Cobrar - Abrir modal de método de pago
     async function cobrar() {
       if (carritoLocal.length === 0) {
         alert("Agrega productos antes de cobrar.");
         return;
       }
-      
+
+      totalVenta = carritoLocal.reduce((sum, item) => sum + item.precio_total, 0);
+
+      // Mostrar modal de método de pago
+      document.getElementById('modalMetodoPago').classList.remove('hidden');
+      document.getElementById('modalMetodoPago').classList.add('flex');
+    }
+
+    // Seleccionar método de pago
+    function seleccionarMetodoPago(metodo) {
+      metodoPagoSeleccionado = metodo;
+      cerrarModalMetodoPago();
+
+      if (metodo === 'efectivo') {
+        // Flujo para efectivo: pedir monto
+        procesarPagoEfectivo();
+      } else {
+        // Flujo para transferencia/tarjeta: mostrar modal de confirmación
+        mostrarModalConfirmacion(metodo);
+      }
+    }
+
+    // Cerrar modal de método de pago
+    function cerrarModalMetodoPago() {
+      document.getElementById('modalMetodoPago').classList.add('hidden');
+      document.getElementById('modalMetodoPago').classList.remove('flex');
+    }
+
+    // Procesar pago en efectivo
+    async function procesarPagoEfectivo() {
       let pago = prompt("Ingrese la cantidad pagada:");
-      if (!pago) return;
-      
-      pago = parseFloat(pago);
-      const total = carritoLocal.reduce((sum, item) => sum + item.precio_total, 0);
-      
-      if (isNaN(pago) || pago < total) {
-        alert("El pago es insuficiente.");
+      if (!pago) {
+        metodoPagoSeleccionado = null;
         return;
       }
-      
-      const cambio = redondear(pago - total);
+
+      pago = parseFloat(pago);
+
+      if (isNaN(pago) || pago < totalVenta) {
+        alert("El pago es insuficiente.");
+        metodoPagoSeleccionado = null;
+        return;
+      }
+
+      const cambio = redondear(pago - totalVenta);
       cambioSpan.textContent = formatearPesos(cambio);
-      
-      // Registrar venta
+
+      // Registrar venta con efectivo
+      await registrarVentaConMetodo('efectivo', pago, cambio);
+    }
+
+    // Mostrar modal de confirmación para transferencia/tarjeta
+    function mostrarModalConfirmacion(metodo) {
+      const metodoTexto = metodo === 'transferencia' ? '🏦 Transferencia' : '💳 Tarjeta';
+      document.getElementById('metodoConfirmacion').textContent = metodoTexto;
+      document.getElementById('totalConfirmacion').textContent = formatearPesos(totalVenta);
+
+      document.getElementById('modalConfirmacionPago').classList.remove('hidden');
+      document.getElementById('modalConfirmacionPago').classList.add('flex');
+    }
+
+    // Confirmar pago (transferencia/tarjeta)
+    async function confirmarPago() {
+      cerrarModalConfirmacionPago();
+
+      // Para transferencia/tarjeta: monto_pagado = total, cambio = 0
+      await registrarVentaConMetodo(metodoPagoSeleccionado, totalVenta, 0);
+    }
+
+    // Cancelar confirmación de pago
+    function cancelarConfirmacionPago() {
+      cerrarModalConfirmacionPago();
+      metodoPagoSeleccionado = null;
+      alert("Pago cancelado. El carrito permanece intacto.");
+    }
+
+    // Cerrar modal de confirmación
+    function cerrarModalConfirmacionPago() {
+      document.getElementById('modalConfirmacionPago').classList.add('hidden');
+      document.getElementById('modalConfirmacionPago').classList.remove('flex');
+    }
+
+    // Registrar venta con método de pago
+    async function registrarVentaConMetodo(metodo, montoPagado, cambio) {
       try {
         const productos = carritoLocal.map(p => ({
           codigo: p.codigo,
           cantidad: p.cantidad
         }));
-        
+
         const res = await fetch("/punto_de_venta/registrar-venta/", {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             'X-CSRFToken': getCookie('csrftoken')
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             productos,
-            monto_pagado: pago
+            monto_pagado: montoPagado,
+            metodo_pago: metodo
           })
         });
-        
+
         const data = await res.json();
-        
+
         if (res.ok) {
-          alert(`Venta registrada exitosamente. Cambio: ${formatearPesos(cambio)}`);
+          const mensaje = metodo === 'efectivo'
+            ? `Venta registrada exitosamente.\nCambio: ${formatearPesos(cambio)}`
+            : `Venta registrada exitosamente.\nMétodo: ${metodo.charAt(0).toUpperCase() + metodo.slice(1)}`;
+
+          alert(mensaje);
+
           carritoLocal = [];
           actualizarTabla();
           cambioSpan.textContent = formatearPesos(0);
           cargarTotalDia();
-          
+
           // Verificar productos que han quedado con stock bajo después de la venta
           verificarStockDespuesDeVenta(productos);
-          
+
           // Actualizar el contador de productos con stock bajo
           setTimeout(() => {
             actualizarContadorStock();
@@ -1226,10 +1366,13 @@
         } else {
           alert("Error: " + (data.error || "No se pudo registrar la venta"));
         }
-        
+
       } catch (error) {
         console.error("Error registrando venta:", error);
         alert("Error al registrar la venta");
+      } finally {
+        metodoPagoSeleccionado = null;
+        totalVenta = 0;
       }
     }
 
