@@ -226,15 +226,16 @@
         <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Historial de Ventas</h3>
       </div>
       <div class="overflow-auto" style="max-height: 70vh;">
-        <table class="text-sm text-left" id="tabla-ventas" style="width: auto; min-width: 100%; table-layout: auto;">
+        <table class="text-sm text-left" id="tabla-ventas" style="width: 100%; table-layout: fixed;">
           <thead style="background: var(--bg-tertiary); color: var(--text-primary); border-bottom: 2px solid var(--border-color);" class="sticky top-0">
             <tr>
-              <th class="p-3 font-medium">Producto</th>
-              <th class="p-3 font-medium text-center">Cantidad</th>
-              <th class="p-3 font-medium text-right">Precio Unitario</th>
-              <th class="p-3 font-medium text-right">Total</th>
-              <th class="p-3 font-medium text-center">Usuario</th>
-              <th class="p-3 font-medium text-center">Stock</th>
+              <th class="p-3 font-medium" style="width: 30%;">Producto</th>
+              <th class="p-3 font-medium text-center" style="width: 8%;">Cant.</th>
+              <th class="p-3 font-medium text-right" style="width: 12%;">Precio Unit.</th>
+              <th class="p-3 font-medium text-right" style="width: 12%;">Total</th>
+              <th class="p-3 font-medium text-center" style="width: 15%;">Usuario</th>
+              <th class="p-3 font-medium text-center" style="width: 10%;">Método Pago</th>
+              <th class="p-3 font-medium text-center" style="width: 13%;">Stock</th>
             </tr>
           </thead>
           <tbody id="tabla-ventas-body"></tbody>
@@ -320,8 +321,8 @@
             filaHeader.style.background = "var(--bg-tertiary)";
             filaHeader.style.borderBottom = "1px solid var(--border-color)";
             filaHeader.innerHTML = `
-              <td colspan="6" class="p-3 font-semibold" style="color: var(--accent-blue);">
-                ${actividad.titulo} del ${fecha} - Total: ${formatearPesos(actividad.total)}
+              <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
+                💰 ${actividad.titulo} del ${fecha} - Total: ${formatearPesos(actividad.total)}
                 - 👤 ${actividad.usuario} - 💳 ${actividad.metodo_pago}
               </td>
             `;
@@ -334,7 +335,7 @@
                 actividad.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
 
               const stockInfo = movimiento ?
-                `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '⏳ Sin registro';
+                `${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : 'Sin registro';
 
               const fila = document.createElement("tr");
               fila.style.borderBottom = "1px solid var(--border-color)";
@@ -342,9 +343,13 @@
               fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
               fila.onmouseleave = () => fila.style.background = "transparent";
               fila.innerHTML = `
-                <td colspan="6" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
-                  ${producto.nombre} | Cant: ${producto.cantidad} | ${formatearPesos(producto.precio_unitario)} | Total: ${formatearPesos(producto.subtotal)} | ${stockInfo}
-                </td>
+                <td class="p-3" style="color: var(--text-primary); padding-left: 2rem;">${producto.nombre}</td>
+                <td class="p-3 text-center" style="color: var(--text-primary);">${producto.cantidad}</td>
+                <td class="p-3 text-right" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
+                <td class="p-3 text-right font-semibold" style="color: var(--accent-green);">${formatearPesos(producto.subtotal)}</td>
+                <td class="p-3 text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
+                <td class="p-3 text-center" style="color: var(--accent-blue);">${actividad.metodo_pago}</td>
+                <td class="p-3 text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${stockInfo}</td>
               `;
               tabla.appendChild(fila);
             });
@@ -355,8 +360,8 @@
             filaHeader.style.background = "linear-gradient(135deg, #2a5a2a 0%, #1a4a1a 100%)";
             filaHeader.style.borderBottom = "1px solid var(--border-color)";
             filaHeader.innerHTML = `
-              <td colspan="6" class="p-3 font-semibold" style="color: #90EE90;">
-                ${actividad.titulo} del ${fecha} - 👤 ${actividad.usuario}
+              <td colspan="7" class="p-3 font-semibold" style="color: #90EE90;">
+                📦 ${actividad.titulo} del ${fecha} - 👤 ${actividad.usuario}
                 ${actividad.motivo ? `- 📝 ${actividad.motivo}` : ''}
               </td>
             `;
@@ -371,9 +376,13 @@
             fila.style.borderBottom = "1px solid var(--border-color)";
             fila.style.background = "rgba(144, 238, 144, 0.05)";
             fila.innerHTML = `
-              <td colspan="6" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
-                ${actividad.producto.nombre} | Movimiento: <span style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</span> | Código: ${actividad.producto.codigo} | Stock: ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
-              </td>
+              <td class="p-3" style="color: var(--text-primary); padding-left: 2rem;">${actividad.producto.nombre}</td>
+              <td class="p-3 text-center" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'}; font-weight: 600;">${cantidad_text}</td>
+              <td class="p-3 text-right" style="color: var(--text-secondary);">-</td>
+              <td class="p-3 text-right" style="color: var(--text-secondary);">-</td>
+              <td class="p-3 text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
+              <td class="p-3 text-center" style="color: var(--text-secondary);">Movimiento</td>
+              <td class="p-3 text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}</td>
             `;
             tabla.appendChild(fila);
           }
@@ -382,7 +391,7 @@
         // No hay actividades
         const filaVacia = document.createElement("tr");
         filaVacia.innerHTML = `
-          <td colspan="6" class="p-6 text-center" style="color: var(--text-secondary);">
+          <td colspan="7" class="p-6 text-center" style="color: var(--text-secondary);">
             No hay actividades registradas en el período seleccionado
           </td>
         `;
@@ -401,7 +410,7 @@
             grupoHeader.style.cursor = "pointer";
             grupoHeader.onclick = () => toggleGrupo(grupo.titulo);
             grupoHeader.innerHTML = `
-              <td colspan="6" class="p-4 font-bold text-center">
+              <td colspan="7" class="p-4 font-bold text-center">
                 📅 ${grupo.titulo} - Total: ${formatearPesos(grupo.total_grupo)}
                 <span id="toggle-${grupo.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
               </td>
@@ -421,7 +430,7 @@
               filaHeader.style.background = "var(--bg-tertiary)";
               filaHeader.style.borderBottom = "1px solid var(--border-color)";
               filaHeader.innerHTML = `
-                <td colspan="6" class="p-3 font-semibold" style="color: var(--accent-blue);">
+                <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
                   💰 Venta #${venta.folio || venta.id} del ${fecha} - Total: ${formatearPesos(venta.total)}
                   ${venta.usuario ? `- 👤 ${venta.usuario.nombre_completo}` : ''}
                   ${venta.metodo_pago ? `- 💳 ${venta.metodo_pago}` : ''}
@@ -449,7 +458,7 @@
                 const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
 
                 fila.innerHTML = `
-                  <td colspan="6" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
+                  <td colspan="7" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
                     ${detalle.producto.nombre} | Cant: ${detalle.cantidad} | ${formatearPesos(detalle.precio_unitario)} | Total: ${formatearPesos(detalle.cantidad * detalle.precio_unitario)} | ${stockDisplay}
                   </td>
                 `;
@@ -463,7 +472,7 @@
           // No hay ventas
           const filaVacia = document.createElement("tr");
           filaVacia.innerHTML = `
-            <td colspan="6" class="p-6 text-center" style="color: var(--text-secondary);">
+            <td colspan="7" class="p-6 text-center" style="color: var(--text-secondary);">
               No hay ventas registradas
             </td>
           `;
@@ -481,7 +490,7 @@
             filaHeader.style.background = "var(--bg-tertiary)";
             filaHeader.style.borderBottom = "1px solid var(--border-color)";
             filaHeader.innerHTML = `
-              <td colspan="6" class="p-3 font-semibold" style="color: var(--accent-blue);">
+              <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
                 💰 Venta #${venta.folio || venta.id} del ${fecha} - Total: ${formatearPesos(venta.total_venta)}
                 ${venta.usuario ? `- 👤 ${venta.usuario.nombre_completo}` : ''}
                 ${venta.metodo_pago ? `- 💳 ${venta.metodo_pago}` : ''}
@@ -509,7 +518,7 @@
               const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
 
               fila.innerHTML = `
-                <td colspan="6" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
+                <td colspan="7" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
                   ${p.nombre_producto} | Cant: ${p.cantidad_vendida} | ${formatearPesos(p.precio_unitario)} | Total: ${formatearPesos(p.total)} | ${stockDisplay}
                 </td>
               `;
@@ -520,7 +529,7 @@
           // No sales found
           const filaVacia = document.createElement("tr");
           filaVacia.innerHTML = `
-            <td colspan="6" class="p-6 text-center" style="color: var(--text-secondary);">
+            <td colspan="7" class="p-6 text-center" style="color: var(--text-secondary);">
               No se encontraron ventas para los filtros seleccionados
             </td>
           `;
@@ -543,7 +552,7 @@
       
       tabla.innerHTML = `
         <tr>
-          <td colspan="6" class="p-6 text-center" style="color: #ef4444;">
+          <td colspan="7" class="p-6 text-center" style="color: #ef4444;">
             ${errorMessage}<br>
             <small style="color: var(--text-secondary);">Detalles: ${error.message}</small>
           </td>
@@ -568,8 +577,8 @@
       anioHeader.style.cursor = "pointer";
       anioHeader.onclick = () => toggleGrupoJerarquico('anio', anio.titulo);
       anioHeader.innerHTML = `
-        <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary);">
-          ${anio.titulo} - Total: ${formatearPesos(anio.total)}
+        <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary);">
+          📅 ${anio.titulo} - Total: ${formatearPesos(anio.total)}
           <span id="toggle-anio-${anio.titulo}" style="float: right;">▼</span>
         </td>
       `;
@@ -588,8 +597,8 @@
         mesHeader.style.cursor = "pointer";
         mesHeader.onclick = () => toggleGrupoJerarquico('mes', `${anio.titulo}-${mes.titulo}`);
         mesHeader.innerHTML = `
-          <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 2rem;">
-            ${mes.titulo} - Total: ${formatearPesos(mes.total)}
+          <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 2rem;">
+            📅 ${mes.titulo} - Total: ${formatearPesos(mes.total)}
             <span id="toggle-mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
           </td>
         `;
@@ -613,8 +622,8 @@
           semanaHeader.style.cursor = "pointer";
           semanaHeader.onclick = () => toggleGrupoJerarquico('semana', `${anio.titulo}-${mes.titulo}-${semana.titulo}`);
           semanaHeader.innerHTML = `
-            <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 3rem;">
-              ${semana.titulo} - Total: ${formatearPesos(semana.total)}
+            <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 3rem;">
+              📅 ${semana.titulo} - Total: ${formatearPesos(semana.total)}
               <span id="toggle-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
             </td>
           `;
@@ -635,8 +644,8 @@
             diaHeader.style.cursor = "pointer";
             diaHeader.onclick = () => toggleGrupoJerarquico('dia', `${anio.titulo}-${mes.titulo}-${semana.titulo}-${dia.titulo}`);
             diaHeader.innerHTML = `
-              <td colspan="6" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 4rem;">
-                ${dia.titulo} - Total: ${formatearPesos(dia.total)}${dia.es_hoy ? ' (HOY)' : ''}
+              <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 4rem;">
+                📅 ${dia.titulo} - Total: ${formatearPesos(dia.total)}${dia.es_hoy ? ' 🌟 (HOY)' : ''}
                 <span id="toggle-dia-${dia.fecha.replace(/-/g, '')}" style="float: right;">▼</span>
               </td>
             `;
@@ -669,8 +678,8 @@
               ventaHeader.style.cursor = "pointer";
               ventaHeader.onclick = () => toggleVenta(ventaId);
               ventaHeader.innerHTML = `
-                <td colspan="6" class="p-2 text-sm font-medium" style="color: var(--accent-blue); padding-left: 5rem;">
-                  Venta #${venta.id} - ${formatearPesos(venta.total)} - ${venta.productos.length} items - ${venta.metodo_pago} - ${venta.usuario} - ${fecha}
+                <td colspan="7" class="p-2 text-sm font-medium" style="color: var(--accent-blue); padding-left: 5rem;">
+                  💰 Venta #${venta.id} - ${formatearPesos(venta.total)} - ${venta.productos.length} items - ${venta.metodo_pago} - ${venta.usuario} - ${fecha}
                   <span id="toggle-${ventaId}" style="float: right;">▼</span>
                 </td>
               `;
@@ -687,7 +696,7 @@
                   venta.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
 
                 const stockInfo = movimiento ?
-                  `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '⏳ Sin registro';
+                  `${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : 'Sin registro';
 
                 const fila = document.createElement("tr");
                 fila.style.borderBottom = "1px solid var(--border-color)";
@@ -696,9 +705,13 @@
                 fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
                 fila.onmouseleave = () => fila.style.background = "rgba(0, 123, 255, 0.02)";
                 fila.innerHTML = `
-                  <td colspan="6" class="p-2 text-sm" style="color: var(--text-primary); padding-left: 6rem;">
-                    ${producto.nombre} | Cant: ${producto.cantidad} | ${formatearPesos(producto.precio_unitario)} | Total: ${formatearPesos(producto.subtotal)} | ${venta.usuario} | ${stockInfo}
-                  </td>
+                  <td class="p-2 text-sm" style="color: var(--text-primary); padding-left: 6rem;">${producto.nombre}</td>
+                  <td class="p-2 text-sm text-center" style="color: var(--text-primary);">${producto.cantidad}</td>
+                  <td class="p-2 text-sm text-right" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
+                  <td class="p-2 text-sm text-right font-semibold" style="color: var(--accent-green);">${formatearPesos(producto.subtotal)}</td>
+                  <td class="p-2 text-sm text-center" style="color: var(--text-secondary);">${venta.usuario}</td>
+                  <td class="p-2 text-sm text-center" style="color: var(--accent-blue);">${venta.metodo_pago}</td>
+                  <td class="p-2 text-sm text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${stockInfo}</td>
                 `;
                 ventaContainer.appendChild(fila);
               });
@@ -715,9 +728,13 @@
               fila.style.borderBottom = "1px solid var(--border-color)";
               fila.style.background = "rgba(144, 238, 144, 0.05)";
               fila.innerHTML = `
-                <td colspan="6" class="p-2 text-sm" style="color: var(--text-primary); padding-left: 5rem;">
-                  ${actividad.producto.nombre} | Movimiento: <span style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'};">${cantidad_text}</span> | ${actividad.usuario} | Stock: ${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}
-                </td>
+                <td class="p-2 text-sm" style="color: var(--text-primary); padding-left: 5rem;">${actividad.producto.nombre}</td>
+                <td class="p-2 text-sm text-center" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'}; font-weight: 600;">${cantidad_text}</td>
+                <td class="p-2 text-sm text-right" style="color: var(--text-secondary);">-</td>
+                <td class="p-2 text-sm text-right" style="color: var(--text-secondary);">-</td>
+                <td class="p-2 text-sm text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
+                <td class="p-2 text-sm text-center" style="color: var(--text-secondary);">Movimiento</td>
+                <td class="p-2 text-sm text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}</td>
               `;
               diaContainer.appendChild(fila);
             });
