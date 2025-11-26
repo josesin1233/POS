@@ -609,61 +609,61 @@
   </div>
 
   <!-- Modal: Selección de Método de Pago -->
-  <div id="modalMetodoPago" class="fixed inset-0" style="display: none; z-index: 9999; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center;">
-    <div class="rounded-xl border-2 p-6 max-w-md w-full mx-4" style="background-color: #0a0a0a; border-color: #333333;">
-      <h2 class="text-2xl font-bold mb-6 text-center" style="color: var(--text-primary);">💳 Método de Pago</h2>
+  <div id="modalMetodoPago" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;">
+    <div style="background-color: #0a0a0a; border: 2px solid #333333; border-radius: 1rem; padding: 2rem; max-width: 500px; width: 90%;">
+      <h2 style="color: #ffffff; font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; text-align: center;">💳 Método de Pago</h2>
 
-      <div class="space-y-3 mb-6">
-        <button onclick="seleccionarMetodoPago('efectivo')" class="w-full p-4 rounded-lg border-2 transition-all hover:border-green-500" style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
-          <div class="flex items-center justify-between">
-            <span class="text-lg font-semibold">💵 Efectivo</span>
-            <span class="text-sm" style="color: var(--text-secondary);">Con cambio</span>
+      <div style="margin-bottom: 1.5rem;">
+        <button onclick="seleccionarMetodoPago('efectivo')" style="width: 100%; padding: 1rem; margin-bottom: 0.75rem; background-color: #1a1a1a; border: 2px solid #333333; border-radius: 0.5rem; color: #ffffff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>💵 Efectivo</span>
+            <span style="font-size: 0.875rem; color: #a0a0a0;">Con cambio</span>
           </div>
         </button>
 
-        <button onclick="seleccionarMetodoPago('transferencia')" class="w-full p-4 rounded-lg border-2 transition-all hover:border-blue-500" style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
-          <div class="flex items-center justify-between">
-            <span class="text-lg font-semibold">🏦 Transferencia</span>
-            <span class="text-sm" style="color: var(--text-secondary);">Sin cambio</span>
+        <button onclick="seleccionarMetodoPago('transferencia')" style="width: 100%; padding: 1rem; margin-bottom: 0.75rem; background-color: #1a1a1a; border: 2px solid #333333; border-radius: 0.5rem; color: #ffffff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>🏦 Transferencia</span>
+            <span style="font-size: 0.875rem; color: #a0a0a0;">Sin cambio</span>
           </div>
         </button>
 
-        <button onclick="seleccionarMetodoPago('tarjeta')" class="w-full p-4 rounded-lg border-2 transition-all hover:border-purple-500" style="background-color: #1a1a1a; border-color: #333333; color: var(--text-primary);">
-          <div class="flex items-center justify-between">
-            <span class="text-lg font-semibold">💳 Tarjeta</span>
-            <span class="text-sm" style="color: var(--text-secondary);">Sin cambio</span>
+        <button onclick="seleccionarMetodoPago('tarjeta')" style="width: 100%; padding: 1rem; background-color: #1a1a1a; border: 2px solid #333333; border-radius: 0.5rem; color: #ffffff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>💳 Tarjeta</span>
+            <span style="font-size: 0.875rem; color: #a0a0a0;">Sin cambio</span>
           </div>
         </button>
       </div>
 
-      <button onclick="cerrarModalMetodoPago()" class="w-full p-3 rounded-lg font-semibold" style="background-color: #333333; color: var(--text-primary);">
+      <button onclick="cerrarModalMetodoPago()" style="width: 100%; padding: 0.75rem; background-color: #333333; color: #ffffff; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
         Cancelar
       </button>
     </div>
   </div>
 
   <!-- Modal: Confirmación de Pago (Transferencia/Tarjeta) -->
-  <div id="modalConfirmacionPago" class="fixed inset-0" style="display: none; z-index: 10000; background-color: rgba(0, 0, 0, 0.75); align-items: center; justify-content: center;">
-    <div class="rounded-xl border-2 p-6 max-w-md w-full mx-4" style="background-color: #0a0a0a; border-color: #333333;">
-      <h2 class="text-2xl font-bold mb-4 text-center" style="color: var(--text-primary);">⚠️ Confirmar Pago</h2>
+  <div id="modalConfirmacionPago" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;">
+    <div style="background-color: #0a0a0a; border: 2px solid #333333; border-radius: 1rem; padding: 2rem; max-width: 500px; width: 90%;">
+      <h2 style="color: #ffffff; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">⚠️ Confirmar Pago</h2>
 
-      <div class="mb-6 p-4 rounded-lg" style="background-color: #1a1a1a;">
-        <p class="text-center mb-2" style="color: var(--text-secondary);">Método de pago:</p>
-        <p class="text-xl font-bold text-center mb-4" style="color: var(--text-primary);" id="metodoConfirmacion"></p>
+      <div style="margin-bottom: 1.5rem; padding: 1rem; background-color: #1a1a1a; border-radius: 0.5rem;">
+        <p style="text-align: center; margin-bottom: 0.5rem; color: #a0a0a0;">Método de pago:</p>
+        <p id="metodoConfirmacion" style="font-size: 1.25rem; font-weight: bold; text-align: center; margin-bottom: 1rem; color: #ffffff;"></p>
 
-        <p class="text-center mb-2" style="color: var(--text-secondary);">Total a cobrar:</p>
-        <p class="text-3xl font-bold text-center" style="color: #22c55e;" id="totalConfirmacion"></p>
+        <p style="text-align: center; margin-bottom: 0.5rem; color: #a0a0a0;">Total a cobrar:</p>
+        <p id="totalConfirmacion" style="font-size: 2rem; font-weight: bold; text-align: center; color: #22c55e;"></p>
       </div>
 
-      <p class="text-center mb-6" style="color: var(--text-secondary);">
-        ¿Confirma que el pago fue <span class="font-semibold" style="color: var(--text-primary);">realizado correctamente</span>?
+      <p style="text-align: center; margin-bottom: 1.5rem; color: #a0a0a0;">
+        ¿Confirma que el pago fue <span style="font-weight: 600; color: #ffffff;">realizado correctamente</span>?
       </p>
 
-      <div class="grid grid-cols-2 gap-3">
-        <button onclick="cancelarConfirmacionPago()" class="p-3 rounded-lg font-semibold" style="background-color: #ef4444; color: white;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <button onclick="cancelarConfirmacionPago()" style="padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; background-color: #ef4444; color: white; border: none; cursor: pointer;">
           ❌ Cancelar
         </button>
-        <button onclick="confirmarPago()" class="p-3 rounded-lg font-semibold" style="background-color: #22c55e; color: white;">
+        <button onclick="confirmarPago()" style="padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; background-color: #22c55e; color: white; border: none; cursor: pointer;">
           ✅ Confirmar
         </button>
       </div>
@@ -1235,45 +1235,19 @@
 
     // Cobrar - Abrir modal de método de pago
     async function cobrar() {
-      console.log('cobrar() llamado');
-
       if (carritoLocal.length === 0) {
         alert("Agrega productos antes de cobrar.");
         return;
       }
 
-      console.log('Carrito:', carritoLocal);
-
       try {
         totalVenta = carritoLocal.reduce((sum, item) => {
-          console.log('Item:', item, 'precio_total:', item.precio_total);
           return sum + (parseFloat(item.precio_total) || 0);
         }, 0);
 
-        console.log('Total venta calculado:', totalVenta);
-
         // Mostrar modal de método de pago
         const modal = document.getElementById('modalMetodoPago');
-        console.log('Modal encontrado:', modal);
-
-        // Forzar todos los estilos para debug
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('z-index', '999999', 'important');
-        modal.style.setProperty('position', 'fixed', 'important');
-        modal.style.setProperty('top', '0', 'important');
-        modal.style.setProperty('left', '0', 'important');
-        modal.style.setProperty('right', '0', 'important');
-        modal.style.setProperty('bottom', '0', 'important');
-        modal.style.setProperty('background-color', 'rgba(255, 0, 0, 0.9)', 'important'); // Fondo rojo para debug
-
-        const computedStyle = window.getComputedStyle(modal);
-        console.log('Modal display cambiado a flex');
-        console.log('Computed style - display:', computedStyle.display);
-        console.log('Computed style - opacity:', computedStyle.opacity);
-        console.log('Computed style - visibility:', computedStyle.visibility);
-        console.log('Computed style - z-index:', computedStyle.zIndex);
-        console.log('Modal rect:', modal.getBoundingClientRect());
-        console.log('Modal offsetWidth:', modal.offsetWidth, 'offsetHeight:', modal.offsetHeight);
+        modal.style.display = 'flex';
       } catch (error) {
         console.error('Error en cobrar():', error);
         alert('Error al procesar el cobro: ' + error.message);
@@ -1328,7 +1302,7 @@
       document.getElementById('metodoConfirmacion').textContent = metodoTexto;
       document.getElementById('totalConfirmacion').textContent = formatearPesos(totalVenta);
 
-      document.getElementById('modalConfirmacionPago').style.setProperty('display', 'flex', 'important');
+      document.getElementById('modalConfirmacionPago').style.display = 'flex';
     }
 
     // Confirmar pago (transferencia/tarjeta)
