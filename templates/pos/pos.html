@@ -609,7 +609,7 @@
   </div>
 
   <!-- Modal: Selección de Método de Pago -->
-  <div id="modalMetodoPago" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center" style="z-index: 9999;">
+  <div id="modalMetodoPago" class="fixed inset-0 items-center justify-center" style="display: none; z-index: 9999; background-color: rgba(0, 0, 0, 0.75);">
     <div class="rounded-xl border-2 p-6 max-w-md w-full mx-4" style="background-color: #0a0a0a; border-color: #333333;">
       <h2 class="text-2xl font-bold mb-6 text-center" style="color: var(--text-primary);">💳 Método de Pago</h2>
 
@@ -643,7 +643,7 @@
   </div>
 
   <!-- Modal: Confirmación de Pago (Transferencia/Tarjeta) -->
-  <div id="modalConfirmacionPago" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center" style="z-index: 10000;">
+  <div id="modalConfirmacionPago" class="fixed inset-0 items-center justify-center" style="display: none; z-index: 10000; background-color: rgba(0, 0, 0, 0.75);">
     <div class="rounded-xl border-2 p-6 max-w-md w-full mx-4" style="background-color: #0a0a0a; border-color: #333333;">
       <h2 class="text-2xl font-bold mb-4 text-center" style="color: var(--text-primary);">⚠️ Confirmar Pago</h2>
 
@@ -1243,8 +1243,7 @@
       totalVenta = carritoLocal.reduce((sum, item) => sum + item.precio_total, 0);
 
       // Mostrar modal de método de pago
-      document.getElementById('modalMetodoPago').classList.remove('hidden');
-      document.getElementById('modalMetodoPago').classList.add('flex');
+      document.getElementById('modalMetodoPago').style.display = 'flex';
     }
 
     // Seleccionar método de pago
@@ -1263,8 +1262,7 @@
 
     // Cerrar modal de método de pago
     function cerrarModalMetodoPago() {
-      document.getElementById('modalMetodoPago').classList.add('hidden');
-      document.getElementById('modalMetodoPago').classList.remove('flex');
+      document.getElementById('modalMetodoPago').style.display = 'none';
     }
 
     // Procesar pago en efectivo
@@ -1296,8 +1294,7 @@
       document.getElementById('metodoConfirmacion').textContent = metodoTexto;
       document.getElementById('totalConfirmacion').textContent = formatearPesos(totalVenta);
 
-      document.getElementById('modalConfirmacionPago').classList.remove('hidden');
-      document.getElementById('modalConfirmacionPago').classList.add('flex');
+      document.getElementById('modalConfirmacionPago').style.display = 'flex';
     }
 
     // Confirmar pago (transferencia/tarjeta)
@@ -1317,8 +1314,7 @@
 
     // Cerrar modal de confirmación
     function cerrarModalConfirmacionPago() {
-      document.getElementById('modalConfirmacionPago').classList.add('hidden');
-      document.getElementById('modalConfirmacionPago').classList.remove('flex');
+      document.getElementById('modalConfirmacionPago').style.display = 'none';
     }
 
     // Registrar venta con método de pago
