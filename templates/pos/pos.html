@@ -1255,8 +1255,8 @@
         // Mostrar modal de método de pago
         const modal = document.getElementById('modalMetodoPago');
         console.log('Modal encontrado:', modal);
-        modal.style.display = 'flex';
-        console.log('Modal display cambiado a flex');
+        modal.style.setProperty('display', 'flex', 'important');
+        console.log('Modal display cambiado a flex', 'Computed style:', window.getComputedStyle(modal).display);
       } catch (error) {
         console.error('Error en cobrar():', error);
         alert('Error al procesar el cobro: ' + error.message);
@@ -1311,7 +1311,7 @@
       document.getElementById('metodoConfirmacion').textContent = metodoTexto;
       document.getElementById('totalConfirmacion').textContent = formatearPesos(totalVenta);
 
-      document.getElementById('modalConfirmacionPago').style.display = 'flex';
+      document.getElementById('modalConfirmacionPago').style.setProperty('display', 'flex', 'important');
     }
 
     // Confirmar pago (transferencia/tarjeta)
