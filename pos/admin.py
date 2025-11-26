@@ -207,336 +207,169 @@ from .models import UserRegistration, UserRegistrationLog
 
 @admin.register(UserRegistration)
 class UserRegistrationAdmin(admin.ModelAdmin):
-    """
-    Admin súper personalizado para gestión visual de usuarios
-    """
+    """Admin optimizado para gestión rápida de leads"""
 
-    # Lista principal
+    # SOLO LO ESENCIAL EN LA TABLA
     list_display = [
-        'registration_id_display',
         'full_name',
         'email',
-        'phone',
+        'phone_display',
         'city',
-        'status_timeline',
-        'created_at_formatted',
-        'action_buttons',
+        'progress_bar',
+        'whatsapp_button',
     ]
 
-    list_filter = [
-        'status',
-        'created_at',
-        'source',
-    ]
-
-    search_fields = [
-        'full_name',
-        'email',
-        'phone',
-        'pk',
-    ]
-
-    readonly_fields = [
-        'created_at',
-        'registration_token',
-        'token_expires_at',
-        'token_used_at',
-        'pos_user',
-        'business',
-        'timeline_visual',
-        'registration_url_display',
-    ]
-
-    fieldsets = [
-        ('Información básica', {
-            'fields': (
-                'full_name',
-                'email',
-                'phone',
-                'city',
-                'source',
-            )
-        }),
-        ('Estado y progreso', {
-            'fields': (
-                'status',
-                'timeline_visual',
-            )
-        }),
-        ('Timestamps', {
-            'fields': (
-                'created_at',
-                'mensaje_enviado_at',
-                'contactado_at',
-                'pago_pendiente_at',
-                'pago_completado_at',
-                'link_enviado_at',
-                'registro_completo_at',
-            ),
-            'classes': ('collapse',)
-        }),
-        ('Sistema de registro', {
-            'fields': (
-                'registration_token',
-                'registration_url_display',
-                'token_expires_at',
-                'token_used',
-                'token_used_at',
-            ),
-            'classes': ('collapse',)
-        }),
-        ('Usuario final', {
-            'fields': (
-                'pos_user',
-                'business',
-            ),
-            'classes': ('collapse',)
-        }),
-        ('Notas', {
-            'fields': (
-                'notes',
-            )
-        }),
-    ]
-
-    # Ordenar por fecha
+    list_filter = ['status', 'created_at']
+    search_fields = ['full_name', 'email', 'phone']
     ordering = ['-created_at']
 
+    # Media para estilos y scripts
     class Media:
         css = {
-            'all': ('admin/css/user_management.css',)
+            'all': ('admin/css/lead_management.css',)
         }
-        js = ('admin/js/user_management.js',)
+        js = ('admin/js/lead_management.js',)
 
-    def registration_id_display(self, obj):
-        """Muestra ID con formato bonito"""
+    def phone_display(self, obj):
+        """Teléfono clickeable que copia al portapapeles"""
         return format_html(
-            '<span class="registration-id">#{}</span>',
-            obj.pk
+            '<span class="phone-copy" data-phone="{}" data-lead-id="{}" style="cursor: pointer; color: #667eea; font-weight: 600;">'
+            '📱 {}</span>',
+            obj.phone,
+            obj.pk,
+            obj.phone
         )
-    registration_id_display.short_description = 'ID'
+    phone_display.short_description = 'Teléfono'
 
-    def status_timeline(self, obj):
-        """Línea de tiempo visual del estado"""
-        # Estados y sus íconos
-        statuses = [
-            ('nuevo', '👤', 'Nuevo'),
-            ('mensaje_enviado', '📱', 'Mensaje'),
-            ('contactado', '💬', 'Contactado'),
-            ('pago_pendiente', '⏳', 'Pago Pdte'),
-            ('pago_completado', '💰', 'Pagado'),
-            ('link_enviado', '🔗', 'Link'),
-            ('registro_completo', '✅', 'Completo'),
-            ('activo', '🚀', 'Activo'),
+    def progress_bar(self, obj):
+        """Barra de progreso interactiva"""
+        # Definir los estados y su orden
+        stages = [
+            ('nuevo', 'Nuevo'),
+            ('mensaje_enviado', 'Mensaje'),
+            ('contactado', 'Contactado'),
+            ('pago_pendiente', 'Pago Pdte'),
+            ('pago_completado', 'Pagado'),
+            ('link_enviado', 'Link'),
+            ('registro_completo', 'Completo'),
         ]
 
-        timeline_html = '<div class="timeline-container">'
+        # Calcular progreso
+        current_index = next((i for i, (key, _) in enumerate(stages) if key == obj.status), 0)
+        progress_percent = int((current_index / (len(stages) - 1)) * 100) if len(stages) > 1 else 0
 
-        for i, (status_key, icon, label) in enumerate(statuses):
-            # Determinar si este estado está completado
-            is_current = (obj.status == status_key)
-            is_completed = (i <= self._get_status_index(obj.status, [s[0] for s in statuses]))
+        # Link de registro si está disponible
+        registration_link_html = ''
+        if obj.registration_token and obj.is_token_valid():
+            protocol = 'https'
+            domain = 'web-production-11df5.up.railway.app'  # Tu dominio
+            full_url = f"{protocol}://{domain}/registro/complete/{obj.registration_token}/"
+            registration_link_html = f'''
+                <button class="copy-link-btn" data-url="{full_url}" 
+                        style="margin-left: 10px; padding: 4px 12px; background: #48bb78; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 11px;">
+                    📋 Copiar Link
+                </button>
+            '''
 
-            # Clase CSS según el estado
-            if is_current:
-                css_class = "timeline-step current"
-            elif is_completed:
-                css_class = "timeline-step completed"
-            else:
-                css_class = "timeline-step pending"
-
-            timeline_html += f'''
-            <div class="{css_class}" title="{label}">
-                <div class="timeline-icon">{icon}</div>
-                <div class="timeline-label">{label}</div>
+        html = f'''
+        <div class="progress-container" data-lead-id="{obj.pk}" data-current-status="{obj.status}">
+            <div class="progress-bar-wrapper">
+                <div class="progress-bar-fill" style="width: {progress_percent}%;"></div>
+                <div class="progress-text">{obj.get_status_display()}</div>
             </div>
-            '''
-
-            # Línea conectora (excepto el último)
-            if i < len(statuses) - 1:
-                line_class = "timeline-line completed" if is_completed else "timeline-line pending"
-                timeline_html += f'<div class="{line_class}"></div>'
-
-        timeline_html += '</div>'
-
-        return format_html(timeline_html)
-
-    status_timeline.short_description = 'Progreso'
-
-    def _get_status_index(self, status, status_list):
-        """Helper para obtener índice del estado"""
-        try:
-            return status_list.index(status)
-        except ValueError:
-            return -1
-
-    def created_at_formatted(self, obj):
-        """Fecha formateada bonita"""
-        return obj.created_at.strftime('%d/%m/%Y %H:%M')
-    created_at_formatted.short_description = 'Fecha registro'
-
-    def action_buttons(self, obj):
-        """Botones de acción según el estado"""
-        buttons_html = ''
-
-        next_status = obj.get_next_status()
-
-        if next_status:
-            # Botón para avanzar al siguiente estado
-            action_labels = {
-                'mensaje_enviado': '📱 Marcar mensaje enviado',
-                'contactado': '💬 Marcar como contactado',
-                'pago_pendiente': '⏳ Marcar pago pendiente',
-                'pago_completado': '💰 Confirmar pago',
-                'link_enviado': '🔗 Generar y enviar link',
-                'registro_completo': '✅ Marcar completo',
-                'activo': '🚀 Activar usuario',
-            }
-
-            button_label = action_labels.get(next_status, f'Avanzar a {next_status}')
-
-            buttons_html += f'''
-            <a href="/admin/pos/userregistration/{obj.pk}/advance/"
-               class="button advance-btn"
-               title="{button_label}">
-               {button_label}
-            </a>
-            '''
-
-        # Botón de ver detalles siempre presente
-        buttons_html += f'''
-        <a href="/admin/pos/userregistration/{obj.pk}/change/"
-           class="button view-btn"
-           title="Ver detalles">
-           👁️ Ver
-        </a>
+            <select class="status-selector" data-lead-id="{obj.pk}">
         '''
 
-        # Botón especial si hay link de registro
-        if obj.registration_token and obj.is_token_valid():
-            buttons_html += f'''
-            <a href="/admin/pos/userregistration/{obj.pk}/copy-link/"
-               class="button link-btn"
-               title="Copiar link de registro">
-               📋 Copiar Link
-            </a>
-            '''
+        for status_key, status_label in stages:
+            selected = 'selected' if status_key == obj.status else ''
+            html += f'<option value="{status_key}" {selected}>{status_label}</option>'
+
+        html += f'''
+            </select>
+            {registration_link_html}
+        </div>
+        '''
+
+        return format_html(html)
+    progress_bar.short_description = 'Progreso'
+
+    def whatsapp_button(self, obj):
+        """Botón para abrir WhatsApp con mensaje predefinido"""
+        # Limpiar número (quitar espacios, guiones, etc.)
+        phone_clean = ''.join(filter(str.isdigit, obj.phone))
+        
+        # Si no tiene código de país, asumir México (+52)
+        if not phone_clean.startswith('52') and len(phone_clean) == 10:
+            phone_clean = '52' + phone_clean
+
+        # Mensaje predefinido
+        message = f"""¡Hola {obj.full_name}! 👋
+
+Gracias por tu interés en POS México.
+
+Para completar tu registro necesito la siguiente información:
+
+1️⃣ Tipo de negocio:
+2️⃣ Plan que deseas (Básico/Premium):
+3️⃣ Forma de pago preferida:
+
+¿Cuándo podemos agendar una llamada rápida?"""
+
+        whatsapp_url = f"https://wa.me/{phone_clean}?text={quote(message)}"
 
         return format_html(
-            '<div class="action-buttons">{}</div>',
-            buttons_html
+            '<a href="{}" target="_blank" class="whatsapp-btn" data-lead-id="{}">'
+            '<img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" '
+            'style="width: 24px; height: 24px; vertical-align: middle;"> '
+            'WhatsApp'
+            '</a>',
+            whatsapp_url,
+            obj.pk
         )
-
-    action_buttons.short_description = 'Acciones'
-
-    def timeline_visual(self, obj):
-        """Timeline visual más detallado para la vista individual"""
-        return self.status_timeline(obj)
-    timeline_visual.short_description = 'Línea de tiempo'
-
-    def registration_url_display(self, obj):
-        """Muestra la URL de registro si existe"""
-        if obj.registration_token:
-            url = f"/registro/complete/{obj.registration_token}/"
-            return format_html(
-                '<a href="{}" target="_blank" class="registration-link">{}</a>',
-                url,
-                url
-            )
-        return "No generado"
-    registration_url_display.short_description = 'URL de registro'
+    whatsapp_button.short_description = 'Contactar'
 
     def get_urls(self):
-        """Agregar URLs personalizadas para acciones del admin"""
+        """URLs personalizadas"""
         urls = super().get_urls()
         custom_urls = [
             path(
-                '<int:registration_id>/advance/',
-                self.admin_site.admin_view(self.advance_status_view),
-                name='userregistration-advance',
-            ),
-            path(
-                '<int:registration_id>/copy-link/',
-                self.admin_site.admin_view(self.copy_link_view),
-                name='userregistration-copy-link',
+                '<int:pk>/update-status/',
+                self.admin_site.admin_view(self.update_status_view),
+                name='userregistration-update-status',
             ),
         ]
         return custom_urls + urls
 
-    def advance_status_view(self, request, registration_id):
-        """Vista para avanzar al siguiente estado"""
-        registration = get_object_or_404(UserRegistration, pk=registration_id)
+    def update_status_view(self, request, pk):
+        """Actualizar estado vía AJAX"""
+        if request.method == 'POST':
+            import json
+            data = json.loads(request.body)
+            new_status = data.get('status')
 
-        # Guardar estado anterior para el mensaje
-        previous_status = registration.get_status_display()
+            registration = get_object_or_404(UserRegistration, pk=pk)
+            old_status = registration.status
 
-        # Intentar avanzar al siguiente estado
-        success = registration.advance_status()
+            registration.status = new_status
+            registration.save()
 
-        if success:
-            # Crear log de la acción
+            # Crear log
             UserRegistrationLog.objects.create(
                 registration=registration,
                 action='status_change',
-                description=f'Estado cambiado de "{previous_status}" a "{registration.get_status_display()}"',
+                description=f'Estado cambiado de "{old_status}" a "{new_status}"',
                 created_by=request.user
             )
 
-            messages.success(
-                request,
-                f'Estado actualizado a: {registration.get_status_display()}'
-            )
-        else:
-            messages.warning(
-                request,
-                'No hay siguiente estado disponible'
-            )
+            # Si llega a pago_completado, generar token
+            if new_status == 'pago_completado' and not registration.registration_token:
+                registration.generate_registration_token()
+                registration.save()
 
-        # Redirigir de vuelta a la lista o a la página de detalle
-        if request.GET.get('next') == 'detail':
-            return redirect('admin:pos_userregistration_change', registration_id)
-        return redirect('admin:pos_userregistration_changelist')
+            return JsonResponse({'success': True, 'new_status': new_status})
 
-    def copy_link_view(self, request, registration_id):
-        """Vista para obtener el link de registro (para copiar)"""
-        registration = get_object_or_404(UserRegistration, pk=registration_id)
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-        # Verificar si tiene token
-        if not registration.registration_token:
-            return JsonResponse({
-                'error': 'Este registro no tiene un token generado aún'
-            }, status=400)
-
-        # Verificar si el token es válido
-        if not registration.is_token_valid():
-            return JsonResponse({
-                'error': 'El token ha expirado o ya fue usado'
-            }, status=400)
-
-        # Construir URL completa
-        registration_url = registration.get_registration_url()
-
-        # En producción, incluir el dominio completo
-        if request.is_secure():
-            protocol = 'https'
-        else:
-            protocol = 'http'
-
-        full_url = f"{protocol}://{request.get_host()}{registration_url}"
-
-        # Crear log de la acción
-        UserRegistrationLog.objects.create(
-            registration=registration,
-            action='link_copied',
-            description=f'Link de registro copiado por {request.user.username}',
-            created_by=request.user
-        )
-
-        return JsonResponse({
-            'url': full_url,
-            'expires_at': registration.token_expires_at.isoformat() if registration.token_expires_at else None,
-            'token': str(registration.registration_token)
-        })
 
 
 @admin.register(UserRegistrationLog)
