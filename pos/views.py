@@ -1752,7 +1752,7 @@ def registro_completo_api(request):
         # Parámetros de filtro
         fecha_inicio = request.GET.get('fecha_inicio')
         fecha_fin = request.GET.get('fecha_fin')
-        limite = int(request.GET.get('limite', 50))
+        limite = int(request.GET.get('limite', 500))
         vista_agrupada = request.GET.get('agrupada', 'true').lower() == 'true'
 
         # Nuevos filtros de fecha compatible con frontend existente
@@ -1785,8 +1785,8 @@ def registro_completo_api(request):
             fecha_inicio = f"{anio}-01-01"
             fecha_fin = f"{anio}-12-31"
         elif not fecha_inicio and not fecha_fin:
-            # Si no hay filtros, mostrar últimos 7 días
-            fecha_inicio = (hoy - timedelta(days=7)).isoformat()
+            # Si no hay filtros, mostrar últimos 30 días
+            fecha_inicio = (hoy - timedelta(days=30)).isoformat()
             fecha_fin = hoy.isoformat()
 
         # Obtener ventas
