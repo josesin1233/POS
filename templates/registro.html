@@ -14,8 +14,7 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
     .font-mono { font-family: 'JetBrains Mono', monospace; }
-    
-    /* Dark theme variables */
+
     :root {
       --bg-primary: #111111;
       --bg-secondary: #000000;
@@ -26,12 +25,12 @@
       --accent-blue: #00d4ff;
       --accent-green: #00ff88;
     }
-    
+
     body {
       background-color: #000000;
       color: var(--text-primary);
     }
-    
+
     .modern-button {
       background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
       border: 2px solid var(--border-color);
@@ -42,102 +41,69 @@
       transition: all 0.3s ease;
       cursor: pointer;
     }
-    
+
     .modern-button:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
       border-color: var(--accent-blue);
       background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
     }
-    
+
     .modern-button.primary {
       background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%);
       border-color: var(--accent-blue);
       color: #000000;
     }
-    
+
     .modern-card {
       background: #0a0a0a;
       border: 2px solid var(--border-color);
       border-radius: 16px;
       box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
     }
-    
-    /* Fix input text colors for user typing */
+
     input, select {
       color: #f9fafb !important;
     }
-    
+
     input::placeholder {
       color: #9ca3af !important;
     }
-    
+
     input:focus, select:focus {
       outline: none;
       border-color: var(--accent-blue) !important;
       box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2) !important;
       color: #f9fafb !important;
     }
-    
+
     select option {
       background-color: #1f2937;
       color: #f9fafb;
     }
 
-    /* Tab Buttons Styling */
     .tab-button {
       transition: all 0.2s ease;
     }
-    
+
     .tab-button:hover {
       border-color: var(--accent-blue) !important;
       background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%) !important;
       box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2) !important;
       transform: translateY(-1px) scale(1.02);
     }
-    
+
     .tab-button-active {
       box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4) !important;
     }
-    
-    /* Mobile responsive fixes */
-    @media (max-width: 768px) {
-      .text-sm {
-        font-size: 1rem !important;
-      }
-      
-      .text-xs {
-        font-size: 0.875rem !important;
-      }
-      
-      .text-lg {
-        font-size: 1.25rem !important;
-      }
-      
-      .text-2xl {
-        font-size: 1.75rem !important;
-      }
-      
-      .p-3 {
-        padding: 0.875rem !important;
-      }
-      
-      .p-6 {
-        padding: 1.25rem !important;
-      }
-      
-      .mb-2 {
-        margin-bottom: 0.75rem !important;
-      }
-      
-      .mb-6 {
-        margin-bottom: 1.25rem !important;
-      }
-      
-      .modern-card {
-        padding: 1rem !important;
-        margin: 0.5rem !important;
-      }
+
+    .clickable-row {
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .clickable-row:hover {
+      background-color: rgba(0, 212, 255, 0.1);
     }
   </style>
 </head>
@@ -147,7 +113,7 @@
     <div class="max-w-full mx-auto px-4 py-1.5">
       <div class="flex items-center justify-between">
         <div class="text-lg font-bold text-primary">{{ business.name|default:"DulcePOS" }}</div>
-        
+
         <div class="flex items-center space-x-2">
           <a href="/punto_de_venta/" class="text-secondary hover:text-blue-600 font-medium text-xs">← Volver al POS</a>
           <a href="/accounts/logout/" class="text-secondary hover:text-blue-600 font-medium text-xs">Salir</a>
@@ -203,19 +169,11 @@
           <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Año:</label>
           <input type="number" id="filtro-anio" class="w-full p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="2025" min="2000" />
         </div>
-        <div class="flex-1 min-w-48">
-          <label class="block text-xs font-medium mb-1" style="color: var(--text-secondary);">Producto:</label>
-          <div class="flex space-x-1">
-            <input type="text" id="filtro-producto" class="flex-1 p-2 text-sm rounded" style="background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary);" placeholder="Código o nombre" />
-            <button type="button" onclick="openScanner('filtro-producto')"
-                    class="modern-button flex items-center justify-center px-2 text-sm"
-                    style="min-width: 36px;">
-              🔍
-            </button>
-          </div>
-        </div>
         <div>
           <button type="submit" class="modern-button primary px-4 py-2 text-sm">Filtrar</button>
+        </div>
+        <div>
+          <button type="button" onclick="limpiarFiltros()" class="modern-button px-4 py-2 text-sm">Limpiar</button>
         </div>
       </form>
     </div>
@@ -226,7 +184,7 @@
         <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Historial de Ventas</h3>
       </div>
       <div class="overflow-auto" style="max-height: 70vh;">
-        <table class="text-sm text-left" id="tabla-ventas" style="width: 100%; min-width: 900px;">
+        <table class="text-sm text-left w-full" id="tabla-ventas" style="min-width: 900px;">
           <thead style="background: var(--bg-tertiary); color: var(--text-primary); border-bottom: 2px solid var(--border-color);" class="sticky top-0">
             <tr>
               <th class="p-3 font-medium" style="min-width: 200px;">Producto</th>
@@ -238,16 +196,22 @@
               <th class="p-3 font-medium text-center" style="min-width: 120px;">Stock</th>
             </tr>
           </thead>
-          <tbody id="tabla-ventas-body"></tbody>
+          <tbody id="tabla-ventas-body">
+            <tr>
+              <td colspan="7" class="p-6 text-center" style="color: var(--text-secondary);">
+                Cargando ventas...
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>
   </div>
 
 <script>
-  const formFiltro = document.getElementById("filtro-form");
   const tabla = document.querySelector("#tabla-ventas-body");
   const totalDiaSpan = document.getElementById("total-dia");
+  const formFiltro = document.getElementById("filtro-form");
 
   function formatearPesos(monto) {
     return new Intl.NumberFormat('es-MX', {
@@ -258,28 +222,23 @@
     }).format(monto);
   }
 
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
   async function cargarVentas(queryParams = "") {
     try {
-      console.log('[DEBUG] Cargando ventas con queryParams:', queryParams);
-      
-      // Get CSRF token
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-      
-      // Usar la nueva API unificada que incluye movimientos de inventario
-      console.log('[DEBUG] Haciendo fetch a:', `/registro/completo/${queryParams}`);
       const res = await fetch(`/registro/completo/${queryParams}`, {
         method: 'GET',
         credentials: 'same-origin',
@@ -288,379 +247,165 @@
           'X-CSRFToken': getCookie('csrftoken')
         }
       });
-      
-      console.log('[DEBUG] Response status:', res.status);
-      console.log('[DEBUG] Response headers:', res.headers);
-      
+
       if (!res.ok) {
-        const errorText = await res.text();
-        console.error('[DEBUG] Error response:', errorText);
         throw new Error(`Error ${res.status}: ${res.statusText}`);
       }
-      
+
       const data = await res.json();
+      console.log('Datos recibidos:', data);
 
       tabla.innerHTML = "";
 
-      // Para el total del día, usaremos la nueva API de ventas original como fallback
-      // TODO: Implementar cálculo de total del día en la nueva API
       if (data.total_del_dia !== undefined) {
         totalDiaSpan.textContent = formatearPesos(data.total_del_dia);
       }
 
-      // Verificar si es vista jerárquica
       if (data.es_vista_jerarquica && data.grupos_jerarquicos) {
         renderizarVistaJerarquica(data.grupos_jerarquicos);
       } else if (data.actividades && data.actividades.length > 0) {
-        data.actividades.forEach(actividad => {
-          const fecha = new Date(actividad.fecha).toLocaleString('es-MX');
-
-          if (actividad.tipo === 'venta') {
-            // Renderizar venta
-            const filaHeader = document.createElement("tr");
-            filaHeader.style.background = "var(--bg-tertiary)";
-            filaHeader.style.borderBottom = "1px solid var(--border-color)";
-            filaHeader.innerHTML = `
-              <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
-                ${actividad.titulo} del ${fecha} - Total: ${formatearPesos(actividad.total)}
-                - Usuario: ${actividad.usuario} - Método: ${actividad.metodo_pago}
-              </td>
-            `;
-            tabla.appendChild(filaHeader);
-
-            // Productos de la venta
-            actividad.productos.forEach(producto => {
-              // Buscar movimiento de stock para este producto
-              const movimiento = actividad.movimientos_stock ?
-                actividad.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
-
-              const stockInfo = movimiento ?
-                `${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : 'Sin registro';
-
-              const fila = document.createElement("tr");
-              fila.style.borderBottom = "1px solid var(--border-color)";
-              fila.style.transition = "background-color 0.2s ease";
-              fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
-              fila.onmouseleave = () => fila.style.background = "transparent";
-              fila.innerHTML = `
-                <td class="p-3" style="color: var(--text-primary); padding-left: 2rem;">${producto.nombre}</td>
-                <td class="p-3 text-center" style="color: var(--text-primary);">${producto.cantidad}</td>
-                <td class="p-3 text-right" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
-                <td class="p-3 text-right font-semibold" style="color: var(--accent-green);">${formatearPesos(producto.subtotal)}</td>
-                <td class="p-3 text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
-                <td class="p-3 text-center" style="color: var(--accent-blue);">${actividad.metodo_pago}</td>
-                <td class="p-3 text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${stockInfo}</td>
-              `;
-              tabla.appendChild(fila);
-            });
-
-          } else if (actividad.tipo === 'movimiento_stock') {
-            // Renderizar movimiento de inventario
-            const filaHeader = document.createElement("tr");
-            filaHeader.style.background = "linear-gradient(135deg, #2a5a2a 0%, #1a4a1a 100%)";
-            filaHeader.style.borderBottom = "1px solid var(--border-color)";
-            filaHeader.innerHTML = `
-              <td colspan="7" class="p-3 font-semibold" style="color: #90EE90;">
-                📦 ${actividad.titulo} del ${fecha} - 👤 ${actividad.usuario}
-                ${actividad.motivo ? `- 📝 ${actividad.motivo}` : ''}
-              </td>
-            `;
-            tabla.appendChild(filaHeader);
-
-            // Detalle del movimiento de stock
-            const cantidad_text = actividad.producto.cantidad_movida > 0 ?
-              `+${actividad.producto.cantidad_movida}` :
-              `${actividad.producto.cantidad_movida}`;
-
-            const fila = document.createElement("tr");
-            fila.style.borderBottom = "1px solid var(--border-color)";
-            fila.style.background = "rgba(144, 238, 144, 0.05)";
-            fila.innerHTML = `
-              <td class="p-3" style="color: var(--text-primary); padding-left: 2rem;">${actividad.producto.nombre}</td>
-              <td class="p-3 text-center" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'}; font-weight: 600;">${cantidad_text}</td>
-              <td class="p-3 text-right" style="color: var(--text-secondary);">-</td>
-              <td class="p-3 text-right" style="color: var(--text-secondary);">-</td>
-              <td class="p-3 text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
-              <td class="p-3 text-center" style="color: var(--text-secondary);">Movimiento</td>
-              <td class="p-3 text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}</td>
-            `;
-            tabla.appendChild(fila);
-          }
-        });
+        renderizarActividades(data.actividades);
       } else {
-        // No hay actividades
-        const filaVacia = document.createElement("tr");
-        filaVacia.innerHTML = `
-          <td colspan="7" class="p-6 text-center" style="color: var(--text-secondary);">
-            No hay actividades registradas en el período seleccionado
-          </td>
-        `;
-        tabla.appendChild(filaVacia);
-      }
-
-      // Resto del código para compatibilidad con versión anterior
-      if (false && data.es_agrupado) {
-        // Vista agrupada (sin filtros)
-        if (data.grupos && data.grupos.length > 0) {
-          data.grupos.forEach(grupo => {
-            // Header del grupo con total
-            const grupoHeader = document.createElement("tr");
-            grupoHeader.style.background = "linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%)";
-            grupoHeader.style.color = "#000000";
-            grupoHeader.style.cursor = "pointer";
-            grupoHeader.onclick = () => toggleGrupo(grupo.titulo);
-            grupoHeader.innerHTML = `
-              <td colspan="7" class="p-4 font-bold text-center">
-                📅 ${grupo.titulo} - Total: ${formatearPesos(grupo.total_grupo)}
-                <span id="toggle-${grupo.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
-              </td>
-            `;
-            tabla.appendChild(grupoHeader);
-
-            // Container del grupo (inicialmente visible solo para "Hoy")
-            const grupoContainer = document.createElement("tbody");
-            grupoContainer.id = `grupo-${grupo.titulo.replace(/\s+/g, '-')}`;
-            grupoContainer.style.display = grupo.titulo.includes('Hoy') ? 'table-row-group' : 'none';
-            
-            grupo.ventas.forEach(venta => {
-              const fecha = new Date(venta.fecha_creacion).toLocaleString('es-MX');
-
-              // Fila resumen de venta
-              const filaHeader = document.createElement("tr");
-              filaHeader.style.background = "var(--bg-tertiary)";
-              filaHeader.style.borderBottom = "1px solid var(--border-color)";
-              filaHeader.innerHTML = `
-                <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
-                  💰 Venta #${venta.folio || venta.id} del ${fecha} - Total: ${formatearPesos(venta.total)}
-                  ${venta.usuario ? `- 👤 ${venta.usuario.nombre_completo}` : ''}
-                  ${venta.metodo_pago ? `- 💳 ${venta.metodo_pago}` : ''}
-                </td>
-              `;
-              grupoContainer.appendChild(filaHeader);
-
-              // Filas por producto
-              venta.detalles.forEach((detalle, index) => {
-                const fila = document.createElement("tr");
-                fila.style.borderBottom = "1px solid var(--border-color)";
-                fila.style.transition = "background-color 0.2s ease";
-                fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
-                fila.onmouseleave = () => fila.style.background = "transparent";
-
-                // Buscar movimiento de stock para este producto
-                const movimiento = venta.movimientos_stock ?
-                  venta.movimientos_stock.find(mov => mov.producto === detalle.producto.nombre) : null;
-
-                const stockInfo = movimiento ?
-                  `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '';
-
-                // Detectar si es una venta antigua (sin movimientos de stock)
-                const esVentaAntigua = !venta.movimientos_stock || venta.movimientos_stock.length === 0;
-                const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
-
-                fila.innerHTML = `
-                  <td colspan="7" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
-                    ${detalle.producto.nombre} | Cant: ${detalle.cantidad} | ${formatearPesos(detalle.precio_unitario)} | Total: ${formatearPesos(detalle.cantidad * detalle.precio_unitario)} | ${stockDisplay}
-                  </td>
-                `;
-                grupoContainer.appendChild(fila);
-              });
-            });
-            
-            tabla.appendChild(grupoContainer);
-          });
-        } else {
-          // No hay ventas
-          const filaVacia = document.createElement("tr");
-          filaVacia.innerHTML = `
-            <td colspan="7" class="p-6 text-center" style="color: var(--text-secondary);">
-              No hay ventas registradas
-            </td>
-          `;
-          tabla.appendChild(filaVacia);
-        }
-      } else {
-        // Vista con filtros específicos
-        const ventas = data.ventas || [];
-        if (ventas.length > 0) {
-          ventas.forEach(venta => {
-            const fecha = new Date(venta.fecha).toLocaleString('es-MX');
-
-            // Fila resumen de venta
-            const filaHeader = document.createElement("tr");
-            filaHeader.style.background = "var(--bg-tertiary)";
-            filaHeader.style.borderBottom = "1px solid var(--border-color)";
-            filaHeader.innerHTML = `
-              <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
-                💰 Venta #${venta.folio || venta.id} del ${fecha} - Total: ${formatearPesos(venta.total_venta)}
-                ${venta.usuario ? `- 👤 ${venta.usuario.nombre_completo}` : ''}
-                ${venta.metodo_pago ? `- 💳 ${venta.metodo_pago}` : ''}
-              </td>
-            `;
-            tabla.appendChild(filaHeader);
-
-            // Filas por producto
-            venta.productos.forEach(p => {
-              const fila = document.createElement("tr");
-              fila.style.borderBottom = "1px solid var(--border-color)";
-              fila.style.transition = "background-color 0.2s ease";
-              fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
-              fila.onmouseleave = () => fila.style.background = "transparent";
-
-              // Buscar movimiento de stock para este producto
-              const movimiento = venta.movimientos_stock ?
-                venta.movimientos_stock.find(mov => mov.producto === p.nombre_producto) : null;
-
-              const stockInfo = movimiento ?
-                `📦 ${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : '';
-
-              // Detectar si es una venta antigua (sin movimientos de stock)
-              const esVentaAntigua = !venta.movimientos_stock || venta.movimientos_stock.length === 0;
-              const stockDisplay = stockInfo || (esVentaAntigua ? '⏳ Venta anterior' : '📦 Sin datos');
-
-              fila.innerHTML = `
-                <td colspan="7" class="p-3" style="color: var(--text-primary); padding-left: 2rem;">
-                  ${p.nombre_producto} | Cant: ${p.cantidad_vendida} | ${formatearPesos(p.precio_unitario)} | Total: ${formatearPesos(p.total)} | ${stockDisplay}
-                </td>
-              `;
-              tabla.appendChild(fila);
-            });
-          });
-        } else {
-          // No sales found
-          const filaVacia = document.createElement("tr");
-          filaVacia.innerHTML = `
-            <td colspan="7" class="p-6 text-center" style="color: var(--text-secondary);">
-              No se encontraron ventas para los filtros seleccionados
-            </td>
-          `;
-          tabla.appendChild(filaVacia);
-        }
+        mostrarMensajeVacio();
       }
     } catch (error) {
       console.error("Error al cargar ventas:", error);
-      console.error("Detalles del error:", error.message);
-      
-      // More detailed error message
-      let errorMessage = "Error al cargar las ventas.";
-      if (error.message.includes("404")) {
-        errorMessage = "API de ventas no encontrada. Verifique que esté autenticado.";
-      } else if (error.message.includes("401") || error.message.includes("403")) {
-        errorMessage = "No tiene permisos para ver las ventas. Contacte al administrador.";
-      } else if (error.message.includes("Failed to fetch")) {
-        errorMessage = "Error de conexión. Verifique su conexión a internet.";
-      }
-      
       tabla.innerHTML = `
         <tr>
           <td colspan="7" class="p-6 text-center" style="color: #ef4444;">
-            ${errorMessage}<br>
-            <small style="color: var(--text-secondary);">Detalles: ${error.message}</small>
+            Error al cargar las ventas: ${error.message}
           </td>
         </tr>
       `;
-      
-      if (totalDiaSpan) {
-        totalDiaSpan.textContent = "$0.00";
-      }
+      totalDiaSpan.textContent = "$0.00";
     }
   }
 
-  // Renderizar vista jerárquica con años → meses → semanas → días
-  function renderizarVistaJerarquica(gruposAnios) {
-    tabla.innerHTML = "";
+  function renderizarActividades(actividades) {
+    actividades.forEach(actividad => {
+      const fecha = new Date(actividad.fecha).toLocaleString('es-MX');
 
+      if (actividad.tipo === 'venta') {
+        // Header de la venta
+        const filaHeader = document.createElement("tr");
+        filaHeader.className = "clickable-row";
+        filaHeader.style.background = "var(--bg-tertiary)";
+        filaHeader.style.borderBottom = "1px solid var(--border-color)";
+        filaHeader.style.cursor = "pointer";
+        const ventaId = `venta-${actividad.id || Date.now()}`;
+        filaHeader.onclick = () => toggleVenta(ventaId);
+        filaHeader.innerHTML = `
+          <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
+            Venta #${actividad.id} del ${fecha} - Total: ${formatearPesos(actividad.total)}
+            - Usuario: ${actividad.usuario} - Método: ${actividad.metodo_pago}
+            <span id="toggle-${ventaId}" style="float: right;">▼</span>
+          </td>
+        `;
+        tabla.appendChild(filaHeader);
+
+        // Productos de la venta
+        actividad.productos.forEach(producto => {
+          const movimiento = actividad.movimientos_stock ?
+            actividad.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
+          const stockInfo = movimiento ?
+            `${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : 'Sin registro';
+
+          const fila = document.createElement("tr");
+          fila.setAttribute('data-venta-id', ventaId);
+          fila.style.display = 'none';
+          fila.style.borderBottom = "1px solid var(--border-color)";
+          fila.innerHTML = `
+            <td class="p-3" style="color: var(--text-primary); padding-left: 2rem;">${producto.nombre}</td>
+            <td class="p-3 text-center" style="color: var(--text-primary);">${producto.cantidad}</td>
+            <td class="p-3 text-right" style="color: var(--text-primary);">${formatearPesos(producto.precio_unitario)}</td>
+            <td class="p-3 text-right font-semibold" style="color: var(--accent-green);">${formatearPesos(producto.subtotal)}</td>
+            <td class="p-3 text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
+            <td class="p-3 text-center" style="color: var(--accent-blue);">${actividad.metodo_pago}</td>
+            <td class="p-3 text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${stockInfo}</td>
+          `;
+          tabla.appendChild(fila);
+        });
+      } else if (actividad.tipo === 'movimiento_stock') {
+        // Movimiento de inventario
+        const filaHeader = document.createElement("tr");
+        filaHeader.style.background = "linear-gradient(135deg, #2a5a2a 0%, #1a4a1a 100%)";
+        filaHeader.style.borderBottom = "1px solid var(--border-color)";
+        filaHeader.innerHTML = `
+          <td colspan="7" class="p-3 font-semibold" style="color: #90EE90;">
+            Movimiento de Stock del ${fecha} - Usuario: ${actividad.usuario}
+            ${actividad.motivo ? `- Motivo: ${actividad.motivo}` : ''}
+          </td>
+        `;
+        tabla.appendChild(filaHeader);
+
+        const cantidad_text = actividad.producto.cantidad_movida > 0 ?
+          `+${actividad.producto.cantidad_movida}` : `${actividad.producto.cantidad_movida}`;
+
+        const fila = document.createElement("tr");
+        fila.style.borderBottom = "1px solid var(--border-color)";
+        fila.style.background = "rgba(144, 238, 144, 0.05)";
+        fila.innerHTML = `
+          <td class="p-3" style="color: var(--text-primary); padding-left: 2rem;">${actividad.producto.nombre}</td>
+          <td class="p-3 text-center" style="color: ${actividad.producto.cantidad_movida > 0 ? '#90EE90' : '#FF6B6B'}; font-weight: 600;">${cantidad_text}</td>
+          <td class="p-3 text-right" style="color: var(--text-secondary);">-</td>
+          <td class="p-3 text-right" style="color: var(--text-secondary);">-</td>
+          <td class="p-3 text-center" style="color: var(--text-secondary);">${actividad.usuario}</td>
+          <td class="p-3 text-center" style="color: var(--text-secondary);">Movimiento</td>
+          <td class="p-3 text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}</td>
+        `;
+        tabla.appendChild(fila);
+      }
+    });
+  }
+
+  function renderizarVistaJerarquica(gruposAnios) {
     gruposAnios.forEach(anio => {
       // Header del año
-      const anioHeader = document.createElement("tr");
-      anioHeader.style.background = "var(--bg-tertiary)";
-      anioHeader.style.borderBottom = "1px solid var(--border-color)";
-      anioHeader.style.cursor = "pointer";
-      anioHeader.onclick = () => toggleGrupoJerarquico('anio', anio.titulo);
-      anioHeader.innerHTML = `
-        <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary);">
-          📅 ${anio.titulo} - Total: ${formatearPesos(anio.total)}
-          <span id="toggle-anio-${anio.titulo}" style="float: right;">▼</span>
-        </td>
-      `;
+      const anioHeader = crearHeaderGrupo(
+        `Año ${anio.titulo} - Total: ${formatearPesos(anio.total)}`,
+        `anio-${anio.titulo}`,
+        anio.titulo === new Date().getFullYear().toString()
+      );
       tabla.appendChild(anioHeader);
-
-      // Container del año
-      const anioContainer = document.createElement("tbody");
-      anioContainer.id = `grupo-anio-${anio.titulo}`;
-      anioContainer.style.display = anio.titulo === new Date().getFullYear().toString() ? 'table-row-group' : 'none';
 
       anio.meses.forEach(mes => {
         // Header del mes
-        const mesHeader = document.createElement("tr");
-        mesHeader.style.background = "var(--bg-tertiary)";
-        mesHeader.style.borderBottom = "1px solid var(--border-color)";
-        mesHeader.style.cursor = "pointer";
-        mesHeader.onclick = () => toggleGrupoJerarquico('mes', `${anio.titulo}-${mes.titulo}`);
-        mesHeader.innerHTML = `
-          <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 2rem;">
-            📅 ${mes.titulo} - Total: ${formatearPesos(mes.total)}
-            <span id="toggle-mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
-          </td>
-        `;
-        anioContainer.appendChild(mesHeader);
-
-        // Container del mes
-        const mesContainer = document.createElement("tbody");
-        mesContainer.id = `grupo-mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}`;
-        // Mostrar si es el mes actual y el año actual
-        const esAnioActual = anio.titulo === new Date().getFullYear().toString();
-        const esMesActual = esAnioActual && mes.semanas.some(semana =>
-          semana.dias.some(dia => dia.es_hoy)
+        const mesHeader = crearHeaderGrupo(
+          `${mes.titulo} - Total: ${formatearPesos(mes.total)}`,
+          `mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}`,
+          false,
+          '2rem'
         );
-        mesContainer.style.display = esMesActual ? 'table-row-group' : 'none';
+        mesHeader.setAttribute('data-grupo-id', `anio-${anio.titulo}`);
+        mesHeader.style.display = anio.titulo === new Date().getFullYear().toString() ? 'table-row' : 'none';
+        tabla.appendChild(mesHeader);
 
         mes.semanas.forEach(semana => {
           // Header de la semana
-          const semanaHeader = document.createElement("tr");
-          semanaHeader.style.background = "var(--bg-tertiary)";
-          semanaHeader.style.borderBottom = "1px solid var(--border-color)";
-          semanaHeader.style.cursor = "pointer";
-          semanaHeader.onclick = () => toggleGrupoJerarquico('semana', `${anio.titulo}-${mes.titulo}-${semana.titulo}`);
-          semanaHeader.innerHTML = `
-            <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 3rem;">
-              📅 ${semana.titulo} - Total: ${formatearPesos(semana.total)}
-              <span id="toggle-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}" style="float: right;">▼</span>
-            </td>
-          `;
-          mesContainer.appendChild(semanaHeader);
-
-          // Container de la semana
-          const semanaContainer = document.createElement("tbody");
-          semanaContainer.id = `grupo-semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}`;
-          // Mostrar si es la semana actual
-          const esSemanaActual = esMesActual && semana.dias.some(dia => dia.es_hoy);
-          semanaContainer.style.display = esSemanaActual ? 'table-row-group' : 'none';
+          const semanaHeader = crearHeaderGrupo(
+            `${semana.titulo} - Total: ${formatearPesos(semana.total)}`,
+            `semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}`,
+            false,
+            '3rem'
+          );
+          semanaHeader.setAttribute('data-grupo-id', `mes-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}`);
+          semanaHeader.style.display = 'none';
+          tabla.appendChild(semanaHeader);
 
           semana.dias.forEach(dia => {
             // Header del día
-            const diaHeader = document.createElement("tr");
-            diaHeader.style.background = "var(--bg-tertiary)";
-            diaHeader.style.borderBottom = "1px solid var(--border-color)";
-            diaHeader.style.cursor = "pointer";
-            diaHeader.onclick = () => toggleGrupoJerarquico('dia', `${anio.titulo}-${mes.titulo}-${semana.titulo}-${dia.titulo}`);
-            diaHeader.innerHTML = `
-              <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary); padding-left: 4rem;">
-                📅 ${dia.titulo} - Total: ${formatearPesos(dia.total)}${dia.es_hoy ? ' 🌟 (HOY)' : ''}
-                <span id="toggle-dia-${dia.fecha.replace(/-/g, '')}" style="float: right;">▼</span>
-              </td>
-            `;
-            semanaContainer.appendChild(diaHeader);
+            const diaHeader = crearHeaderGrupo(
+              `${dia.titulo} - Total: ${formatearPesos(dia.total)}${dia.es_hoy ? ' (HOY)' : ''}`,
+              `dia-${dia.fecha.replace(/-/g, '')}`,
+              dia.es_hoy,
+              '4rem'
+            );
+            diaHeader.setAttribute('data-grupo-id', `semana-${anio.titulo}-${mes.titulo.replace(/\s+/g, '-')}-${semana.titulo.replace(/\s+/g, '-')}`);
+            diaHeader.style.display = dia.es_hoy ? 'table-row' : 'none';
+            tabla.appendChild(diaHeader);
 
-            // Container del día
-            const diaContainer = document.createElement("tbody");
-            diaContainer.id = `grupo-dia-${dia.fecha.replace(/-/g, '')}`;
-            diaContainer.style.display = dia.es_hoy ? 'table-row-group' : 'none';
-
-            // Agrupar ventas y mostrarlas primero
+            // Ventas del día
             const ventas = dia.actividades.filter(actividad => actividad.tipo === 'venta');
-            const movimientos = dia.actividades.filter(actividad => actividad.tipo === 'movimiento_stock');
-
-            // Mostrar cada venta como un header clickeable
             ventas.forEach((venta, index) => {
               const ventaId = `venta-${dia.fecha.replace(/-/g, '')}-${index}`;
               const fecha = new Date(venta.fecha).toLocaleString('es-MX', {
@@ -673,9 +418,12 @@
 
               // Header de la venta
               const ventaHeader = document.createElement("tr");
+              ventaHeader.className = "clickable-row";
               ventaHeader.style.background = "rgba(0, 123, 255, 0.1)";
               ventaHeader.style.borderBottom = "1px solid var(--border-color)";
               ventaHeader.style.cursor = "pointer";
+              ventaHeader.setAttribute('data-grupo-id', `dia-${dia.fecha.replace(/-/g, '')}`);
+              ventaHeader.style.display = dia.es_hoy ? 'table-row' : 'none';
               ventaHeader.onclick = () => toggleVenta(ventaId);
               ventaHeader.innerHTML = `
                 <td colspan="7" class="p-2 text-sm font-medium" style="color: var(--accent-blue); padding-left: 5rem;">
@@ -683,24 +431,21 @@
                   <span id="toggle-${ventaId}" style="float: right;">▼</span>
                 </td>
               `;
-              diaContainer.appendChild(ventaHeader);
+              tabla.appendChild(ventaHeader);
 
               // Productos de la venta
               venta.productos.forEach(producto => {
                 const movimiento = venta.movimientos_stock ?
                   venta.movimientos_stock.find(mov => mov.producto === producto.nombre) : null;
-
                 const stockInfo = movimiento ?
                   `${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : 'Sin registro';
 
                 const fila = document.createElement("tr");
                 fila.setAttribute('data-venta-id', ventaId);
+                fila.setAttribute('data-grupo-id', `dia-${dia.fecha.replace(/-/g, '')}`);
                 fila.style.display = 'none';
                 fila.style.borderBottom = "1px solid var(--border-color)";
-                fila.style.transition = "background-color 0.2s ease";
                 fila.style.background = "rgba(0, 123, 255, 0.02)";
-                fila.onmouseenter = () => fila.style.background = "rgba(0, 212, 255, 0.05)";
-                fila.onmouseleave = () => fila.style.background = "rgba(0, 123, 255, 0.02)";
                 fila.innerHTML = `
                   <td class="p-2 text-sm" style="color: var(--text-primary); padding-left: 6rem;">${producto.nombre}</td>
                   <td class="p-2 text-sm text-center" style="color: var(--text-primary);">${producto.cantidad}</td>
@@ -710,17 +455,19 @@
                   <td class="p-2 text-sm text-center" style="color: var(--accent-blue);">${venta.metodo_pago}</td>
                   <td class="p-2 text-sm text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${stockInfo}</td>
                 `;
-                diaContainer.appendChild(fila);
+                tabla.appendChild(fila);
               });
             });
 
-            // Mostrar movimientos de stock independientes
+            // Movimientos de stock del día
+            const movimientos = dia.actividades.filter(actividad => actividad.tipo === 'movimiento_stock');
             movimientos.forEach(actividad => {
               const cantidad_text = actividad.producto.cantidad_movida > 0 ?
-                `+${actividad.producto.cantidad_movida}` :
-                `${actividad.producto.cantidad_movida}`;
+                `+${actividad.producto.cantidad_movida}` : `${actividad.producto.cantidad_movida}`;
 
               const fila = document.createElement("tr");
+              fila.setAttribute('data-grupo-id', `dia-${dia.fecha.replace(/-/g, '')}`);
+              fila.style.display = dia.es_hoy ? 'table-row' : 'none';
               fila.style.borderBottom = "1px solid var(--border-color)";
               fila.style.background = "rgba(144, 238, 144, 0.05)";
               fila.innerHTML = `
@@ -732,67 +479,46 @@
                 <td class="p-2 text-sm text-center" style="color: var(--text-secondary);">Movimiento</td>
                 <td class="p-2 text-sm text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${actividad.producto.stock_anterior} → ${actividad.producto.stock_nuevo}</td>
               `;
-              diaContainer.appendChild(fila);
+              tabla.appendChild(fila);
             });
-
-            semanaContainer.appendChild(diaContainer);
           });
-
-          mesContainer.appendChild(semanaContainer);
         });
-
-        anioContainer.appendChild(mesContainer);
       });
-
-      tabla.appendChild(anioContainer);
     });
   }
 
-  // Toggle grupos jerárquicos
-  function toggleGrupoJerarquico(tipo, identificador) {
-    let grupoId, toggleId, simboloAbierto, simboloCerrado;
+  function crearHeaderGrupo(titulo, grupoId, abierto = false, paddingLeft = '1rem') {
+    const header = document.createElement("tr");
+    header.className = "clickable-row";
+    header.style.background = "var(--bg-tertiary)";
+    header.style.borderBottom = "1px solid var(--border-color)";
+    header.style.cursor = "pointer";
+    header.onclick = () => toggleGrupo(grupoId);
+    header.innerHTML = `
+      <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary); padding-left: ${paddingLeft};">
+        ${titulo}
+        <span id="toggle-${grupoId}" style="float: right;">${abierto ? '▲' : '▼'}</span>
+      </td>
+    `;
+    return header;
+  }
 
-    switch(tipo) {
-      case 'anio':
-        grupoId = `grupo-anio-${identificador}`;
-        toggleId = `toggle-anio-${identificador}`;
-        simboloAbierto = '▲';
-        simboloCerrado = '▼';
-        break;
-      case 'mes':
-        const [anio, mes] = identificador.split('-', 2);
-        grupoId = `grupo-mes-${anio}-${mes.replace(/\s+/g, '-')}`;
-        toggleId = `toggle-mes-${anio}-${mes.replace(/\s+/g, '-')}`;
-        simboloAbierto = '▲';
-        simboloCerrado = '▼';
-        break;
-      case 'semana':
-        const partes = identificador.split('-');
-        grupoId = `grupo-semana-${partes.join('-').replace(/\s+/g, '-')}`;
-        toggleId = `toggle-semana-${partes.join('-').replace(/\s+/g, '-')}`;
-        simboloAbierto = '▲';
-        simboloCerrado = '▼';
-        break;
-      case 'dia':
-        const [a, m, s, d] = identificador.split('-');
-        grupoId = `grupo-dia-${d.replace(/-/g, '')}`;
-        toggleId = `toggle-dia-${d.replace(/-/g, '')}`;
-        simboloAbierto = '▲';
-        simboloCerrado = '▼';
-        break;
-    }
+  function toggleGrupo(grupoId) {
+    const elementos = document.querySelectorAll(`[data-grupo-id="${grupoId}"]`);
+    const toggle = document.getElementById(`toggle-${grupoId}`);
 
-    const grupo = document.getElementById(grupoId);
-    const toggle = document.getElementById(toggleId);
-
-    if (grupo && toggle) {
-      if (grupo.style.display === 'none') {
-        grupo.style.display = 'table-row-group';
-        toggle.textContent = simboloAbierto;
-      } else {
-        grupo.style.display = 'none';
-        toggle.textContent = simboloCerrado;
-      }
+    if (elementos.length > 0 && toggle) {
+      const isHidden = elementos[0].style.display === 'none';
+      elementos.forEach(elem => {
+        elem.style.display = isHidden ? 'table-row' : 'none';
+        // Si estamos cerrando, cerrar también todos los hijos
+        if (!isHidden && elem.id && elem.id.startsWith('toggle-')) {
+          const elemId = elem.id.replace('toggle-', '');
+          const hijos = document.querySelectorAll(`[data-grupo-id="${elemId}"]`);
+          hijos.forEach(hijo => hijo.style.display = 'none');
+        }
+      });
+      toggle.textContent = isHidden ? '▲' : '▼';
     }
   }
 
@@ -809,71 +535,44 @@
     }
   }
 
-  // Load sales on page load
+  function mostrarMensajeVacio() {
+    const filaVacia = document.createElement("tr");
+    filaVacia.innerHTML = `
+      <td colspan="7" class="p-6 text-center" style="color: var(--text-secondary);">
+        No hay actividades registradas en el período seleccionado
+      </td>
+    `;
+    tabla.appendChild(filaVacia);
+  }
+
+  function limpiarFiltros() {
+    document.getElementById('filtro-dia').value = '';
+    document.getElementById('filtro-mes').value = '';
+    document.getElementById('filtro-anio').value = '';
+    cargarVentas();
+  }
+
+  // Event listeners
   document.addEventListener('DOMContentLoaded', function() {
     cargarVentas();
   });
 
-  // Handle filter form submission
   formFiltro.addEventListener("submit", e => {
     e.preventDefault();
-
     const dia = document.getElementById("filtro-dia").value;
     const mes = document.getElementById("filtro-mes").value;
     const anio = document.getElementById("filtro-anio").value;
-    const producto = document.getElementById("filtro-producto").value;
 
     const params = new URLSearchParams();
     if (dia) params.append("dia", dia);
     if (mes) params.append("mes", mes);
     if (anio) params.append("anio", anio);
-    if (producto) params.append("producto", producto);
 
     const queryString = params.toString();
     cargarVentas(queryString ? "?" + queryString : "");
   });
-
-  // Toggle grupos (expandir/colapsar)
-  function toggleGrupo(titulo) {
-    const grupoId = `grupo-${titulo.replace(/\s+/g, '-')}`;
-    const toggleId = `toggle-${titulo.replace(/\s+/g, '-')}`;
-    
-    const grupo = document.getElementById(grupoId);
-    const toggle = document.getElementById(toggleId);
-    
-    if (grupo && toggle) {
-      if (grupo.style.display === 'none') {
-        grupo.style.display = 'table-row-group';
-        toggle.textContent = '▼';
-      } else {
-        grupo.style.display = 'none';
-        toggle.textContent = '▶';
-      }
-    }
-  }
-
-  // Make toggleGrupo globally available
-  window.toggleGrupo = toggleGrupo;
-
-  // Function to open scanner for product filter
-  function openScanner(targetFieldId = null) {
-    console.log(`🚀 REGISTRO DEBUG: openScanner called with targetFieldId: ${targetFieldId}`);
-
-    if (typeof BarCodeScanner !== 'undefined') {
-      console.log(`✅ REGISTRO DEBUG: BarCodeScanner available, opening with target: ${targetFieldId}`);
-      BarCodeScanner.open(targetFieldId);
-    } else {
-      console.error(`❌ REGISTRO DEBUG: BarCodeScanner not available!`);
-      alert('Scanner no disponible. Ingresa el código manualmente.');
-    }
-  }
-
-  // Make openScanner globally available
-  window.openScanner = openScanner;
 </script>
 
-<!-- Include barcode scanner -->
 <script src="{% static 'js/barcode-scanner.js' %}"></script>
-
 </body>
 </html>
