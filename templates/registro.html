@@ -161,16 +161,16 @@
     <div class="max-w-full mx-auto px-4 py-2">
       <div class="flex flex-wrap gap-2">
         <a href="/punto_de_venta/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          🏪 Punto de Venta
+          Punto de Venta
         </a>
         <a href="/inventario/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          📦 Inventario
+          Inventario
         </a>
         <a href="/ventas/" class="tab-button-active px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%); color: #000000;">
-          📊 Registro
+          Registro
         </a>
         <a href="/caja/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          💰 Caja
+          Caja
         </a>
       </div>
     </div>
@@ -226,16 +226,16 @@
         <h3 class="text-lg font-semibold" style="color: var(--text-primary);">Historial de Ventas</h3>
       </div>
       <div class="overflow-auto" style="max-height: 70vh;">
-        <table class="text-sm text-left" id="tabla-ventas" style="width: 100%; table-layout: fixed;">
+        <table class="text-sm text-left" id="tabla-ventas" style="width: 100%; min-width: 900px;">
           <thead style="background: var(--bg-tertiary); color: var(--text-primary); border-bottom: 2px solid var(--border-color);" class="sticky top-0">
             <tr>
-              <th class="p-3 font-medium" style="width: 30%;">Producto</th>
-              <th class="p-3 font-medium text-center" style="width: 8%;">Cant.</th>
-              <th class="p-3 font-medium text-right" style="width: 12%;">Precio Unit.</th>
-              <th class="p-3 font-medium text-right" style="width: 12%;">Total</th>
-              <th class="p-3 font-medium text-center" style="width: 15%;">Usuario</th>
-              <th class="p-3 font-medium text-center" style="width: 10%;">Método Pago</th>
-              <th class="p-3 font-medium text-center" style="width: 13%;">Stock</th>
+              <th class="p-3 font-medium" style="min-width: 200px;">Producto</th>
+              <th class="p-3 font-medium text-center" style="min-width: 70px;">Cant.</th>
+              <th class="p-3 font-medium text-right" style="min-width: 100px;">Precio Unit.</th>
+              <th class="p-3 font-medium text-right" style="min-width: 100px;">Total</th>
+              <th class="p-3 font-medium text-center" style="min-width: 120px;">Usuario</th>
+              <th class="p-3 font-medium text-center" style="min-width: 100px;">Método Pago</th>
+              <th class="p-3 font-medium text-center" style="min-width: 120px;">Stock</th>
             </tr>
           </thead>
           <tbody id="tabla-ventas-body"></tbody>
@@ -322,8 +322,8 @@
             filaHeader.style.borderBottom = "1px solid var(--border-color)";
             filaHeader.innerHTML = `
               <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
-                💰 ${actividad.titulo} del ${fecha} - Total: ${formatearPesos(actividad.total)}
-                - 👤 ${actividad.usuario} - 💳 ${actividad.metodo_pago}
+                ${actividad.titulo} del ${fecha} - Total: ${formatearPesos(actividad.total)}
+                - Usuario: ${actividad.usuario} - Método: ${actividad.metodo_pago}
               </td>
             `;
             tabla.appendChild(filaHeader);
@@ -679,16 +679,11 @@
               ventaHeader.onclick = () => toggleVenta(ventaId);
               ventaHeader.innerHTML = `
                 <td colspan="7" class="p-2 text-sm font-medium" style="color: var(--accent-blue); padding-left: 5rem;">
-                  💰 Venta #${venta.id} - ${formatearPesos(venta.total)} - ${venta.productos.length} items - ${venta.metodo_pago} - ${venta.usuario} - ${fecha}
+                  Venta #${venta.id} - ${formatearPesos(venta.total)} - ${venta.productos.length} items - ${venta.metodo_pago} - ${venta.usuario} - ${fecha}
                   <span id="toggle-${ventaId}" style="float: right;">▼</span>
                 </td>
               `;
               diaContainer.appendChild(ventaHeader);
-
-              // Container de productos de la venta
-              const ventaContainer = document.createElement("tbody");
-              ventaContainer.id = ventaId;
-              ventaContainer.style.display = 'none';
 
               // Productos de la venta
               venta.productos.forEach(producto => {
@@ -699,6 +694,8 @@
                   `${movimiento.stock_anterior} → ${movimiento.stock_nuevo}` : 'Sin registro';
 
                 const fila = document.createElement("tr");
+                fila.setAttribute('data-venta-id', ventaId);
+                fila.style.display = 'none';
                 fila.style.borderBottom = "1px solid var(--border-color)";
                 fila.style.transition = "background-color 0.2s ease";
                 fila.style.background = "rgba(0, 123, 255, 0.02)";
@@ -713,9 +710,8 @@
                   <td class="p-2 text-sm text-center" style="color: var(--accent-blue);">${venta.metodo_pago}</td>
                   <td class="p-2 text-sm text-center" style="color: var(--text-secondary); font-size: 0.75rem;">${stockInfo}</td>
                 `;
-                ventaContainer.appendChild(fila);
+                diaContainer.appendChild(fila);
               });
-              diaContainer.appendChild(ventaContainer);
             });
 
             // Mostrar movimientos de stock independientes
@@ -801,17 +797,15 @@
   }
 
   function toggleVenta(ventaId) {
-    const venta = document.getElementById(ventaId);
+    const filas = document.querySelectorAll(`[data-venta-id="${ventaId}"]`);
     const toggle = document.getElementById(`toggle-${ventaId}`);
 
-    if (venta && toggle) {
-      if (venta.style.display === 'none') {
-        venta.style.display = 'table-row-group';
-        toggle.textContent = '▲';
-      } else {
-        venta.style.display = 'none';
-        toggle.textContent = '▼';
-      }
+    if (filas.length > 0 && toggle) {
+      const isHidden = filas[0].style.display === 'none';
+      filas.forEach(fila => {
+        fila.style.display = isHidden ? 'table-row' : 'none';
+      });
+      toggle.textContent = isHidden ? '▲' : '▼';
     }
   }
 
