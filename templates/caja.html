@@ -143,16 +143,16 @@
     <div class="max-w-full mx-auto px-4 py-2">
       <div class="flex flex-wrap gap-2">
         <a href="/punto_de_venta/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          🏪 Punto de Venta
+           Punto de Venta
         </a>
         <a href="/inventario/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          📦 Inventario
+           Inventario
         </a>
         <a href="/registro/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          📊 Registro
+           Registro
         </a>
         <a href="/caja/" class="tab-button-active px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%); color: #000000;">
-          💰 Caja
+           Caja
         </a>
       </div>
     </div>
@@ -180,7 +180,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <!-- Apertura de Caja -->
       <div class="modern-card p-6">
-        <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">🔓 Apertura de Caja</h2>
+        <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);"> Apertura de Caja</h2>
         
         <form id="form-apertura">
           <div class="mb-4">
@@ -205,14 +205,14 @@
                    placeholder="0.00">
           </div>
           <button type="submit" class="btn-success w-full py-3 rounded-lg">
-            🔓 Abrir Caja
+             Abrir Caja
           </button>
         </form>
       </div>
 
       <!-- Cierre de Caja -->
       <div class="modern-card p-6">
-        <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">🔒 Cierre de Caja</h2>
+        <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);"> Cierre de Caja</h2>
         
         <div class="mb-4">
           <div class="text-sm" style="color: var(--text-secondary);">Efectivo esperado:</div>
@@ -232,7 +232,7 @@
             <div class="text-lg font-bold font-mono" id="diferencia">$0.00</div>
           </div>
           <button type="submit" class="btn-danger w-full py-3 rounded-lg">
-            🔒 Cerrar Caja
+             Cerrar Caja
           </button>
         </form>
       </div>
@@ -241,7 +241,7 @@
     <!-- Gastos -->
     <div class="modern-card p-6">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold" style="color: var(--text-primary);">💸 Gastos y Retiros</h2>
+        <h2 class="text-xl font-bold" style="color: var(--text-primary);"> Gastos y Retiros</h2>
         <button id="btn-nuevo-gasto" class="btn-primary px-4 py-2 rounded-lg">
           + Nuevo Gasto
         </button>
@@ -280,7 +280,7 @@
               Guardar
             </button>
             <button type="button" id="btn-cancelar-gasto" class="btn-danger px-3 py-2 rounded-lg">
-              ✕
+              
             </button>
           </div>
         </form>
@@ -418,15 +418,15 @@
       
       const result = await response.json();
       if (result.success) {
-        alert('✅ Caja abierta exitosamente');
+        alert(' Caja abierta exitosamente');
         cargarEstadoCaja();
         cargarGastos();
         document.getElementById('form-apertura').reset();
       } else {
-        alert('❌ Error: ' + result.error);
+        alert(' Error: ' + result.error);
       }
     } catch (error) {
-      alert('❌ Error de conexión');
+      alert(' Error de conexión');
     }
   });
 
@@ -446,13 +446,13 @@
       
       const result = await response.json();
       if (result.success) {
-        alert('✅ Caja cerrada exitosamente');
+        alert(' Caja cerrada exitosamente');
         cargarEstadoCaja();
       } else {
-        alert('❌ Error: ' + result.error);
+        alert(' Error: ' + result.error);
       }
     } catch (error) {
-      alert('❌ Error de conexión');
+      alert(' Error de conexión');
     }
   });
 
@@ -489,16 +489,16 @@
       
       const result = await response.json();
       if (result.success) {
-        alert('✅ Gasto registrado exitosamente');
+        alert(' Gasto registrado exitosamente');
         document.getElementById('form-gasto-container').classList.add('hidden');
         document.getElementById('form-gasto').reset();
         cargarEstadoCaja();
         cargarGastos();
       } else {
-        alert('❌ Error: ' + result.error);
+        alert(' Error: ' + result.error);
       }
     } catch (error) {
-      alert('❌ Error de conexión');
+      alert(' Error de conexión');
     }
   });
 

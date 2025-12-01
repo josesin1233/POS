@@ -12,7 +12,7 @@
     <header class="bg-blue-600 text-white p-6 shadow-lg">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold">⚙️ Editar Permisos</h1>
+                <h1 class="text-2xl font-bold"> Editar Permisos</h1>
                 <p class="text-blue-100">{{ target_user.get_full_name|default:target_user.username }} - {{ business.name }}</p>
             </div>
             <a href="/accounts/admin/users/" class="bg-white text-blue-600 px-4 py-2 rounded hover:bg-blue-100">
@@ -35,14 +35,14 @@
                     <p class="text-gray-600">{{ target_user.email }}</p>
                     <div class="flex items-center mt-1">
                         {% if is_owner %}
-                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">👑 Propietario</span>
+                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs"> Propietario</span>
                         {% else %}
-                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">👤 Empleado</span>
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs"> Empleado</span>
                         {% endif %}
                         {% if target_user.is_active %}
-                            <span class="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">✅ Activo</span>
+                            <span class="ml-2 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs"> Activo</span>
                         {% else %}
-                            <span class="ml-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">❌ Inactivo</span>
+                            <span class="ml-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs"> Inactivo</span>
                         {% endif %}
                     </div>
                 </div>
@@ -56,26 +56,26 @@
             <!-- Access Permissions -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    🚪 Permisos de Acceso
+                     Permisos de Acceso
                     <span class="ml-2 text-sm text-gray-500 font-normal">Controla a qué secciones puede acceder</span>
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex items-center">
                         {{ form.can_access_pos }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">💰 Punto de Venta</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Punto de Venta</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_access_inventory }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">📦 Inventario</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Inventario</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_access_reports }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">📊 Reportes</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Reportes</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_access_settings }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">⚙️ Configuración</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Configuración</label>
                     </div>
                 </div>
             </div>
@@ -83,26 +83,26 @@
             <!-- Inventory Permissions -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    📦 Permisos de Inventario
+                     Permisos de Inventario
                     <span class="ml-2 text-sm text-gray-500 font-normal">Gestión de productos y stock</span>
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex items-center">
                         {{ form.can_add_products }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">➕ Agregar Productos</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Agregar Productos</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_edit_products }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">✏️ Editar Productos</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Editar Productos</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_delete_products }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">🗑️ Eliminar Productos</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Eliminar Productos</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_adjust_stock }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">🔄 Ajustar Stock</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Ajustar Stock</label>
                     </div>
                 </div>
             </div>
@@ -110,26 +110,26 @@
             <!-- Sales Permissions -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    💳 Permisos de Ventas
+                     Permisos de Ventas
                     <span class="ml-2 text-sm text-gray-500 font-normal">Operaciones del punto de venta</span>
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex items-center">
                         {{ form.can_process_sales }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">💰 Procesar Ventas</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Procesar Ventas</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_apply_discounts }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">🏷️ Aplicar Descuentos</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Aplicar Descuentos</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_void_sales }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">❌ Cancelar Ventas</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Cancelar Ventas</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_access_cash_register }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">💸 Acceso a Caja</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Acceso a Caja</label>
                     </div>
                 </div>
             </div>
@@ -137,22 +137,22 @@
             <!-- Administrative Permissions -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    👨‍💼 Permisos Administrativos
+                     Permisos Administrativos
                     <span class="ml-2 text-sm text-gray-500 font-normal">Funciones avanzadas de administración</span>
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex items-center">
                         {{ form.can_manage_users }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">👥 Gestionar Usuarios</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Gestionar Usuarios</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_view_financial_reports }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">💹 Ver Reportes Financieros</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Ver Reportes Financieros</label>
                     </div>
                     <div class="flex items-center">
                         {{ form.can_backup_data }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">💾 Respaldar Datos</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Respaldar Datos</label>
                     </div>
                 </div>
             </div>
@@ -160,18 +160,18 @@
             <!-- Operational Limits -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    📊 Límites Operacionales
+                     Límites Operacionales
                     <span class="ml-2 text-sm text-gray-500 font-normal">Restricciones para operaciones del usuario</span>
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">💰 Monto Máximo de Venta</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"> Monto Máximo de Venta</label>
                         {{ form.max_sale_amount }}
                         <p class="text-xs text-gray-500 mt-1">Dejar vacío para sin límite</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">🏷️ % Máximo de Descuento</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1"> % Máximo de Descuento</label>
                         {{ form.max_discount_percent }}
                         <p class="text-xs text-gray-500 mt-1">Entre 0 y 100</p>
                     </div>
@@ -181,7 +181,7 @@
             <!-- Security Settings -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    🔒 Configuración de Seguridad
+                     Configuración de Seguridad
                     <span class="ml-2 text-sm text-gray-500 font-normal">Ajustes de sesión y seguridad</span>
                 </h3>
                 
@@ -193,32 +193,32 @@
                     </div>
                     <div class="flex items-center pt-6">
                         {{ form.require_pin_for_sensitive }}
-                        <label class="ml-2 text-sm font-medium text-gray-700">🔐 Requiere PIN para operaciones sensibles</label>
+                        <label class="ml-2 text-sm font-medium text-gray-700"> Requiere PIN para operaciones sensibles</label>
                     </div>
                 </div>
             </div>
 
             <!-- Quick Permission Templates -->
             <div class="bg-gray-50 rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">⚡ Plantillas Rápidas</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4"> Plantillas Rápidas</h3>
                 <p class="text-sm text-gray-600 mb-4">Aplica configuraciones predefinidas comunes</p>
                 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <button type="button" onclick="applyTemplate('cashier')" 
                             class="bg-blue-100 text-blue-800 px-3 py-2 rounded text-sm hover:bg-blue-200">
-                        💰 Cajero
+                         Cajero
                     </button>
                     <button type="button" onclick="applyTemplate('inventory')" 
                             class="bg-green-100 text-green-800 px-3 py-2 rounded text-sm hover:bg-green-200">
-                        📦 Inventario
+                         Inventario
                     </button>
                     <button type="button" onclick="applyTemplate('supervisor')" 
                             class="bg-purple-100 text-purple-800 px-3 py-2 rounded text-sm hover:bg-purple-200">
-                        👨‍💼 Supervisor
+                         Supervisor
                     </button>
                     <button type="button" onclick="applyTemplate('manager')" 
                             class="bg-red-100 text-red-800 px-3 py-2 rounded text-sm hover:bg-red-200">
-                        👑 Gerente
+                         Gerente
                     </button>
                 </div>
             </div>
@@ -231,7 +231,7 @@
                 </a>
                 <button type="submit" 
                         class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
-                    💾 Guardar Permisos
+                     Guardar Permisos
                 </button>
             </div>
         </form>

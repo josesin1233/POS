@@ -292,16 +292,16 @@
     <div class="max-w-full mx-auto px-4 py-2">
       <div class="flex flex-wrap gap-2">
         <a href="/punto_de_venta/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          🏪 Punto de Venta
+           Punto de Venta
         </a>
         <a href="/inventario/" class="tab-button-active px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%); color: #000000;">
-          📦 Inventario
+           Inventario
         </a>
         <a href="/registro/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          📊 Registro
+           Registro
         </a>
         <a href="/caja/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          💰 Caja
+           Caja
         </a>
       </div>
     </div>
@@ -312,13 +312,13 @@
     
     {% if error %}
     <div class="cart-container rounded-xl p-6 mb-6" style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444;">
-      <p style="color: #ff4444;">❌ Error: {{ error }}</p>
+      <p style="color: #ff4444;"> Error: {{ error }}</p>
     </div>
     {% endif %}
 
     <!-- Agregar Producto -->
     <div class="cart-container rounded-xl shadow-lg p-6 mb-6">
-      <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">➕ Agregar Producto</h2>
+      <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);"> Agregar Producto</h2>
       
       <form id="form-agregar-producto" class="space-y-3">
         <!-- Primera fila: Código + Nombre -->
@@ -333,13 +333,13 @@
               <button type="button" onclick="openScanner('nuevo-codigo')" 
                       class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
                       style="z-index: 1 !important; position: relative;">
-                📱 SCAN
+                 SCAN
               </button>
               <button type="button" onclick="asignarCodigoAutomatico()" 
                       class="btn-auto px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
                       style="box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);"
                       title="Asignar código automático secuencial">
-                🏷️ AUTO
+                 AUTO
               </button>
             </div>
           </div>
@@ -382,7 +382,7 @@
           <div class="flex items-end">
             <button type="submit" class="w-full py-3 px-4 rounded-lg font-bold text-sm transition-all hover:scale-105"
                     style="background: linear-gradient(135deg, var(--accent-blue), #0099cc); color: #000000; border: none; box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);">
-              ➕ Agregar Producto
+               Agregar Producto
             </button>
           </div>
         </div>
@@ -391,7 +391,7 @@
 
     <!-- Actualizar Producto Existente -->
     <div class="cart-container rounded-xl shadow-lg p-6 mb-6">
-      <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);">🔄 Actualizar Producto</h2>
+      <h2 class="text-xl font-bold mb-4" style="color: var(--text-primary);"> Actualizar Producto</h2>
       
       <form id="form-actualizar-producto" class="space-y-3">
         <!-- Primera fila: Código + Agregar Stock -->
@@ -405,7 +405,7 @@
               <button type="button" onclick="openScanner('stock-codigo')" 
                       class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
                       style="z-index: 1 !important; position: relative;">
-                📱 SCAN
+                 SCAN
               </button>
             </div>
           </div>
@@ -465,9 +465,9 @@
     <!-- Productos con Poco Stock -->
     <div id="poco-stock-container" class="cart-container rounded-xl shadow-lg p-6 mb-6" style="display: none;">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold" style="color: var(--text-primary);">⚠️ Productos con Poco Stock</h2>
+        <h2 class="text-xl font-bold" style="color: var(--text-primary);"> Productos con Poco Stock</h2>
         <button onclick="actualizarPocoStockManual()" class="btn-refresh px-3 py-1 rounded text-sm transition-all">
-          🔄 Actualizar
+           Actualizar
         </button>
       </div>
       
@@ -481,13 +481,13 @@
     <!-- Lista de Productos -->
     <div class="cart-container rounded-xl shadow-lg p-6">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold" style="color: var(--text-primary);">📋 Productos en Inventario</h2>
+        <h2 class="text-xl font-bold" style="color: var(--text-primary);"> Productos en Inventario</h2>
         <span class="text-sm" style="color: var(--text-secondary);">Total: {{ productos|length }} productos</span>
       </div>
 
       <!-- Buscador de Productos -->
       <div class="cart-container rounded-xl shadow-lg p-6 mb-6">
-        <h3 class="text-xl font-bold mb-4" style="color: var(--text-primary);">🔍 Buscar Productos</h3>
+        <h3 class="text-xl font-bold mb-4" style="color: var(--text-primary);"> Buscar Productos</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="md:col-span-2">
             <div class="flex gap-2">
@@ -498,14 +498,14 @@
               <button type="button" onclick="openScanner('buscar-inventario')" 
                       class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
                       style="z-index: 1 !important; position: relative;">
-                📱 SCAN
+                 SCAN
               </button>
             </div>
           </div>
           <div>
             <button onclick="limpiarBusqueda()" class="w-full py-3 px-4 rounded-lg font-bold text-sm transition-all hover:scale-105"
                     style="background: linear-gradient(135deg, #6b7280, #4b5563); color: white; border: none; box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);">
-              🧹 Limpiar
+               Limpiar
             </button>
           </div>
         </div>
@@ -535,11 +535,11 @@
               <td class="px-4 py-3 text-center">
                 <button onclick="editarProducto('{{ producto.id }}')" 
                         class="btn-edit px-3 py-1.5 rounded text-xs font-medium transition-all mr-2">
-                  ✏️ Editar
+                   Editar
                 </button>
                 <button onclick="eliminarProducto('{{ producto.id }}')" 
                         class="btn-delete px-3 py-1.5 rounded text-xs font-medium transition-all">
-                  🗑️ Eliminar
+                   Eliminar
                 </button>
               </td>
             </tr>
@@ -549,7 +549,7 @@
       </div>
       {% else %}
       <div class="text-center py-12" style="color: var(--text-secondary);">
-        <p class="text-lg mb-2">📦 No hay productos en el inventario</p>
+        <p class="text-lg mb-2"> No hay productos en el inventario</p>
         <p class="text-sm">Agrega tu primer producto usando el formulario de arriba</p>
       </div>
       {% endif %}
@@ -575,49 +575,49 @@ document.addEventListener("DOMContentLoaded", () => {
     // GLOBAL BARCODE EVENT LISTENER - ENHANCED WITH DEBUGGING
     document.addEventListener('barcodeScanned', async (event) => {
         const { code, source, targetField } = event.detail;
-        console.log(`🔍 INVENTARIO DEBUG: Barcode received - Code: ${code}, Source: ${source}, TargetField: ${targetField}`);
+        console.log(` INVENTARIO DEBUG: Barcode received - Code: ${code}, Source: ${source}, TargetField: ${targetField}`);
         
         // PRIORITY 1: If we have a specific target field, use it exclusively
         if (targetField) {
-            console.log(`🎯 INVENTARIO DEBUG: Using target field: ${targetField}`);
+            console.log(` INVENTARIO DEBUG: Using target field: ${targetField}`);
             const targetElement = document.getElementById(targetField);
             
             if (targetElement) {
-                console.log(`✅ INVENTARIO DEBUG: Found target element for ${targetField}`);
+                console.log(` INVENTARIO DEBUG: Found target element for ${targetField}`);
                 targetElement.value = code;
                 targetElement.focus();
                 
                 // Trigger appropriate actions based on the target field
                 if (targetField === 'stock-codigo') {
-                    console.log(`🔄 INVENTARIO DEBUG: Triggering product lookup for stock update`);
+                    console.log(` INVENTARIO DEBUG: Triggering product lookup for stock update`);
                     setTimeout(() => buscarProductoParaActualizar(code), 100);
                 } else if (targetField === 'buscar-inventario') {
-                    console.log(`🔍 INVENTARIO DEBUG: Triggering product search`);
+                    console.log(` INVENTARIO DEBUG: Triggering product search`);
                     filtrarProductos(code);
                 } else if (targetField === 'nuevo-codigo') {
-                    console.log(`➕ INVENTARIO DEBUG: Code set for new product`);
+                    console.log(` INVENTARIO DEBUG: Code set for new product`);
                 }
                 
-                console.log(`✅ INVENTARIO DEBUG: Successfully assigned ${code} to ${targetField}`);
+                console.log(` INVENTARIO DEBUG: Successfully assigned ${code} to ${targetField}`);
                 return;
             } else {
-                console.error(`❌ INVENTARIO DEBUG: Target element ${targetField} not found!`);
+                console.error(` INVENTARIO DEBUG: Target element ${targetField} not found!`);
             }
         }
         
         // PRIORITY 2: Fallback logic for USB scanner or when no target is specified
-        console.log(`🔄 INVENTARIO DEBUG: Using fallback logic - no target field or target not found`);
+        console.log(` INVENTARIO DEBUG: Using fallback logic - no target field or target not found`);
         const buscarInventario = document.getElementById('buscar-inventario');
         const nuevoCodigo = document.getElementById('nuevo-codigo');
         const stockCodigo = document.getElementById('stock-codigo');
         
         // Check which input is currently focused
         const activeElement = document.activeElement;
-        console.log(`🎯 INVENTARIO DEBUG: Active element: ${activeElement?.id || 'none'}`);
+        console.log(` INVENTARIO DEBUG: Active element: ${activeElement?.id || 'none'}`);
         
         if (activeElement && (activeElement === nuevoCodigo || activeElement === stockCodigo || activeElement === buscarInventario)) {
             // If any of our target inputs is focused, use that one
-            console.log(`✅ INVENTARIO DEBUG: Using focused element: ${activeElement.id}`);
+            console.log(` INVENTARIO DEBUG: Using focused element: ${activeElement.id}`);
             activeElement.value = code;
             if (activeElement === stockCodigo) {
                 setTimeout(() => buscarProductoParaActualizar(code), 100);
@@ -626,24 +626,24 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } else if (stockCodigo && stockCodigo.offsetParent !== null && !stockCodigo.value) {
             // If update form is visible and empty, prefer it
-            console.log(`🔄 INVENTARIO DEBUG: Using empty stock-codigo field`);
+            console.log(` INVENTARIO DEBUG: Using empty stock-codigo field`);
             stockCodigo.value = code;
             stockCodigo.focus();
             setTimeout(() => buscarProductoParaActualizar(code), 100);
         } else if (nuevoCodigo && !nuevoCodigo.value) {
             // If add form field is empty, use it
-            console.log(`➕ INVENTARIO DEBUG: Using empty nuevo-codigo field`);
+            console.log(` INVENTARIO DEBUG: Using empty nuevo-codigo field`);
             nuevoCodigo.value = code;
             nuevoCodigo.focus();
         } else {
             // Default to search
-            console.log(`🔍 INVENTARIO DEBUG: Defaulting to search field`);
+            console.log(` INVENTARIO DEBUG: Defaulting to search field`);
             buscarInventario.value = code;
             buscarInventario.focus();
             filtrarProductos(code);
         }
         
-        console.log(`✅ INVENTARIO DEBUG: Barcode processing completed`);
+        console.log(` INVENTARIO DEBUG: Barcode processing completed`);
     });
     
     // Load inventory data
@@ -806,7 +806,7 @@ async function actualizarPocoStockManual() {
         await actualizarPocoStock();
         
         // Show success feedback
-        button.innerHTML = '✅ Actualizado';
+        button.innerHTML = ' Actualizado';
         setTimeout(() => {
             button.innerHTML = originalText;
             button.disabled = false;
@@ -814,7 +814,7 @@ async function actualizarPocoStockManual() {
     } catch (error) {
         console.error('Error en actualización manual:', error);
         // Show error feedback
-        button.innerHTML = '❌ Error';
+        button.innerHTML = ' Error';
         setTimeout(() => {
             button.innerHTML = originalText;
             button.disabled = false;
@@ -827,7 +827,7 @@ async function actualizarPocoStock() {
     const container = document.getElementById('productos-poco-stock');
     
     try {
-        console.log('🔄 INVENTARIO: Actualizando productos con poco stock...');
+        console.log(' INVENTARIO: Actualizando productos con poco stock...');
         container.innerHTML = '<div class="text-center py-6" style="color: var(--text-secondary);"><p>Cargando productos con poco stock...</p></div>';
         
         // Add cache busting parameter to ensure fresh data
@@ -836,14 +836,14 @@ async function actualizarPocoStock() {
         
         if (response.ok) {
             const data = await response.json();
-            console.log('📦 INVENTARIO: Productos con poco stock recibidos:', data.productos_bajo_stock.length);
+            console.log(' INVENTARIO: Productos con poco stock recibidos:', data.productos_bajo_stock.length);
             mostrarProductosPocoStock(data.productos_bajo_stock);
         } else {
-            console.error('❌ INVENTARIO: Error en respuesta del servidor:', response.status);
+            console.error(' INVENTARIO: Error en respuesta del servidor:', response.status);
             container.innerHTML = '<div class="text-center py-6" style="color: #ff4444;"><p>Error cargando productos con poco stock</p></div>';
         }
     } catch (error) {
-        console.error('❌ INVENTARIO: Error:', error);
+        console.error(' INVENTARIO: Error:', error);
         container.innerHTML = '<div class="text-center py-6" style="color: #ff4444;"><p>Error de conexión</p></div>';
     }
 }
@@ -853,16 +853,16 @@ function mostrarProductosPocoStock(productos) {
     const container = document.getElementById('productos-poco-stock');
     const pocoStockContainer = document.getElementById('poco-stock-container');
     
-    console.log('📋 INVENTARIO: Mostrando productos con poco stock:', productos?.length || 0);
+    console.log(' INVENTARIO: Mostrando productos con poco stock:', productos?.length || 0);
     
     if (!productos || productos.length === 0) {
-        console.log('✅ INVENTARIO: No hay productos con poco stock, ocultando sección');
+        console.log(' INVENTARIO: No hay productos con poco stock, ocultando sección');
         // Ocultar completamente el banner si no hay productos con poco stock
         pocoStockContainer.style.display = 'none';
         return;
     }
     
-    console.log('⚠️ INVENTARIO: Mostrando', productos.length, 'productos con poco stock');
+    console.log(' INVENTARIO: Mostrando', productos.length, 'productos con poco stock');
     // Mostrar el banner si hay productos con poco stock
     pocoStockContainer.style.display = 'block';
     
@@ -872,8 +872,8 @@ function mostrarProductosPocoStock(productos) {
         const stockClass = producto.stock <= 0 ? 'stock-critico' : 
                           producto.stock <= 5 ? 'stock-bajo' : 'stock-normal';
         
-        const statusIcon = producto.stock <= 0 ? '🚨' : 
-                          producto.stock <= 5 ? '⚠️' : '📊';
+        const statusIcon = producto.stock <= 0 ? '' : 
+                          producto.stock <= 5 ? '' : '';
         
         const statusBg = producto.stock <= 0 ? 'rgba(239, 68, 68, 0.1)' : 
                         producto.stock <= 5 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(34, 197, 94, 0.1)';
@@ -914,7 +914,7 @@ function mostrarProductosPocoStock(productos) {
                 </div>
                 <button onclick="reabastecer('${producto.codigo}')" 
                         class="btn-update w-full py-2.5 px-4 text-sm rounded-lg font-semibold transition-all">
-                    🔄 Reabastecer Ahora
+                     Reabastecer Ahora
                 </button>
             </div>
         </div>
@@ -971,14 +971,14 @@ document.getElementById('form-agregar-producto').addEventListener('submit', asyn
         const result = await response.json();
         
         if (result.success) {
-            alert('✅ Producto agregado exitosamente');
+            alert(' Producto agregado exitosamente');
             this.reset();
             
             // Recargar datos después de un breve delay para asegurar que la DB se actualice  
             setTimeout(() => {
                 cargarTodosLosProductos();
                 actualizarPocoStock();
-                console.log('🔄 Recargando sección de poco stock después de agregar producto');
+                console.log(' Recargando sección de poco stock después de agregar producto');
             }, 500);
             
             // Trigger verificación de alertas después de agregar producto
@@ -986,10 +986,10 @@ document.getElementById('form-agregar-producto').addEventListener('submit', asyn
                 setTimeout(() => window.stockAlerts.checkLowStock(), 2000);
             }
         } else {
-            alert('❌ Error: ' + result.error);
+            alert(' Error: ' + result.error);
         }
     } catch (error) {
-        alert('❌ Error de conexión');
+        alert(' Error de conexión');
     }
 });
 
@@ -1025,7 +1025,7 @@ document.getElementById('form-actualizar-producto').addEventListener('submit', a
         const result = await response.json();
         
         if (result.success) {
-            alert('✅ Producto actualizado exitosamente');
+            alert(' Producto actualizado exitosamente');
             this.reset();
             ocultarInfoProducto();
             
@@ -1033,7 +1033,7 @@ document.getElementById('form-actualizar-producto').addEventListener('submit', a
             setTimeout(() => {
                 cargarTodosLosProductos();
                 actualizarPocoStock();
-                console.log('🔄 Recargando sección de poco stock después de actualizar producto');
+                console.log(' Recargando sección de poco stock después de actualizar producto');
             }, 500);
             
             // Trigger verificación de alertas después de actualizar stock
@@ -1041,10 +1041,10 @@ document.getElementById('form-actualizar-producto').addEventListener('submit', a
                 setTimeout(() => window.stockAlerts.checkLowStock(), 2000);
             }
         } else {
-            alert('❌ Error: ' + result.error);
+            alert(' Error: ' + result.error);
         }
     } catch (error) {
-        alert('❌ Error de conexión');
+        alert(' Error de conexión');
     }
 });
 
@@ -1090,11 +1090,11 @@ async function editarProducto(id) {
             }
             
         } else {
-            alert('❌ Error al cargar los datos del producto');
+            alert(' Error al cargar los datos del producto');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('❌ Error de conexión al cargar el producto');
+        alert(' Error de conexión al cargar el producto');
     }
 }
 
@@ -1141,28 +1141,28 @@ async function eliminarProducto(id) {
                 cargarTodosLosProductos();
             }, 300);
             
-            alert('✅ Producto eliminado exitosamente');
+            alert(' Producto eliminado exitosamente');
         } else {
-            alert('❌ Error: ' + result.error);
+            alert(' Error: ' + result.error);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('❌ Error de conexión al eliminar el producto');
+        alert(' Error de conexión al eliminar el producto');
     }
 }
 
 // Sistema de alertas deshabilitado en inventario (ya tiene su propia sección)
-console.log('📦 Inventario: Las alertas se muestran en la sección dedicada');
+console.log(' Inventario: Las alertas se muestran en la sección dedicada');
 
 // Function to open scanner - IMPROVED WITH TARGETING AND DEBUG
 function openScanner(targetFieldId = null) {
-  console.log(`🚀 INVENTARIO DEBUG: openScanner called with targetFieldId: ${targetFieldId}`);
+  console.log(` INVENTARIO DEBUG: openScanner called with targetFieldId: ${targetFieldId}`);
   
   if (typeof BarCodeScanner !== 'undefined') {
-    console.log(`✅ INVENTARIO DEBUG: BarCodeScanner available, opening with target: ${targetFieldId}`);
+    console.log(` INVENTARIO DEBUG: BarCodeScanner available, opening with target: ${targetFieldId}`);
     BarCodeScanner.open(targetFieldId);
   } else {
-    console.error(`❌ INVENTARIO DEBUG: BarCodeScanner not available!`);
+    console.error(` INVENTARIO DEBUG: BarCodeScanner not available!`);
     alert('Scanner no disponible. Ingresa el código manualmente.');
   }
 }
@@ -1178,7 +1178,7 @@ async function asignarCodigoAutomatico() {
     button.disabled = true;
     
     try {
-        console.log('🏷️ INVENTARIO: Calculando próximo código automático...');
+        console.log(' INVENTARIO: Calculando próximo código automático...');
         
         // Get all existing codes from the current products
         const codigosExistentes = new Set();
@@ -1207,7 +1207,7 @@ async function asignarCodigoAutomatico() {
             console.warn('No se pudo obtener todos los códigos de la API, usando solo los visibles');
         }
         
-        console.log('📋 INVENTARIO: Códigos existentes encontrados:', Array.from(codigosExistentes).sort((a,b) => a-b));
+        console.log(' INVENTARIO: Códigos existentes encontrados:', Array.from(codigosExistentes).sort((a,b) => a-b));
         
         // Find the next available sequential code
         let proximoCodigo = 1;
@@ -1228,21 +1228,21 @@ async function asignarCodigoAutomatico() {
         // Format with leading zeros (2 digits minimum)
         const codigoFormateado = proximoCodigo.toString().padStart(2, '0');
         
-        console.log(`✅ INVENTARIO: Próximo código asignado: ${codigoFormateado}`);
+        console.log(` INVENTARIO: Próximo código asignado: ${codigoFormateado}`);
         
         // Set the code in the input
         codigoInput.value = codigoFormateado;
         codigoInput.focus();
         
         // Show success feedback
-        button.innerHTML = '✅ Asignado';
+        button.innerHTML = ' Asignado';
         
         // Show notification
         mostrarNotificacionCodigo(codigoFormateado);
         
     } catch (error) {
-        console.error('❌ Error al asignar código automático:', error);
-        button.innerHTML = '❌ Error';
+        console.error(' Error al asignar código automático:', error);
+        button.innerHTML = ' Error';
         alert('Error al calcular el próximo código automático');
     } finally {
         // Restore button after 2 seconds
@@ -1259,7 +1259,7 @@ function mostrarNotificacionCodigo(codigo) {
     notification.className = 'fixed top-4 right-4 bg-purple-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300';
     notification.innerHTML = `
         <div class="flex items-center space-x-2">
-            <span class="text-xl">🏷️</span>
+            <span class="text-xl"></span>
             <div>
                 <div class="font-semibold">Código asignado</div>
                 <div class="text-sm opacity-90">Código automático: ${codigo}</div>
@@ -1299,7 +1299,7 @@ function mostrarNotificacionCodigo(codigo) {
 document.addEventListener('DOMContentLoaded', function() {
   // Small delay to ensure all scripts are fully loaded
   setTimeout(function() {
-    console.log('📦 INVENTARIO: Verificando disponibilidad de BarCodeScanner y USBBarcodeScanner');
+    console.log(' INVENTARIO: Verificando disponibilidad de BarCodeScanner y USBBarcodeScanner');
     console.log('BarCodeScanner disponible:', typeof BarCodeScanner !== 'undefined');
     console.log('USBBarcodeScanner disponible:', typeof USBBarcodeScanner !== 'undefined');
   }, 100);

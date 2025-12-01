@@ -136,15 +136,15 @@
       <div class="flex flex-wrap gap-2">
         <button onclick="window.location.href='/'" id="tab-demo"
                 class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
-          🏪 DEMO
+           DEMO
         </button>
         <button onclick="mostrarTab('suscripcion')" id="tab-suscripcion"
                 class="tab-active px-4 py-2 rounded-lg font-semibold text-sm transition-all">
-          📋 SUSCRIBIRSE
+           SUSCRIBIRSE
         </button>
         <button onclick="window.location.href='/accounts/login/'" id="tab-login"
                 class="tab-inactive px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105">
-          🔐 INICIAR SESIÓN
+           INICIAR SESIÓN
         </button>
       </div>
     </div>
@@ -205,7 +205,7 @@
             <div class="pt-4">
               <button type="submit" id="submit-btn"
                       class="btn-success w-full py-3 px-6 rounded-lg font-bold text-lg transition-all">
-                📞 Enviar información
+                 Enviar información
               </button>
             </div>
 
@@ -299,7 +299,7 @@
 
         // Disable button and show loading
         submitBtn.disabled = true;
-        submitBtn.textContent = '📤 Enviando...';
+        submitBtn.textContent = ' Enviando...';
         submitBtn.style.opacity = '0.7';
 
         // Get form data
@@ -312,7 +312,7 @@
 
         // Basic validation
         if (!formData.full_name || !formData.email || !formData.phone || !formData.city) {
-          mostrarNotificacion('❌ Por favor completa todos los campos obligatorios', 'error');
+          mostrarNotificacion(' Por favor completa todos los campos obligatorios', 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
           submitBtn.style.opacity = '1';
@@ -332,23 +332,23 @@
         .then(data => {
           if (data.success) {
             // Show success message
-            mostrarNotificacion('✅ ¡Información enviada exitosamente! Te contactaremos pronto.', 'success');
+            mostrarNotificacion(' ¡Información enviada exitosamente! Te contactaremos pronto.', 'success');
 
             // Clear form
             document.getElementById('contact-form').reset();
 
             // Additional info
             setTimeout(() => {
-              mostrarNotificacion('📞 Mantente atento a tu teléfono y email', 'info');
+              mostrarNotificacion(' Mantente atento a tu teléfono y email', 'info');
             }, 2000);
           } else {
             // Show error message
-            mostrarNotificacion('❌ ' + (data.error || 'Error al enviar la información'), 'error');
+            mostrarNotificacion(' ' + (data.error || 'Error al enviar la información'), 'error');
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          mostrarNotificacion('❌ Error de conexión. Por favor intenta de nuevo.', 'error');
+          mostrarNotificacion(' Error de conexión. Por favor intenta de nuevo.', 'error');
         })
         .finally(() => {
           // Reset button

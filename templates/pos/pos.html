@@ -402,7 +402,7 @@
           <div class="flex items-center space-x-3 px-4 py-2 rounded-lg border-2 shadow-lg" 
                style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-color: #f59e0b; min-width: 280px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
             <div class="flex items-center space-x-2">
-              <span id="stock-alert-icon" class="text-xl animate-pulse">⚠️</span>
+              <span id="stock-alert-icon" class="text-xl animate-pulse"></span>
               <div class="text-sm">
                 <div class="font-bold" style="color: #ffffff;">
                   <span id="stock-count-display" class="text-lg">-</span>
@@ -415,7 +415,7 @@
                     class="px-3 py-2 rounded-lg text-sm font-bold transition-all hover:scale-110 hover:shadow-lg"
                     style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000000; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);"
                     id="btn-ir-inventario">
-              📦 Ver Inventario
+               Ver Inventario
             </button>
           </div>
           
@@ -431,16 +431,16 @@
     <div class="max-w-full mx-auto px-4 py-2">
       <div class="flex flex-wrap gap-2">
         <a href="/punto_de_venta/" class="tab-button-active px-4 py-2 rounded-lg font-semibold text-sm transition-all" style="background: linear-gradient(135deg, var(--accent-blue) 0%, #0099cc 100%); color: #000000;">
-          🏪 Punto de Venta
+           Punto de Venta
         </a>
         <a href="/inventario/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          📦 Inventario
+           Inventario
         </a>
         <a href="/registro/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          📊 Registro
+           Registro
         </a>
         <a href="/caja/" class="tab-button px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-105" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-primary);">
-          💰 Caja
+           Caja
         </a>
       </div>
     </div>
@@ -495,7 +495,7 @@
           
           <!-- Área vacía cuando no hay productos -->
           <div id="carrito-vacio" class="flex flex-col items-center justify-center h-full text-center" style="color: var(--text-secondary);">
-            <div class="text-6xl mb-4">🛒</div>
+            <div class="text-6xl mb-4"></div>
             <p class="text-lg font-medium mb-2">Tu carrito está vacío</p>
             <p class="text-sm opacity-70">Agrega productos escaneando o buscando</p>
           </div>
@@ -516,13 +516,13 @@
             <!-- Botones de Acción del Carrito -->
             <div class="grid grid-cols-3 gap-2">
               <button onclick="cobrar()" class="process-btn py-2 rounded-lg font-semibold text-xs">
-                💳 Cobrar
+                 Cobrar
               </button>
               <button onclick="window.location.href='/ventas/'" class="ticket-btn py-2 rounded-lg font-semibold text-xs">
-                🎫 Generar Ticket
+                 Generar Ticket
               </button>
               <button onclick="limpiarCarrito()" class="btn-cart-v1 py-2 rounded-lg font-semibold text-xs">
-                🗑️ Limpiar
+                 Limpiar
               </button>
             </div>
           </div>
@@ -564,7 +564,7 @@
                   <button type="button" onclick="openScanner()" 
                           class="btn-scan px-3 py-2 rounded-lg transition-all text-xs font-semibold whitespace-nowrap"
                           style="z-index: 1 !important; position: relative;">
-                    📱 SCAN
+                     SCAN
                   </button>
                 </div>
               </div>
@@ -592,7 +592,7 @@
 
             <!-- Botón Principal -->
             <button type="submit" class="btn-add-v1 w-full py-3 rounded-lg font-semibold transition-colors text-sm">
-              🛒 Agregar al Carrito
+               Agregar al Carrito
             </button>
           </form>
         </div>
@@ -600,7 +600,7 @@
         <!-- Form Footer con Total del día -->
         <div class="border-t flex-shrink-0 p-4" style="border-color: var(--border-color); border-radius: 0 0 0.75rem 0.75rem;">
           <div class="p-3 rounded-lg" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
-            <h4 class="font-semibold text-sm text-center" style="color: #ffffff;">📊 Resumen del Día</h4>
+            <h4 class="font-semibold text-sm text-center" style="color: #ffffff;"> Resumen del Día</h4>
             <p class="text-lg font-bold text-center mt-1" style="color: #22c55e;" id="total-dia">$0.00</p>
           </div>
         </div>
@@ -611,26 +611,26 @@
   <!-- Modal: Selección de Método de Pago -->
   <div id="modalMetodoPago" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;">
     <div style="background-color: #0a0a0a; border: 2px solid #333333; border-radius: 1rem; padding: 2rem; max-width: 500px; width: 90%;">
-      <h2 style="color: #ffffff; font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; text-align: center;">💳 Método de Pago</h2>
+      <h2 style="color: #ffffff; font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem; text-align: center;"> Método de Pago</h2>
 
       <div style="margin-bottom: 1.5rem;">
         <button onclick="seleccionarMetodoPago('efectivo')" style="width: 100%; padding: 1rem; margin-bottom: 0.75rem; background-color: #1a1a1a; border: 2px solid #333333; border-radius: 0.5rem; color: #ffffff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>💵 Efectivo</span>
+            <span> Efectivo</span>
             <span style="font-size: 0.875rem; color: #a0a0a0;">Con cambio</span>
           </div>
         </button>
 
         <button onclick="seleccionarMetodoPago('transferencia')" style="width: 100%; padding: 1rem; margin-bottom: 0.75rem; background-color: #1a1a1a; border: 2px solid #333333; border-radius: 0.5rem; color: #ffffff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>🏦 Transferencia</span>
+            <span> Transferencia</span>
             <span style="font-size: 0.875rem; color: #a0a0a0;">Sin cambio</span>
           </div>
         </button>
 
         <button onclick="seleccionarMetodoPago('tarjeta')" style="width: 100%; padding: 1rem; background-color: #1a1a1a; border: 2px solid #333333; border-radius: 0.5rem; color: #ffffff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>💳 Tarjeta</span>
+            <span> Tarjeta</span>
             <span style="font-size: 0.875rem; color: #a0a0a0;">Sin cambio</span>
           </div>
         </button>
@@ -645,7 +645,7 @@
   <!-- Modal: Confirmación de Pago (Transferencia/Tarjeta) -->
   <div id="modalConfirmacionPago" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); z-index: 999999; justify-content: center; align-items: center;">
     <div style="background-color: #0a0a0a; border: 2px solid #333333; border-radius: 1rem; padding: 2rem; max-width: 500px; width: 90%;">
-      <h2 style="color: #ffffff; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">⚠️ Confirmar Pago</h2>
+      <h2 style="color: #ffffff; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;"> Confirmar Pago</h2>
 
       <div style="margin-bottom: 1.5rem; padding: 1rem; background-color: #1a1a1a; border-radius: 0.5rem;">
         <p style="text-align: center; margin-bottom: 0.5rem; color: #a0a0a0;">Método de pago:</p>
@@ -661,10 +661,10 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
         <button onclick="cancelarConfirmacionPago()" style="padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; background-color: #ef4444; color: white; border: none; cursor: pointer;">
-          ❌ Cancelar
+           Cancelar
         </button>
         <button onclick="confirmarPago()" style="padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; background-color: #22c55e; color: white; border: none; cursor: pointer;">
-          ✅ Confirmar
+           Confirmar
         </button>
       </div>
     </div>
@@ -1175,7 +1175,7 @@
       notification.className = "fixed top-20 right-4 bg-blue-500 text-white px-4 py-2 rounded shadow-lg z-50";
       notification.innerHTML = `
         <div class="text-sm">
-          📦 ${nombreProducto}<br>
+           ${nombreProducto}<br>
           Cantidad: ${cantidadAnterior} → ${nuevaCantidad}
         </div>
       `;
@@ -1206,7 +1206,7 @@
       // Mostrar notificación de eliminación
       const notification = document.createElement("div");
       notification.className = "fixed top-20 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50";
-      notification.textContent = `🗑️ ${item.nombre} eliminado`;
+      notification.textContent = ` ${item.nombre} eliminado`;
       
       document.body.appendChild(notification);
       
@@ -1298,7 +1298,7 @@
 
     // Mostrar modal de confirmación para transferencia/tarjeta
     function mostrarModalConfirmacion(metodo) {
-      const metodoTexto = metodo === 'transferencia' ? '🏦 Transferencia' : '💳 Tarjeta';
+      const metodoTexto = metodo === 'transferencia' ? ' Transferencia' : ' Tarjeta';
       document.getElementById('metodoConfirmacion').textContent = metodoTexto;
       document.getElementById('totalConfirmacion').textContent = formatearPesos(totalVenta);
 
@@ -1546,7 +1546,7 @@
       notification.className = "fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300";
       notification.innerHTML = `
         <div class="flex items-center space-x-2">
-          <span class="text-xl">✅</span>
+          <span class="text-xl"></span>
           <div>
             <div class="font-semibold">Producto agregado</div>
             <div class="text-sm opacity-90">${nombreProducto} (${cantidad}x)</div>
@@ -1629,7 +1629,7 @@
         window.stockAlerts.configure({ enabled: false });
       }, 1000);
       
-      console.log(`🚨 Alerta deslizante mostrada para: ${producto.nombre} (Stock: ${producto.stock}/${producto.stock_minimo})`);
+      console.log(` Alerta deslizante mostrada para: ${producto.nombre} (Stock: ${producto.stock}/${producto.stock_minimo})`);
     }
 
     // Cargar contador de stock al inicializar la página
@@ -1674,26 +1674,26 @@
         
         // Actualizar icono según la cantidad
         if (cantidad === 0) {
-          iconDisplay.textContent = '✅';
+          iconDisplay.textContent = '';
           btnInventario.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
-          btnInventario.innerHTML = '✅ Todo OK';
+          btnInventario.innerHTML = ' Todo OK';
         } else if (cantidad >= 5) {
-          iconDisplay.textContent = '🚨';
+          iconDisplay.textContent = '';
           btnInventario.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-          btnInventario.innerHTML = '🚨 Ver Urgente';
+          btnInventario.innerHTML = ' Ver Urgente';
         } else {
-          iconDisplay.textContent = '⚠️';
+          iconDisplay.textContent = '';
           btnInventario.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
-          btnInventario.innerHTML = '📦 Ver Inventario';
+          btnInventario.innerHTML = ' Ver Inventario';
         }
         
-        console.log(`📊 ${cantidad} productos con stock bajo detectados`);
+        console.log(` ${cantidad} productos con stock bajo detectados`);
 
       } catch (error) {
         console.error('Error cargando contador de stock:', error);
         countDisplay.textContent = '!';
-        iconDisplay.textContent = '❌';
-        btnInventario.innerHTML = '❌ Error';
+        iconDisplay.textContent = '';
+        btnInventario.innerHTML = ' Error';
       }
     }
 

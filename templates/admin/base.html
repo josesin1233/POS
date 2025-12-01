@@ -14,7 +14,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'admin/css/pos_admin.css' %}">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'></text></svg>">
     
     <!-- Fuentes de Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,7 +67,7 @@
         }
         
         #header h1 a:before {
-            content: '🏪 ';
+            content: ' ';
             font-size: 24px;
             margin-right: 8px;
         }
@@ -441,13 +441,13 @@
                 </strong>
                 {% if user.business %}
                     <span style="margin-left: 10px; padding: 4px 8px; background: rgba(255,255,255,0.2); border-radius: 4px; font-size: 12px;">
-                        📍 {{ user.business.name }}
+                         {{ user.business.name }}
                     </span>
                 {% endif %}
                 -
-                <a href="{% url 'admin:password_change' %}">📝 Cambiar contraseña</a>
+                <a href="{% url 'admin:password_change' %}"> Cambiar contraseña</a>
                 -
-                <a href="{% url 'admin:logout' %}">🚪 Cerrar sesión</a>
+                <a href="{% url 'admin:logout' %}"> Cerrar sesión</a>
             </div>
         {% endif %}
         {% endblock %}
@@ -486,7 +486,7 @@
             
             <!-- Breadcrumbs -->
             <div class="breadcrumbs">
-                <a href="{% url 'admin:index' %}">🏠 Inicio</a>
+                <a href="{% url 'admin:index' %}"> Inicio</a>
                 {% if title %}
                     &rsaquo; <span style="color: var(--pos-primary); font-weight: 600;">{{ title }}</span>
                 {% endif %}
@@ -507,7 +507,7 @@
             © {% now "Y" %} <strong>POS México</strong> - Sistema de Punto de Venta
             <br>
             <small>
-                Desarrollado con ❤️ para pequeños y medianos negocios mexicanos
+                Desarrollado con  para pequeños y medianos negocios mexicanos
             </small>
         </p>
     </div>
@@ -546,7 +546,7 @@
             });
         });
         
-        console.log('🏪 POS México Admin Interface loaded successfully!');
+        console.log(' POS México Admin Interface loaded successfully!');
     });
 </script>
 

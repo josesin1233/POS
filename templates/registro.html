@@ -298,7 +298,7 @@
           <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
             Venta #${actividad.id} del ${fecha} - Total: ${formatearPesos(actividad.total)}
             - Usuario: ${actividad.usuario} - Método: ${actividad.metodo_pago}
-            <span id="toggle-${ventaId}" style="float: right;">▼</span>
+            <span id="toggle-${ventaId}" style="float: right;"></span>
           </td>
         `;
         tabla.appendChild(filaHeader);
@@ -428,7 +428,7 @@
               ventaHeader.innerHTML = `
                 <td colspan="7" class="p-2 text-sm font-medium" style="color: var(--accent-blue); padding-left: 5rem;">
                   Venta #${venta.id} - ${formatearPesos(venta.total)} - ${venta.productos.length} items - ${venta.metodo_pago} - ${venta.usuario} - ${fecha}
-                  <span id="toggle-${ventaId}" style="float: right;">▼</span>
+                  <span id="toggle-${ventaId}" style="float: right;"></span>
                 </td>
               `;
               tabla.appendChild(ventaHeader);
@@ -497,7 +497,7 @@
     header.innerHTML = `
       <td colspan="7" class="p-3 font-medium" style="color: var(--text-primary); padding-left: ${paddingLeft};">
         ${titulo}
-        <span id="toggle-${grupoId}" style="float: right;">${abierto ? '▲' : '▼'}</span>
+        <span id="toggle-${grupoId}" style="float: right;">${abierto ? '' : ''}</span>
       </td>
     `;
     return header;
@@ -518,7 +518,7 @@
           hijos.forEach(hijo => hijo.style.display = 'none');
         }
       });
-      toggle.textContent = isHidden ? '▲' : '▼';
+      toggle.textContent = isHidden ? '' : '';
     }
   }
 
@@ -531,7 +531,7 @@
       filas.forEach(fila => {
         fila.style.display = isHidden ? 'table-row' : 'none';
       });
-      toggle.textContent = isHidden ? '▲' : '▼';
+      toggle.textContent = isHidden ? '' : '';
     }
   }
 

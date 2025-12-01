@@ -14,13 +14,13 @@
     <header class="bg-blue-600 text-white p-6 shadow-lg">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-bold">👥 Gestión de Usuarios</h1>
+                <h1 class="text-3xl font-bold"> Gestión de Usuarios</h1>
                 <p class="text-blue-100">{{ business.name }}</p>
             </div>
             <div class="flex items-center space-x-4">
                 <a href="/accounts/admin/create-user/" 
                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2">
-                    ➕ Agregar Usuario
+                     Agregar Usuario
                 </a>
                 <a href="/punto_de_venta/" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100">
                     ← Volver al POS
@@ -40,7 +40,7 @@
                         <p class="text-gray-500 text-sm">Total Usuarios</p>
                         <p class="text-3xl font-bold text-gray-800">{{ users_data|length }}</p>
                     </div>
-                    <div class="text-blue-500 text-2xl">👤</div>
+                    <div class="text-blue-500 text-2xl"></div>
                 </div>
             </div>
             
@@ -52,7 +52,7 @@
                             {% for user_data in users_data %}{% if user_data.user.is_active %}1{% endif %}{% endfor %}0
                         </p>
                     </div>
-                    <div class="text-green-500 text-2xl">✅</div>
+                    <div class="text-green-500 text-2xl"></div>
                 </div>
             </div>
             
@@ -64,7 +64,7 @@
                             {% for user_data in users_data %}{% if user_data.user.is_business_owner %}1{% endif %}{% endfor %}0
                         </p>
                     </div>
-                    <div class="text-purple-500 text-2xl">👑</div>
+                    <div class="text-purple-500 text-2xl"></div>
                 </div>
             </div>
             
@@ -74,7 +74,7 @@
                         <p class="text-gray-500 text-sm">Límite Plan</p>
                         <p class="text-3xl font-bold text-orange-600">{{ business.max_concurrent_users }}</p>
                     </div>
-                    <div class="text-orange-500 text-2xl">📊</div>
+                    <div class="text-orange-500 text-2xl"></div>
                 </div>
             </div>
         </div>
@@ -122,11 +122,11 @@
                             <td class="px-6 py-4">
                                 {% if user_data.user.is_business_owner %}
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                        👑 Propietario
+                                         Propietario
                                     </span>
                                 {% else %}
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                                        👤 Empleado
+                                         Empleado
                                     </span>
                                 {% endif %}
                             </td>
@@ -151,11 +151,11 @@
                             <td class="px-6 py-4">
                                 {% if user_data.user.is_active %}
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                        ✅ Activo
+                                         Activo
                                     </span>
                                 {% else %}
                                     <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                        ❌ Inactivo
+                                         Inactivo
                                     </span>
                                 {% endif %}
                             </td>
@@ -168,19 +168,19 @@
                                 <div class="flex items-center space-x-2">
                                     <a href="/accounts/admin/edit-permissions/{{ user_data.user.id }}/" 
                                        class="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                                        ⚙️ Editar
+                                         Editar
                                     </a>
                                     
                                     {% if not user_data.is_current_user %}
                                         <button onclick="toggleUserActive({{ user_data.user.id }})"
                                                 class="text-yellow-600 hover:text-yellow-900 text-sm font-medium">
-                                            {% if user_data.user.is_active %}🔒 Desactivar{% else %}🔓 Activar{% endif %}
+                                            {% if user_data.user.is_active %} Desactivar{% else %} Activar{% endif %}
                                         </button>
                                         
                                         {% if not user_data.user.is_business_owner %}
                                             <button onclick="deleteUser({{ user_data.user.id }}, '{{ user_data.user.username }}')"
                                                     class="text-red-600 hover:text-red-900 text-sm font-medium">
-                                                🗑️ Eliminar
+                                                 Eliminar
                                             </button>
                                         {% endif %}
                                     {% endif %}
@@ -202,7 +202,7 @@
         <!-- Quick Actions -->
         <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">🔧 Configuraciones</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2"> Configuraciones</h3>
                 <p class="text-gray-600 text-sm mb-4">Ajusta la configuración general del negocio</p>
                 <a href="/accounts/admin/business-settings/" 
                    class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
@@ -211,7 +211,7 @@
             </div>
             
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">📊 Estadísticas</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2"> Estadísticas</h3>
                 <p class="text-gray-600 text-sm mb-4">Revisa el uso y actividad del sistema</p>
                 <a href="/accounts/admin/dashboard/" 
                    class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
@@ -220,7 +220,7 @@
             </div>
             
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">🔐 Seguridad</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2"> Seguridad</h3>
                 <p class="text-gray-600 text-sm mb-4">Gestiona la seguridad y permisos</p>
                 <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
                     Revisar Seguridad
