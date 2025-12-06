@@ -376,54 +376,171 @@ Para completar tu registro necesito la siguiente información:
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 
     def add_lead_manual_view(self, request):
-        """Agregar lead manualmente desde el dashboard"""
+        """Crear usuario nuevo (Business Owner o Employee) desde el dashboard"""
         if request.method == 'POST':
             try:
+                from accounts.models import Business, User, UserPermissions
+                from django.contrib.auth.hashers import make_password
+                from datetime import date
+                from dateutil.relativedelta import relativedelta
+
+                # Datos básicos
+                user_type = request.POST.get('user_type', '').strip()
                 full_name = request.POST.get('full_name', '').strip()
                 email = request.POST.get('email', '').strip()
-                phone = request.POST.get('phone', '').strip()
-                city = request.POST.get('city', '').strip()
+                username = request.POST.get('username', '').strip()
+                password = request.POST.get('password', '').strip()
 
                 # Validaciones básicas
-                if not full_name or not email or not phone:
+                if not all([user_type, full_name, email, username, password]):
                     return JsonResponse({
                         'success': False,
-                        'error': 'Nombre, email y teléfono son obligatorios'
+                        'error': 'Todos los campos obligatorios deben completarse'
                     }, status=400)
 
-                # Verificar si el email ya existe
-                if UserRegistration.objects.filter(email=email).exists():
+                # Verificar si username o email ya existen
+                if User.objects.filter(username=username).exists():
                     return JsonResponse({
                         'success': False,
-                        'error': 'Ya existe un lead con este email'
+                        'error': 'El nombre de usuario ya existe'
                     }, status=400)
 
-                # Crear el lead
-                lead = UserRegistration.objects.create(
-                    full_name=full_name,
-                    email=email,
-                    phone=phone,
-                    city=city,
-                    status='nuevo'
-                )
+                if User.objects.filter(email=email).exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'El email ya está registrado'
+                    }, status=400)
 
-                # Crear log
-                UserRegistrationLog.objects.create(
-                    registration=lead,
-                    action='manual_creation',
-                    description=f'Lead creado manualmente por {request.user.username}',
-                    created_by=request.user
-                )
+                # Procesar según tipo de usuario
+                if user_type == 'owner':
+                    # Business Owner - crear negocio y usuario
+                    phone = request.POST.get('phone', '').strip()
+                    city = request.POST.get('city', '').strip()
+                    business_name = request.POST.get('business_name', '').strip()
 
-                return JsonResponse({
-                    'success': True,
-                    'message': f'Lead {full_name} agregado exitosamente'
-                })
+                    if not business_name or not phone:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'Nombre del negocio y teléfono son obligatorios para Business Owner'
+                        }, status=400)
+
+                    # Crear el negocio
+                    business = Business.objects.create(
+                        name=business_name,
+                        email=email,
+                        phone=phone,
+                        address=city or '',
+                        subscription_active=True
+                    )
+
+                    # Crear el usuario owner
+                    user = User.objects.create(
+                        username=username,
+                        email=email,
+                        first_name=full_name.split()[0] if full_name.split() else full_name,
+                        last_name=' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else '',
+                        password=make_password(password),
+                        phone=phone,
+                        business=business,
+                        is_business_owner=True,
+                        is_staff=False,
+                        is_active=True
+                    )
+
+                    # Crear permisos de owner
+                    UserPermissions.create_default_permissions(user, business, is_owner=True)
+
+                    # Crear registro de lead con datos de contrato
+                    lead_data = {
+                        'full_name': full_name,
+                        'email': email,
+                        'phone': phone,
+                        'city': city,
+                        'status': 'activo',
+                        'business': business
+                    }
+
+                    # Procesar datos de contrato si existen
+                    meses_contratados = request.POST.get('meses_contratados', '').strip()
+                    monto_pagado = request.POST.get('monto_pagado', '').strip()
+
+                    if meses_contratados:
+                        meses = int(meses_contratados)
+                        fecha_inicio = date.today()
+                        fecha_corte = fecha_inicio + relativedelta(months=meses)
+                        lead_data['meses_contratados'] = meses
+                        lead_data['fecha_inicio_contrato'] = fecha_inicio
+                        lead_data['fecha_corte'] = fecha_corte
+
+                    if monto_pagado:
+                        lead_data['monto_pagado'] = float(monto_pagado)
+
+                    lead = UserRegistration.objects.create(**lead_data)
+
+                    # Crear log
+                    UserRegistrationLog.objects.create(
+                        registration=lead,
+                        action='manual_creation',
+                        description=f'Business Owner creado por {request.user.username}',
+                        created_by=request.user
+                    )
+
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'Business Owner {full_name} y negocio {business_name} creados exitosamente'
+                    })
+
+                elif user_type == 'employee':
+                    # Employee - vincular a negocio existente
+                    business_id = request.POST.get('business_id', '').strip()
+
+                    if not business_id:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'Debe seleccionar un negocio para el empleado'
+                        }, status=400)
+
+                    try:
+                        business = Business.objects.get(id=business_id)
+                    except Business.DoesNotExist:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'El negocio seleccionado no existe'
+                        }, status=400)
+
+                    # Crear el usuario employee
+                    user = User.objects.create(
+                        username=username,
+                        email=email,
+                        first_name=full_name.split()[0] if full_name.split() else full_name,
+                        last_name=' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else '',
+                        password=make_password(password),
+                        business=business,
+                        is_business_owner=False,
+                        is_staff=False,
+                        is_active=True
+                    )
+
+                    # Crear permisos de employee
+                    UserPermissions.create_default_permissions(user, business, is_owner=False)
+
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'Empleado {full_name} agregado exitosamente a {business.name}'
+                    })
+
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Tipo de usuario inválido'
+                    }, status=400)
 
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 return JsonResponse({
                     'success': False,
-                    'error': f'Error al crear el lead: {str(e)}'
+                    'error': f'Error al crear el usuario: {str(e)}'
                 }, status=500)
 
         return JsonResponse({'error': 'Método no permitido'}, status=405)
@@ -481,8 +598,33 @@ class CustomAdminSite(BaseAdminSite):
         urls = super().get_urls()
         custom_urls = [
             path('add_lead_manual/', self.admin_view(self.add_lead_manual_view), name='add_lead_manual'),
+            path('get_businesses/', self.admin_view(self.get_businesses_view), name='get_businesses'),
         ]
         return custom_urls + urls
+
+    def get_businesses_view(self, request):
+        """Obtener lista de negocios para el select"""
+        if request.method == 'GET':
+            try:
+                from accounts.models import Business
+                businesses = Business.objects.filter(subscription_active=True).order_by('name')
+
+                business_list = [
+                    {'id': b.id, 'name': b.name}
+                    for b in businesses
+                ]
+
+                return JsonResponse({
+                    'success': True,
+                    'businesses': business_list
+                })
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
 
     def add_lead_manual_view(self, request):
         """Agregar lead manualmente desde el dashboard"""
