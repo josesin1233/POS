@@ -337,6 +337,11 @@ Para completar tu registro necesito la siguiente información:
                 self.admin_site.admin_view(self.update_status_view),
                 name='userregistration-update-status',
             ),
+            path(
+                'add-manual/',
+                self.admin_site.admin_view(self.add_lead_manual_view),
+                name='add_lead_manual',
+            ),
         ]
         return custom_urls + urls
 
@@ -367,6 +372,59 @@ Para completar tu registro necesito la siguiente información:
                 registration.save()
 
             return JsonResponse({'success': True, 'new_status': new_status})
+
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    def add_lead_manual_view(self, request):
+        """Agregar lead manualmente desde el dashboard"""
+        if request.method == 'POST':
+            try:
+                full_name = request.POST.get('full_name', '').strip()
+                email = request.POST.get('email', '').strip()
+                phone = request.POST.get('phone', '').strip()
+                city = request.POST.get('city', '').strip()
+
+                # Validaciones básicas
+                if not full_name or not email or not phone:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Nombre, email y teléfono son obligatorios'
+                    }, status=400)
+
+                # Verificar si el email ya existe
+                if UserRegistration.objects.filter(email=email).exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Ya existe un lead con este email'
+                    }, status=400)
+
+                # Crear el lead
+                lead = UserRegistration.objects.create(
+                    full_name=full_name,
+                    email=email,
+                    phone=phone,
+                    city=city,
+                    status='nuevo'
+                )
+
+                # Crear log
+                UserRegistrationLog.objects.create(
+                    registration=lead,
+                    action='manual_creation',
+                    description=f'Lead creado manualmente por {request.user.username}',
+                    created_by=request.user
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Lead {full_name} agregado exitosamente'
+                })
+
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al crear el lead: {str(e)}'
+                }, status=500)
 
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 
@@ -417,12 +475,106 @@ class CustomAdminSite(BaseAdminSite):
     site_title = "POS México"
     index_title = "Dashboard"
 
+    def get_urls(self):
+        """URLs personalizadas del admin site"""
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('add_lead_manual/', self.admin_view(self.add_lead_manual_view), name='add_lead_manual'),
+        ]
+        return custom_urls + urls
+
+    def add_lead_manual_view(self, request):
+        """Agregar lead manualmente desde el dashboard"""
+        if request.method == 'POST':
+            try:
+                from datetime import date
+                from dateutil.relativedelta import relativedelta
+
+                full_name = request.POST.get('full_name', '').strip()
+                email = request.POST.get('email', '').strip()
+                phone = request.POST.get('phone', '').strip()
+                city = request.POST.get('city', '').strip()
+
+                # Campos de pago (pueden ser vacíos si es usuario sin cobro)
+                meses_contratados = request.POST.get('meses_contratados', '').strip()
+                monto_pagado = request.POST.get('monto_pagado', '').strip()
+
+                # Validaciones básicas
+                if not full_name or not email or not phone:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Nombre, email y teléfono son obligatorios'
+                    }, status=400)
+
+                # Verificar si el email ya existe
+                if UserRegistration.objects.filter(email=email).exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Ya existe un lead con este email'
+                    }, status=400)
+
+                # Preparar datos del lead
+                lead_data = {
+                    'full_name': full_name,
+                    'email': email,
+                    'phone': phone,
+                    'city': city,
+                    'status': 'nuevo',
+                    'source': 'manual_admin'
+                }
+
+                # Si tiene meses contratados, calcular fechas automáticamente
+                if meses_contratados:
+                    meses = int(meses_contratados)
+                    fecha_inicio = date.today()
+                    # Usar relativedelta para sumar meses correctamente
+                    fecha_corte = fecha_inicio + relativedelta(months=meses)
+
+                    lead_data['meses_contratados'] = meses
+                    lead_data['fecha_inicio_contrato'] = fecha_inicio
+                    lead_data['fecha_corte'] = fecha_corte
+
+                # Si tiene monto pagado, guardarlo
+                if monto_pagado:
+                    lead_data['monto_pagado'] = float(monto_pagado)
+
+                # Crear el lead
+                lead = UserRegistration.objects.create(**lead_data)
+
+                # Crear log
+                log_desc = f'Lead creado manualmente por {request.user.username}'
+                if meses_contratados:
+                    log_desc += f' - Contrato: {meses_contratados} meses hasta {lead.fecha_corte}'
+                if monto_pagado:
+                    log_desc += f' - Monto: ${monto_pagado}'
+
+                UserRegistrationLog.objects.create(
+                    registration=lead,
+                    action='manual_creation',
+                    description=log_desc,
+                    created_by=request.user
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Lead {full_name} agregado exitosamente'
+                })
+
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al crear el lead: {str(e)}'
+                }, status=500)
+
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
     def index(self, request, extra_context=None):
         """Dashboard personalizado con estadísticas"""
         from .models import UserRegistration, Venta, Producto
         from accounts.models import User, Business
-        from django.db.models import Sum, Count
-        from datetime import timedelta
+        from django.db.models import Sum, Count, F
+        from datetime import date, timedelta
 
         # Estadísticas de usuarios del sistema (User model)
         total_businesses = Business.objects.count()
@@ -446,6 +598,19 @@ class CustomAdminSite(BaseAdminSite):
         # Últimos 5 registros
         ultimos_usuarios = UserRegistration.objects.order_by('-created_at')[:5]
 
+        # Usuarios próximos a vencer (ordenados por fecha de corte, más próximos primero)
+        # Solo incluir usuarios que tienen fecha_corte (excluyendo usuarios sin cobro)
+        usuarios_proximos_vencer = UserRegistration.objects.filter(
+            fecha_corte__isnull=False
+        ).select_related('business').order_by('fecha_corte')
+
+        # Calcular días restantes para cada usuario
+        hoy = date.today()
+        for usuario in usuarios_proximos_vencer:
+            if usuario.fecha_corte:
+                delta = usuario.fecha_corte - hoy
+                usuario.dias_restantes = delta.days
+
         context = {
             **self.each_context(request),
             'total_usuarios': total_businesses,  # Negocios registrados
@@ -455,6 +620,7 @@ class CustomAdminSite(BaseAdminSite):
             'ultimos_usuarios': ultimos_usuarios,
             'status_counts': status_counts,  # Para debugging
             'total_registros': total_registros,
+            'usuarios_proximos_vencer': usuarios_proximos_vencer,  # Nueva lista
         }
 
         if extra_context:

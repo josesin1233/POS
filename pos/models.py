@@ -1030,6 +1030,35 @@ class UserRegistration(models.Model):
         verbose_name="Origen"
     )
 
+    # Información de contrato y pagos
+    # Si meses_contratados es NULL = usuario sin cobro (nunca vence)
+    meses_contratados = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Meses contratados",
+        help_text="Cantidad de meses del contrato. Si está vacío, el usuario no tiene cobro."
+    )
+    monto_pagado = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="Monto pagado",
+        help_text="Monto total pagado por el cliente. Si está vacío, no hay cobro."
+    )
+    fecha_inicio_contrato = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha inicio de contrato",
+        help_text="Fecha de inicio del contrato. Se calcula automáticamente."
+    )
+    fecha_corte = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Fecha de corte",
+        help_text="Fecha de vencimiento del contrato. Se calcula automáticamente como fecha_inicio + meses_contratados."
+    )
+
     class Meta:
         verbose_name = "Registro de Usuario"
         verbose_name_plural = "Gestión de Usuarios"
