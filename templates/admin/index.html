@@ -15,69 +15,46 @@
         <p class="dashboard-subtitle">Vista general del sistema</p>
     </div>
 
-    <!-- Estadísticas -->
-    <div class="stats-grid">
-        <div class="stat-card primary">
-            <div class="stat-icon"></div>
-            <div class="stat-content">
-                <div class="stat-value">{{ total_usuarios|default:0 }}</div>
-                <div class="stat-label">Usuarios Registrados</div>
-            </div>
-        </div>
-
-        <div class="stat-card warning">
-            <div class="stat-icon"></div>
-            <div class="stat-content">
-                <div class="stat-value">{{ usuarios_nuevos|default:0 }}</div>
-                <div class="stat-label">Leads Nuevos</div>
-            </div>
-        </div>
-
-        <div class="stat-card info">
-            <div class="stat-icon"></div>
-            <div class="stat-content">
-                <div class="stat-value">{{ usuarios_pago|default:0 }}</div>
-                <div class="stat-label">Pagos en Proceso</div>
-            </div>
-        </div>
-
-        <div class="stat-card success">
-            <div class="stat-icon"></div>
-            <div class="stat-content">
-                <div class="stat-value">{{ usuarios_activos|default:0 }}</div>
-                <div class="stat-label">Usuarios Activos</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Accesos Rápidos -->
-    <div class="quick-actions">
-        <h2>Accesos Rápidos</h2>
-        <div class="actions-grid">
-            <a href="{% url 'admin:pos_userregistration_changelist' %}" class="action-card">
-                <div class="action-icon"></div>
-                <div class="action-title">Gestión de Usuarios</div>
-                <div class="action-description">Administrar registros</div>
-            </a>
-
-            <a href="{% url 'admin:pos_producto_changelist' %}" class="action-card">
-                <div class="action-icon"></div>
-                <div class="action-title">Productos</div>
-                <div class="action-description">Inventario</div>
-            </a>
-
-            <a href="{% url 'admin:pos_venta_changelist' %}" class="action-card">
-                <div class="action-icon"></div>
-                <div class="action-title">Ventas</div>
-                <div class="action-description">Transacciones</div>
-            </a>
-
-            <a href="{% url 'admin:pos_movimientostock_changelist' %}" class="action-card">
-                <div class="action-icon"></div>
-                <div class="action-title">Movimientos</div>
-                <div class="action-description">Stock</div>
+    <!-- Últimos Leads -->
+    <div class="leads-section" style="margin-top: 30px;">
+        <h2 style="margin-bottom: 20px; color: #1a202c;">Últimos Leads</h2>
+        {% if ultimos_usuarios %}
+        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <thead>
+                <tr style="background: #f7fafc; border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Nombre</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Email</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Teléfono</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Ciudad</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Estado</th>
+                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #4a5568;">Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in ultimos_usuarios %}
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 12px; color: #2d3748;">{{ lead.full_name }}</td>
+                    <td style="padding: 12px; color: #2d3748;">{{ lead.email }}</td>
+                    <td style="padding: 12px; color: #2d3748;">{{ lead.phone }}</td>
+                    <td style="padding: 12px; color: #2d3748;">{{ lead.city|default:"-" }}</td>
+                    <td style="padding: 12px;">
+                        <span style="padding: 4px 12px; background: #edf2f7; color: #4a5568; border-radius: 12px; font-size: 12px; font-weight: 500;">
+                            {{ lead.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 12px; color: #718096; font-size: 14px;">{{ lead.created_at|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top: 15px; text-align: right;">
+            <a href="{% url 'admin:pos_userregistration_changelist' %}" style="color: #667eea; text-decoration: none; font-weight: 500;">
+                Ver todos los leads →
             </a>
         </div>
+        {% else %}
+        <p style="padding: 20px; background: #f7fafc; border-radius: 8px; color: #718096;">No hay leads registrados aún.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
