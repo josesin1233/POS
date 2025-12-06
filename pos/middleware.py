@@ -73,6 +73,6 @@ class AdminSecurityHeadersMiddleware:
             response['X-Content-Type-Options'] = 'nosniff'
             response['X-XSS-Protection'] = '1; mode=block'
             response['Referrer-Policy'] = 'same-origin'
-            response['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+            response['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;"
 
         return response
