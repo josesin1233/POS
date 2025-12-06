@@ -39,11 +39,23 @@ class LoginView(View):
             user = authenticate(request, username=username, password=password)
             
             if user is not None:
+                # Permitir login directo a superusuarios sin business
+                if user.is_superuser:
+                    login(request, user)
+                    messages.success(request, f'Bienvenido Administrador, {user.get_full_name() or user.username}!')
+                    # Redirigir superusuarios al admin
+                    return redirect('/admin/')
+
+                # Para usuarios normales, verificar business
+                if not hasattr(user, 'business') or not user.business:
+                    messages.error(request, 'Tu usuario no tiene un negocio asignado. Contacta al administrador.')
+                    return render(request, 'accounts/login.html', {'form': form})
+
                 # Verificar que el negocio tenga suscripción activa
                 if not user.business.is_subscription_active:
                     messages.error(request, 'La suscripción de tu negocio ha expirado. Contacta al administrador.')
                     return render(request, 'accounts/login.html', {'form': form})
-                
+
                 # Verificar límite de usuarios simultáneos
                 if self._verificar_limite_usuarios(user):
                     login(request, user)
@@ -51,7 +63,7 @@ class LoginView(View):
                     return redirect('pos:punto_de_venta')
                 else:
                     messages.error(
-                        request, 
+                        request,
                         f'Se ha alcanzado el límite de {user.business.max_concurrent_users} usuarios simultáneos. '
                         'Intenta más tarde o contacta al administrador para ampliar tu plan.'
                     )
