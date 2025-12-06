@@ -424,11 +424,16 @@ Para completar tu registro necesito la siguiente información:
                             'error': 'Nombre del negocio y teléfono son obligatorios para Business Owner'
                         }, status=400)
 
+                    # Limpiar teléfono (solo dígitos)
+                    clean_phone = ''.join(filter(str.isdigit, phone))
+                    if len(clean_phone) > 20:
+                        clean_phone = clean_phone[:20]
+
                     # Crear el negocio
                     business = Business.objects.create(
                         name=business_name,
                         email=email,
-                        phone=phone,
+                        phone=clean_phone,
                         address=city or '',
                         subscription_active=True
                     )
@@ -440,7 +445,7 @@ Para completar tu registro necesito la siguiente información:
                         first_name=full_name.split()[0] if full_name.split() else full_name,
                         last_name=' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else '',
                         password=make_password(password),
-                        phone=phone,
+                        phone=clean_phone,
                         business=business,
                         is_business_owner=True,
                         is_staff=False,
@@ -454,7 +459,7 @@ Para completar tu registro necesito la siguiente información:
                     lead_data = {
                         'full_name': full_name,
                         'email': email,
-                        'phone': phone,
+                        'phone': clean_phone,
                         'city': city,
                         'status': 'activo',
                         'business': business

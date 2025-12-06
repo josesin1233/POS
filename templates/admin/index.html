@@ -386,6 +386,13 @@
         const formData = new FormData(this);
         const messageDiv = document.getElementById('formMessage');
 
+        // Limpiar teléfono (solo números)
+        const phoneInput = document.getElementById('phone');
+        if (phoneInput && phoneInput.value) {
+            const cleanPhone = phoneInput.value.replace(/\D/g, '');
+            formData.set('phone', cleanPhone);
+        }
+
         // Si el checkbox está marcado, eliminar los campos de pago del FormData
         if (sinCobroCheckbox.checked) {
             formData.delete('meses_contratados');

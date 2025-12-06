@@ -7,7 +7,7 @@ class Business(models.Model):
     # Basic info
     name = models.CharField(max_length=100)
     email = models.EmailField()
-    phone = models.CharField(max_length=15, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     max_concurrent_users = models.PositiveIntegerField(default=2)
     subscription_active = models.BooleanField(default=True)
@@ -37,7 +37,7 @@ class Business(models.Model):
 
 class User(AbstractUser):
     business = models.ForeignKey(Business, on_delete=models.CASCADE, null=True, blank=True)
-    phone = models.CharField(max_length=15, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
     is_business_owner = models.BooleanField(default=False)
 
     def __str__(self):
