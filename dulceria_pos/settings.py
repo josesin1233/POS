@@ -199,10 +199,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField' 
 AUTH_USER_MODEL = 'accounts.User'
 
-APPEND_SLASH = False
+APPEND_SLASH = True
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/punto_de_venta/'
-LOGOUT_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/admin/'
 
 # Session configuration
 SESSION_COOKIE_AGE = 86400  # 24 horas
