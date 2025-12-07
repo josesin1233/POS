@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carrito - Prueba Minimalista</title>
+</head>
+<body>
+
+  <!-- Carrito -->
+  <section id="carrito">
+
+    <!-- Header -->
+    <header>
+      <h2>Carrito de Compras</h2>
+      <span id="contador">0</span>
+    </header>
+
+    <!-- Items -->
+    <main>
+      <!-- Mensaje vacío -->
+      <div id="vacio">
+        <p>Tu carrito está vacío</p>
+        <p>Agrega productos para comenzar</p>
+      </div>
+
+      <!-- Tabla de productos -->
+      <table id="productos">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Se llena dinámicamente -->
+        </tbody>
+      </table>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <div>
+        <span>Total:</span>
+        <span id="total">$0.00</span>
+      </div>
+
+      <div>
+        <span>Cambio:</span>
+        <span id="cambio">$0.00</span>
+      </div>
+
+      <nav>
+        <button id="btn-cobrar">Cobrar</button>
+        <button id="btn-limpiar">Limpiar</button>
+      </nav>
+    </footer>
+
+  </section>
+
+</body>
+</html>
