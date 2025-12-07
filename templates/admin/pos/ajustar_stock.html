@@ -1,0 +1,82 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Ajustar Stock - {{ producto.nombre }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Inicio</a>
+    &rsaquo; <a href="{% url 'admin:pos_producto_changelist' %}">Productos</a>
+    &rsaquo; <a href="{% url 'admin:pos_producto_change' producto.id %}">{{ producto.nombre }}</a>
+    &rsaquo; Ajustar Stock
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="margin-bottom: 20px; color: #333;">Ajustar Stock</h1>
+
+    <!-- Info del producto -->
+    <div style="padding: 15px; background: #f7fafc; border-radius: 6px; margin-bottom: 20px;">
+        <h2 style="margin: 0 0 10px 0; font-size: 18px; color: #2d3748;">{{ producto.nombre }}</h2>
+        <p style="margin: 5px 0; color: #4a5568;"><strong>Código:</strong> {{ producto.codigo }}</p>
+        <p style="margin: 5px 0; color: #4a5568;"><strong>Stock Actual:</strong> <span style="font-size: 20px; font-weight: bold; color: #667eea;">{{ producto.stock }} unidades</span></p>
+    </div>
+
+    <!-- Formulario -->
+    <form method="post" style="margin-top: 20px;">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #4a5568; font-weight: 500;">
+                Cantidad a ajustar
+            </label>
+            <input
+                type="number"
+                name="cantidad"
+                required
+                placeholder="Ej: 10 para sumar, -5 para restar"
+                style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 16px;"
+                autofocus
+            >
+            <p style="margin-top: 8px; font-size: 14px; color: #718096;">
+                Usa números positivos para <strong style="color: green;">AGREGAR</strong> stock<br>
+                Usa números negativos para <strong style="color: red;">RESTAR</strong> stock
+            </p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; color: #4a5568; font-weight: 500;">
+                Motivo (opcional)
+            </label>
+            <textarea
+                name="motivo"
+                rows="3"
+                placeholder="Ej: Compra de mercancía, Devolución, Merma, etc."
+                style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 14px; resize: vertical;"
+            ></textarea>
+        </div>
+
+        <!-- Ejemplos -->
+        <div style="padding: 15px; background: #fff5f5; border-left: 4px solid #feb2b2; border-radius: 6px; margin-bottom: 20px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #742a2a;">Ejemplos:</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #742a2a; font-size: 13px;">
+                <li><strong>+50</strong> - Agrega 50 unidades (entrada de mercancía)</li>
+                <li><strong>-10</strong> - Resta 10 unidades (merma o devolución)</li>
+                <li><strong>100</strong> - Agrega 100 unidades (sin signo = positivo)</li>
+            </ul>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <a href="{% url 'admin:pos_producto_changelist' %}"
+               style="padding: 12px 24px; background: #e2e8f0; color: #2d3748; text-decoration: none; border-radius: 6px; font-weight: 500;">
+                Cancelar
+            </a>
+            <button type="submit"
+                    style="padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;">
+                Ajustar Stock
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

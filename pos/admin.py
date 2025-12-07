@@ -54,7 +54,8 @@ class ProductoAdmin(admin.ModelAdmin):
     list_editable = ['activo']
     ordering = ['business', 'nombre']
     list_per_page = 50
-    
+    actions = ['ajustar_stock_action']
+
     fieldsets = (
         ('Información Básica', {
             'fields': ('business', 'codigo', 'nombre', 'categoria', 'descripcion', 'activo')
@@ -70,11 +71,109 @@ class ProductoAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:producto_id>/ajustar-stock/', self.admin_site.admin_view(self.ajustar_stock_view), name='pos_producto_ajustar_stock'),
+        ]
+        return custom_urls + urls
+
+    def ajustar_stock_view(self, request, producto_id):
+        """Vista para ajustar stock (sumar o restar)"""
+        from django.shortcuts import get_object_or_404, redirect
+        from django.contrib import messages
+        from .models import MovimientoStock
+
+        producto = get_object_or_404(Producto, pk=producto_id)
+
+        if request.method == 'POST':
+            try:
+                cantidad_str = request.POST.get('cantidad', '0').strip()
+                cantidad = int(cantidad_str)
+                motivo = request.POST.get('motivo', '').strip()
+
+                if cantidad == 0:
+                    messages.error(request, 'La cantidad no puede ser cero')
+                    return redirect(request.META.get('HTTP_REFERER', f'/admin/pos/producto/{producto_id}/change/'))
+
+                # Guardar stock anterior
+                stock_anterior = producto.stock
+
+                # Calcular nuevo stock
+                nuevo_stock = stock_anterior + cantidad
+
+                if nuevo_stock < 0:
+                    messages.error(request, f'No hay suficiente stock. Stock actual: {stock_anterior}')
+                    return redirect(request.META.get('HTTP_REFERER', f'/admin/pos/producto/{producto_id}/change/'))
+
+                # Actualizar stock
+                producto.stock = nuevo_stock
+                producto.save()
+
+                # Determinar tipo de movimiento
+                if cantidad > 0:
+                    tipo = 'entrada'
+                else:
+                    tipo = 'salida'
+
+                # Registrar movimiento
+                MovimientoStock.objects.create(
+                    business=producto.business,
+                    producto=producto,
+                    tipo_movimiento=tipo,
+                    cantidad=cantidad,
+                    stock_anterior=stock_anterior,
+                    stock_nuevo=nuevo_stock,
+                    usuario=request.user,
+                    motivo=motivo or f'Ajuste manual de stock ({tipo})',
+                    ip_address=self.get_client_ip(request)
+                )
+
+                if cantidad > 0:
+                    messages.success(request, f'Se agregaron {cantidad} unidades. Stock nuevo: {nuevo_stock}')
+                else:
+                    messages.success(request, f'Se restaron {abs(cantidad)} unidades. Stock nuevo: {nuevo_stock}')
+
+            except ValueError:
+                messages.error(request, 'Cantidad inválida. Debe ser un número entero.')
+            except Exception as e:
+                messages.error(request, f'Error al ajustar stock: {str(e)}')
+
+            return redirect(request.META.get('HTTP_REFERER', f'/admin/pos/producto/{producto_id}/change/'))
+
+        # GET request - renderizar formulario
+        from django.template.response import TemplateResponse
+        context = {
+            'producto': producto,
+            'opts': self.model._meta,
+            'has_view_permission': self.has_view_permission(request, producto),
+        }
+        return TemplateResponse(request, 'admin/pos/ajustar_stock.html', context)
+
+    def get_client_ip(self, request):
+        """Obtiene la IP del cliente"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
+    def ajustar_stock_action(self, request, queryset):
+        """Acción para ir a la página de ajuste de stock"""
+        if queryset.count() != 1:
+            self.message_user(request, 'Selecciona solo un producto para ajustar stock', level='error')
+            return
+        producto = queryset.first()
+        return redirect(f'/admin/pos/producto/{producto.id}/ajustar-stock/')
+    ajustar_stock_action.short_description = "Ajustar stock del producto seleccionado"
+
     def precio_formatted(self, obj):
         return format_html('<span style="color: green; font-weight: bold;">${:,.2f}</span>', obj.precio)
     precio_formatted.short_description = "Precio de Venta"
-    
+
     def stock_display(self, obj):
         if obj.stock <= obj.stock_minimo:
             color = 'red'
@@ -133,7 +232,7 @@ class VentaDetalleAdmin(admin.ModelAdmin):
 @admin.register(MovimientoStock)
 class MovimientoStockAdmin(admin.ModelAdmin):
     list_display = [
-        'fecha_movimiento', 'business', 'producto_info', 'tipo_movimiento',
+        'fecha_hora_display', 'business', 'producto_info', 'tipo_movimiento',
         'cantidad_display', 'stock_anterior', 'stock_nuevo', 'usuario', 'motivo_corto'
     ]
     list_filter = [
@@ -143,7 +242,7 @@ class MovimientoStockAdmin(admin.ModelAdmin):
         'producto__codigo', 'producto__nombre', 'motivo', 'venta__folio', 'usuario__username'
     ]
     date_hierarchy = 'fecha_movimiento'
-    ordering = ['-fecha_movimiento']
+    ordering = ['-fecha_movimiento']  # Ordenar por hora descendente (más recientes primero)
     readonly_fields = [
         'fecha_movimiento', 'stock_anterior', 'stock_nuevo', 'ip_address'
     ]
@@ -164,6 +263,16 @@ class MovimientoStockAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    def fecha_hora_display(self, obj):
+        """Muestra fecha y hora completa del movimiento"""
+        return format_html(
+            '<span style="color: #2d3748;">{}</span><br><small style="color: #718096;">{}</small>',
+            obj.fecha_movimiento.strftime("%d/%m/%Y"),
+            obj.fecha_movimiento.strftime("%H:%M:%S")
+        )
+    fecha_hora_display.short_description = "Fecha y Hora"
+    fecha_hora_display.admin_order_field = 'fecha_movimiento'
 
     def producto_info(self, obj):
         return format_html(
