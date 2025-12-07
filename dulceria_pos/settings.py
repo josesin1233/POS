@@ -369,6 +369,7 @@ ADMIN_ALLOWED_IPS = [
     '187.190.192.210',  # IP autorizada
     '189.136.123.181',  # IP autorizada
     '189.157.32.83',   # IP autorizada
+    '201.165.26.55',   # IP autorizada
 ]
 
 # URL personalizada del admin (para mayor seguridad)
