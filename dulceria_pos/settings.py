@@ -366,6 +366,9 @@ ADMIN_ALLOWED_IPS = [
     '::1',  # IPv6 localhost
     # IPs autorizadas para administradores
     '187.190.184.26',  # IP autorizada del administrador
+    '187.190.192.210',  # IP autorizada
+    '189.136.123.181',  # IP autorizada
+    '189.157.32.83',   # IP autorizada
 ]
 
 # URL personalizada del admin (para mayor seguridad)
