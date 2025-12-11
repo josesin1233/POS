@@ -1,0 +1,1180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% if business %}{{ business.name }} - {% endif %}Punto de Venta</title>
+  {% if business %}<meta name="business-id" content="{{ business.id }}">{% endif %}
+  <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+  <link rel="alternate icon" href="{% static 'favicon.ico' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind-production.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/scanner.css' %}">
+  <script src="{% static 'js/barcode-scanner.js' %}"></script>
+  <script src="{% static 'js/stock-alerts.js' %}"></script>
+  <script src="{% static 'js/tutorial-helper.js' %}"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f5f5f5;
+      color: #1a1a1a;
+    }
+
+    /* Variables minimalistas */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f5;
+      --bg-tertiary: #fafafa;
+      --text-primary: #1a1a1a;
+      --text-secondary: #666666;
+      --border-color: #e5e5e5;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+    }
+
+    /* Botones minimalistas */
+    button {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--text-secondary);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue);
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    .btn-success {
+      background: var(--accent-green);
+      color: white;
+      border-color: var(--accent-green);
+    }
+
+    .btn-success:hover {
+      background: #059669;
+      border-color: #059669;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+      border-color: #ef4444;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    /* Cards y contenedores */
+    .card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Navegación */
+    nav {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Tabs */
+    .tab-button {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-secondary);
+      padding: 0.75rem 1rem;
+      font-weight: 500;
+    }
+
+    .tab-button:hover {
+      color: var(--text-primary);
+      background: transparent;
+    }
+
+    .tab-button-active {
+      background: var(--bg-tertiary);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      border-radius: 6px;
+    }
+
+    /* Carrito */
+    .cart-container {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .cart-header {
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .cart-footer {
+      background: var(--bg-tertiary);
+      border-top: 1px solid var(--border-color);
+      padding: 1rem;
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* Tabla */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+    }
+
+    td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.875rem;
+    }
+
+    tbody tr:hover {
+      background: var(--bg-tertiary);
+    }
+
+    /* Inputs */
+    input, select {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem;
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    /* Badge contador */
+    .badge {
+      background: var(--accent-blue);
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: var(--bg-primary);
+      border-radius: 8px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .flex-desktop {
+        flex-direction: column !important;
+      }
+
+      .cart-container,
+      .product-form {
+        width: 100% !important;
+        min-width: auto !important;
+        margin-bottom: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav style="padding: 1rem 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="font-size: 1.25rem; font-weight: 600;">{{ business.name|default:"DulcePOS" }}</div>
+
+      <div style="display: flex; align-items: center; gap: 2rem;">
+        <!-- Stock Alert -->
+        <div class="card" style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem 1rem;">
+          <div>
+            <div style="font-weight: 600; font-size: 0.875rem;">
+              <span id="stock-count-display">-</span> productos
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">con poco stock</div>
+          </div>
+          <button onclick="irAInventarioStock()" class="btn-primary" style="font-size: 0.875rem; padding: 0.5rem 0.75rem;">
+            Ver Inventario
+          </button>
+        </div>
+
+        <a href="/accounts/logout/" style="color: var(--text-secondary); text-decoration: none; font-weight: 500;">Salir</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Tabs Navigation -->
+  <div style="background: var(--bg-primary); border-bottom: 1px solid var(--border-color); padding: 1rem 2rem;">
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="/punto_de_venta/" class="tab-button-active">Punto de Venta</a>
+      <a href="/inventario/" class="tab-button">Inventario</a>
+      <a href="/registro/" class="tab-button">Registro</a>
+      <a href="/caja/" class="tab-button">Caja</a>
+    </div>
+  </div>
+
+  {% if error %}
+  <div style="max-width: 1400px; margin: 1rem auto; padding: 0 2rem;">
+    <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 1rem; border-radius: 6px;">
+      <strong>Error:</strong> {{ error }}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- POS Content -->
+  <div style="padding: 1rem 2rem;">
+    <div class="flex-desktop" style="display: flex; gap: 1rem; min-height: calc(100vh - 200px);">
+
+      <!-- Shopping Cart -->
+      <div class="cart-container" style="flex: 2; display: flex; flex-direction: column;">
+
+        <!-- Cart Header -->
+        <div class="cart-header">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Carrito de Compras</h2>
+            <span class="badge" id="cart-count">0</span>
+          </div>
+        </div>
+
+        <!-- Cart Items -->
+        <div style="flex: 1; overflow-y: auto; padding: 1rem;">
+          <!-- Empty state -->
+          <div id="carrito-vacio" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary);">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🛒</div>
+            <p style="font-size: 1.125rem; font-weight: 500; margin-bottom: 0.5rem;">Tu carrito está vacío</p>
+            <p style="font-size: 0.875rem;">Agrega productos escaneando o buscando</p>
+          </div>
+
+          <!-- Products table -->
+          <table id="productos-table" style="display: none;">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th style="text-align: center;">Cantidad</th>
+                <th style="text-align: right;">Precio</th>
+                <th style="text-align: right;">Total</th>
+                <th style="text-align: center;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-productos">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Cart Footer -->
+        <div class="cart-footer">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <span style="font-size: 1.125rem; font-weight: 600;">Total:</span>
+            <span style="font-size: 1.5rem; font-weight: 700; color: var(--accent-blue);" id="total">$0.00</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: var(--accent-green); font-size: 0.875rem;">
+            <span>Cambio:</span>
+            <span id="cambio" style="font-weight: 600;">$0.00</span>
+          </div>
+
+          <!-- Action buttons -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+            <button onclick="cobrar()" class="btn-success">Cobrar</button>
+            <button onclick="window.location.href='/ventas/'" class="btn-primary">Ticket</button>
+            <button onclick="limpiarCarrito()" class="btn-danger">Limpiar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Form Panel -->
+      <div class="card product-form" style="flex: 1; display: flex; flex-direction: column; padding: 1.5rem;">
+        <h3 style="margin: 0 0 1.5rem 0; font-size: 1.125rem; font-weight: 600;">Agregar Producto</h3>
+
+        <form id="formulario-producto" style="flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Nombre -->
+          <div>
+            <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Nombre:</label>
+            <div style="position: relative;">
+              <input type="text" id="nombre" placeholder="Introduce nombre" autocomplete="off" autofocus style="width: 100%;" />
+              <div id="search-suggestions" style="display: none; position: absolute; z-index: 50; width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; max-height: 200px; overflow-y: auto; margin-top: 0.25rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+            </div>
+          </div>
+
+          <!-- Código + Stock -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Código:</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="codigo" placeholder="Código" autocomplete="off" style="flex: 1;" />
+                <button type="button" onclick="openScanner()" class="btn-primary" style="padding: 0.5rem 0.75rem;">SCAN</button>
+              </div>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Stock:</label>
+              <input type="text" id="stock" readonly placeholder="0" style="width: 100%; background: var(--bg-tertiary); text-align: center;" />
+            </div>
+          </div>
+
+          <!-- Precio + Cantidad -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Precio:</label>
+              <input type="text" id="precio" readonly placeholder="$0.00" style="width: 100%; background: var(--bg-tertiary); text-align: center;" />
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem;">Cantidad:</label>
+              <input type="number" id="cantidad" min="1" value="1" style="width: 100%; text-align: center;" />
+            </div>
+          </div>
+
+          <!-- Submit button -->
+          <button type="submit" class="btn-primary" style="width: 100%; padding: 0.75rem; font-weight: 600; margin-top: auto;">
+            Agregar al Carrito
+          </button>
+        </form>
+
+        <!-- Total del día -->
+        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-tertiary); border-radius: 6px; text-align: center;">
+          <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: 600;">Resumen del Día</h4>
+          <p style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--accent-green);" id="total-dia">$0.00</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Método de Pago -->
+  <div id="modalMetodoPago" class="modal">
+    <div class="modal-content">
+      <h2 style="margin: 0 0 1.5rem 0; font-size: 1.5rem; font-weight: 600; text-align: center;">Método de Pago</h2>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+        <button onclick="seleccionarMetodoPago('efectivo')" style="width: 100%; padding: 1rem; text-align: left;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-weight: 600;">Efectivo</span>
+            <span style="font-size: 0.875rem; color: var(--text-secondary);">Con cambio</span>
+          </div>
+        </button>
+
+        <button onclick="seleccionarMetodoPago('transferencia')" style="width: 100%; padding: 1rem; text-align: left;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-weight: 600;">Transferencia</span>
+            <span style="font-size: 0.875rem; color: var(--text-secondary);">Sin cambio</span>
+          </div>
+        </button>
+
+        <button onclick="seleccionarMetodoPago('tarjeta')" style="width: 100%; padding: 1rem; text-align: left;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-weight: 600;">Tarjeta</span>
+            <span style="font-size: 0.875rem; color: var(--text-secondary);">Sin cambio</span>
+          </div>
+        </button>
+      </div>
+
+      <button onclick="cerrarModalMetodoPago()" style="width: 100%;">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmación de Pago -->
+  <div id="modalConfirmacionPago" class="modal">
+    <div class="modal-content">
+      <h2 style="margin: 0 0 1rem 0; font-size: 1.5rem; font-weight: 600; text-align: center;">Confirmar Pago</h2>
+
+      <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-tertiary); border-radius: 6px;">
+        <p style="text-align: center; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">Método de pago:</p>
+        <p id="metodoConfirmacion" style="font-size: 1.25rem; font-weight: 600; text-align: center; margin-bottom: 1rem;"></p>
+
+        <p style="text-align: center; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.875rem;">Total a cobrar:</p>
+        <p id="totalConfirmacion" style="font-size: 2rem; font-weight: 700; text-align: center; color: var(--accent-green); margin: 0;"></p>
+      </div>
+
+      <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.875rem;">
+        ¿Confirma que el pago fue <strong>realizado correctamente</strong>?
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <button onclick="cancelarConfirmacionPago()" class="btn-danger">Cancelar</button>
+        <button onclick="confirmarPago()" class="btn-success">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Variables globales
+    let carritoLocal = [];
+    const formProducto = document.getElementById("formulario-producto");
+    const tabla = document.getElementById("tabla-productos");
+    const totalSpan = document.getElementById("total");
+    const cambioSpan = document.getElementById("cambio");
+    let businessId = null;
+    const esDemo = false;
+
+    async function initializeBusinessId() {
+        try {
+            const response = await fetch('/business/info/');
+            if (response.ok) {
+                const data = await response.json();
+                businessId = data.id;
+                console.log('Business ID loaded:', businessId);
+            } else {
+                const metaBusinessId = document.querySelector('meta[name="business-id"]');
+                if (metaBusinessId) {
+                    businessId = parseInt(metaBusinessId.getAttribute('content'));
+                }
+            }
+        } catch (error) {
+            console.error('Error loading business info:', error);
+            const metaBusinessId = document.querySelector('meta[name="business-id"]');
+            if (metaBusinessId) {
+                businessId = parseInt(metaBusinessId.getAttribute('content'));
+            }
+        }
+    }
+
+    let autocompletadoActivo = true;
+    let ultimoProductoEncontrado = null;
+    let timeoutBusqueda = null;
+    let sugerenciasActuales = [];
+    let indiceSugerenciaSeleccionada = -1;
+
+    function redondear(monto) {
+      return Math.round(monto * 100) / 100;
+    }
+
+    function formatearPesos(monto) {
+      return new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(monto);
+    }
+
+    function clearProductoInputs() {
+      document.getElementById("precio").value = "";
+      document.getElementById("stock").value = "";
+      autocompletadoActivo = true;
+      ultimoProductoEncontrado = null;
+    }
+
+    async function buscarProducto(query, tipo = 'codigo') {
+      if (!autocompletadoActivo || !query) return;
+
+      try {
+        const res = await fetch("/producto/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ query: query })
+        });
+
+        if (res.ok) {
+          const producto = await res.json();
+
+          if (tipo === 'codigo') {
+            document.getElementById("codigo").value = producto.codigo;
+            document.getElementById("nombre").value = producto.nombre;
+          } else if (tipo === 'nombre') {
+            document.getElementById("codigo").value = producto.codigo;
+            document.getElementById("nombre").value = producto.nombre;
+          }
+
+          document.getElementById("precio").value = `$${producto.precio.toFixed(2)}`;
+          document.getElementById("stock").value = producto.stock;
+
+          autocompletadoActivo = false;
+          ultimoProductoEncontrado = producto;
+        } else {
+          clearProductoInputs();
+        }
+      } catch (error) {
+        console.error("Error buscando producto:", error);
+        clearProductoInputs();
+      }
+    }
+
+    async function buscarSugerencias(query) {
+      if (!query || query.length < 2) {
+        ocultarSugerencias();
+        return;
+      }
+
+      try {
+        const res = await fetch("/producto/sugerencias/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ query: query })
+        });
+
+        if (res.ok) {
+          const sugerencias = await res.json();
+          sugerenciasActuales = sugerencias;
+          mostrarSugerencias(sugerencias);
+        } else {
+          ocultarSugerencias();
+        }
+      } catch (error) {
+        console.error("Error buscando sugerencias:", error);
+        ocultarSugerencias();
+      }
+    }
+
+    function mostrarSugerencias(sugerencias) {
+      const dropdown = document.getElementById("search-suggestions");
+      dropdown.innerHTML = "";
+      indiceSugerenciaSeleccionada = -1;
+
+      if (sugerencias.length === 0) {
+        ocultarSugerencias();
+        return;
+      }
+
+      sugerencias.forEach((producto, index) => {
+        const item = document.createElement("div");
+        item.style.padding = "0.75rem";
+        item.style.cursor = "pointer";
+        item.style.borderBottom = "1px solid var(--border-color)";
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 500; font-size: 0.875rem;">${producto.nombre}</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">Código: ${producto.codigo} | Stock: ${producto.stock}</div>
+            </div>
+            <div style="font-weight: 600; color: var(--accent-blue);">$${producto.precio.toFixed(2)}</div>
+          </div>
+        `;
+
+        item.addEventListener("click", () => seleccionarSugerencia(producto));
+        item.addEventListener("mouseenter", () => {
+          indiceSugerenciaSeleccionada = index;
+          item.style.background = "var(--bg-tertiary)";
+        });
+        item.addEventListener("mouseleave", () => {
+          item.style.background = "transparent";
+        });
+
+        dropdown.appendChild(item);
+      });
+
+      dropdown.style.display = "block";
+    }
+
+    function ocultarSugerencias() {
+      document.getElementById("search-suggestions").style.display = "none";
+      sugerenciasActuales = [];
+      indiceSugerenciaSeleccionada = -1;
+    }
+
+    function seleccionarSugerencia(producto) {
+      document.getElementById("codigo").value = producto.codigo;
+      document.getElementById("nombre").value = producto.nombre;
+      document.getElementById("precio").value = `$${producto.precio.toFixed(2)}`;
+      document.getElementById("stock").value = producto.stock;
+
+      autocompletadoActivo = false;
+      ultimoProductoEncontrado = producto;
+      ocultarSugerencias();
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    document.getElementById("codigo").addEventListener("input", async (e) => {
+      const codigo = e.target.value.trim();
+
+      if (codigo.length === 0) {
+        clearProductoInputs();
+        document.getElementById("nombre").disabled = false;
+        document.getElementById("nombre").value = "";
+        return;
+      }
+
+      document.getElementById("nombre").disabled = true;
+
+      if (ultimoProductoEncontrado && codigo !== ultimoProductoEncontrado.codigo) {
+        autocompletadoActivo = true;
+      }
+
+      if (codigo.length >= 2) {
+        await buscarProducto(codigo, 'codigo');
+      }
+    });
+
+    document.getElementById("nombre").addEventListener("input", async (e) => {
+      const nombre = e.target.value.trim();
+
+      if (timeoutBusqueda) {
+        clearTimeout(timeoutBusqueda);
+      }
+
+      if (nombre.length === 0) {
+        clearProductoInputs();
+        ocultarSugerencias();
+        document.getElementById("codigo").disabled = false;
+        document.getElementById("codigo").value = "";
+        return;
+      }
+
+      document.getElementById("codigo").disabled = true;
+
+      if (ultimoProductoEncontrado && nombre !== ultimoProductoEncontrado.nombre) {
+        autocompletadoActivo = true;
+      }
+
+      timeoutBusqueda = setTimeout(async () => {
+        if (nombre.length >= 2) {
+          await buscarSugerencias(nombre);
+        }
+      }, 300);
+    });
+
+    document.getElementById("codigo").addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+
+        const codigo = e.target.value.trim();
+        if (!codigo) return;
+
+        try {
+          const res = await fetch("/agregar/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ codigo, cantidad: 1 })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            alert(data.error);
+            return;
+          }
+
+          agregarAlCarrito(data);
+
+          document.getElementById("codigo").value = "";
+          clearProductoInputs();
+          document.getElementById("nombre").disabled = false;
+
+        } catch (error) {
+          console.error("Error agregando producto:", error);
+          alert("Error al agregar producto");
+        }
+      }
+    });
+
+    function agregarAlCarrito(producto) {
+      const existente = carritoLocal.findIndex(p => p.codigo === producto.codigo);
+
+      if (existente !== -1) {
+        carritoLocal[existente].cantidad += producto.cantidad;
+        const nuevoTotal = carritoLocal[existente].cantidad * carritoLocal[existente].precio_unitario;
+        carritoLocal[existente].precio_total = redondear(nuevoTotal);
+      } else {
+        carritoLocal.push({
+          codigo: producto.codigo,
+          nombre: producto.nombre,
+          cantidad: producto.cantidad,
+          precio_unitario: producto.precio_unitario,
+          precio_total: producto.precio_total
+        });
+      }
+
+      actualizarTabla();
+    }
+
+    function actualizarTabla() {
+      tabla.innerHTML = "";
+      let total = 0;
+
+      const tablaEl = document.getElementById("productos-table");
+      const vacioEl = document.getElementById("carrito-vacio");
+
+      if (carritoLocal.length === 0) {
+        tablaEl.style.display = "none";
+        vacioEl.style.display = "flex";
+      } else {
+        tablaEl.style.display = "table";
+        vacioEl.style.display = "none";
+      }
+
+      carritoLocal.forEach((item, index) => {
+        total += item.precio_total;
+
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+          <td>
+            <div style="font-weight: 500;">${item.nombre}</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">${item.codigo}</div>
+          </td>
+          <td style="text-align: center;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+              <button onclick="cambiarCantidad(${index}, -1)" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center;">-</button>
+              <input type="number" min="1" value="${item.cantidad}"
+                     style="width: 60px; text-align: center;"
+                     data-index="${index}"
+                     data-codigo="${item.codigo}"
+                     class="cantidad-input" />
+              <button onclick="cambiarCantidad(${index}, 1)" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center;">+</button>
+            </div>
+          </td>
+          <td style="text-align: right;">${formatearPesos(item.precio_unitario)}</td>
+          <td style="text-align: right; font-weight: 600; color: var(--accent-blue);">${formatearPesos(item.precio_total)}</td>
+          <td style="text-align: center;">
+            <button onclick="eliminarDelCarrito(${index})" class="btn-danger" style="padding: 0.5rem;">🗑️</button>
+          </td>
+        `;
+        tabla.appendChild(fila);
+      });
+
+      document.getElementById("total").textContent = formatearPesos(total);
+      document.getElementById("cart-count").textContent = `${carritoLocal.length}`;
+      cambioSpan.textContent = formatearPesos(0);
+
+      document.querySelectorAll(".cantidad-input").forEach(input => {
+        input.addEventListener("change", e => {
+          const index = parseInt(e.target.dataset.index);
+          const codigo = e.target.dataset.codigo;
+          actualizarCantidadItem(index, parseInt(e.target.value), codigo);
+        });
+      });
+    }
+
+    function cambiarCantidad(index, incremento) {
+      const item = carritoLocal[index];
+      const nuevaCantidad = item.cantidad + incremento;
+
+      if (nuevaCantidad >= 1) {
+        actualizarCantidadItem(index, nuevaCantidad, item.codigo);
+      }
+    }
+
+    function actualizarCantidadItem(index, nuevaCantidad, codigo) {
+      if (isNaN(nuevaCantidad) || nuevaCantidad <= 0) {
+        nuevaCantidad = 1;
+      }
+
+      const item = carritoLocal[index];
+      item.cantidad = nuevaCantidad;
+      item.precio_total = redondear(item.precio_unitario * nuevaCantidad);
+
+      actualizarTabla();
+    }
+
+    function eliminarDelCarrito(index) {
+      const item = carritoLocal[index];
+
+      if (item.cantidad > 10) {
+        if (!confirm(`¿Eliminar ${item.nombre} (${item.cantidad} unidades) del carrito?`)) {
+          return;
+        }
+      }
+
+      carritoLocal.splice(index, 1);
+      actualizarTabla();
+    }
+
+    function limpiarCarrito() {
+      if (carritoLocal.length === 0) {
+        alert("El carrito ya está vacío.");
+        return;
+      }
+      if (confirm("¿Deseas vaciar el carrito?")) {
+        carritoLocal = [];
+        actualizarTabla();
+      }
+    }
+
+    let metodoPagoSeleccionado = null;
+    let totalVenta = 0;
+
+    async function cobrar() {
+      if (carritoLocal.length === 0) {
+        alert("Agrega productos antes de cobrar.");
+        return;
+      }
+
+      try {
+        totalVenta = carritoLocal.reduce((sum, item) => {
+          return sum + (parseFloat(item.precio_total) || 0);
+        }, 0);
+
+        const modal = document.getElementById('modalMetodoPago');
+        modal.style.display = 'flex';
+      } catch (error) {
+        console.error('Error en cobrar():', error);
+        alert('Error al procesar el cobro: ' + error.message);
+      }
+    }
+
+    function seleccionarMetodoPago(metodo) {
+      metodoPagoSeleccionado = metodo;
+      cerrarModalMetodoPago();
+
+      if (metodo === 'efectivo') {
+        procesarPagoEfectivo();
+      } else {
+        mostrarModalConfirmacion(metodo);
+      }
+    }
+
+    function cerrarModalMetodoPago() {
+      document.getElementById('modalMetodoPago').style.display = 'none';
+    }
+
+    async function procesarPagoEfectivo() {
+      let pago = prompt("Ingrese la cantidad pagada:");
+      if (!pago) {
+        metodoPagoSeleccionado = null;
+        return;
+      }
+
+      pago = parseFloat(pago);
+
+      if (isNaN(pago) || pago < totalVenta) {
+        alert("El pago es insuficiente.");
+        metodoPagoSeleccionado = null;
+        return;
+      }
+
+      const cambio = redondear(pago - totalVenta);
+      cambioSpan.textContent = formatearPesos(cambio);
+
+      await registrarVentaConMetodo('efectivo', pago, cambio);
+    }
+
+    function mostrarModalConfirmacion(metodo) {
+      const metodoTexto = metodo === 'transferencia' ? 'Transferencia' : 'Tarjeta';
+      document.getElementById('metodoConfirmacion').textContent = metodoTexto;
+      document.getElementById('totalConfirmacion').textContent = formatearPesos(totalVenta);
+
+      document.getElementById('modalConfirmacionPago').style.display = 'flex';
+    }
+
+    async function confirmarPago() {
+      cerrarModalConfirmacionPago();
+      await registrarVentaConMetodo(metodoPagoSeleccionado, totalVenta, 0);
+    }
+
+    function cancelarConfirmacionPago() {
+      cerrarModalConfirmacionPago();
+      metodoPagoSeleccionado = null;
+      alert("Pago cancelado. El carrito permanece intacto.");
+    }
+
+    function cerrarModalConfirmacionPago() {
+      document.getElementById('modalConfirmacionPago').style.display = 'none';
+    }
+
+    async function registrarVentaConMetodo(metodo, montoPagado, cambio) {
+      try {
+        const productos = carritoLocal.map(p => ({
+          codigo: p.codigo,
+          cantidad: p.cantidad
+        }));
+
+        const res = await fetch("/punto_de_venta/registrar-venta/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({
+            productos,
+            monto_pagado: montoPagado,
+            metodo_pago: metodo
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          const mensaje = metodo === 'efectivo'
+            ? `Venta registrada exitosamente.\nCambio: ${formatearPesos(cambio)}`
+            : `Venta registrada exitosamente.\nMétodo: ${metodo.charAt(0).toUpperCase() + metodo.slice(1)}`;
+
+          alert(mensaje);
+
+          carritoLocal = [];
+          actualizarTabla();
+          cambioSpan.textContent = formatearPesos(0);
+          cargarTotalDia();
+        } else {
+          alert("Error: " + (data.error || "No se pudo registrar la venta"));
+        }
+
+      } catch (error) {
+        console.error("Error registrando venta:", error);
+        alert("Error al registrar la venta");
+      } finally {
+        metodoPagoSeleccionado = null;
+        totalVenta = 0;
+      }
+    }
+
+    async function cargarTotalDia() {
+      try {
+        const res = await fetch("/punto_de_venta/total-hoy/", {
+          method: 'GET',
+          credentials: 'same-origin',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          document.getElementById("total-dia").textContent = formatearPesos(data.total_hoy);
+        } else {
+          console.error("Error del servidor al cargar total del día:", data);
+          document.getElementById("total-dia").textContent = "$0.00";
+        }
+      } catch (error) {
+        console.error("Error cargando total del día:", error);
+        document.getElementById("total-dia").textContent = "$0.00";
+      }
+    }
+
+    formProducto.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const codigo = document.getElementById("codigo").value.trim();
+      const cantidad = parseInt(document.getElementById("cantidad").value) || 1;
+
+      if (!codigo) {
+        alert("Ingresa un código de producto.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/agregar/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ codigo, cantidad })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          agregarAlCarrito(data);
+          formProducto.reset();
+          document.getElementById("codigo").focus();
+          clearProductoInputs();
+          document.getElementById("nombre").disabled = false;
+          document.getElementById("codigo").disabled = false;
+        } else {
+          alert(data.error);
+        }
+
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Error al agregar producto");
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof BarCodeScanner !== 'undefined') {
+        BarCodeScanner.init({
+          onScan: async (codigo) => {
+            console.log('Scanner callback:', codigo);
+          }
+        });
+      }
+
+      document.addEventListener('barcodeScanned', async (event) => {
+        const { code, source } = event.detail;
+        console.log(`Barcode scanned from ${source}:`, code);
+
+        document.getElementById('codigo').value = code;
+
+        try {
+          await buscarProducto(code, 'codigo');
+
+          setTimeout(async () => {
+            await autoAgregarProductoEscaneado(code);
+          }, 500);
+
+        } catch (error) {
+          console.error("Error procesando código escaneado:", error);
+          alert("Error procesando el código escaneado");
+        }
+      });
+
+      if (typeof StockAlertSystem !== 'undefined') {
+        StockAlertSystem.createGlobal({
+          checkInterval: 60000,
+          alertDuration: 6000,
+          sound: false,
+          enabled: true
+        });
+      }
+
+      cargarTotalDia();
+      actualizarContadorStock();
+      document.getElementById("codigo").focus();
+    });
+
+    async function autoAgregarProductoEscaneado(codigo) {
+      try {
+        const cantidad = parseInt(document.getElementById("cantidad").value) || 1;
+
+        const res = await fetch("/agregar/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ codigo, cantidad })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          agregarAlCarrito(data);
+
+          document.getElementById("codigo").value = "";
+          clearProductoInputs();
+          document.getElementById("nombre").disabled = false;
+          document.getElementById("codigo").disabled = false;
+          document.getElementById("cantidad").value = "1";
+
+          document.getElementById("codigo").focus();
+        } else {
+          alert(data.error);
+        }
+
+      } catch (error) {
+        console.error("Error agregando producto escaneado:", error);
+        alert("Error al agregar producto al carrito");
+      }
+    }
+
+    function openScanner() {
+      if (typeof BarCodeScanner !== 'undefined') {
+        BarCodeScanner.open();
+      } else {
+        alert('Scanner no disponible. Ingresa el código manualmente.');
+      }
+    }
+
+    async function actualizarContadorStock() {
+      const countDisplay = document.getElementById('stock-count-display');
+
+      if (!countDisplay) return;
+
+      try {
+        countDisplay.textContent = '...';
+
+        const response = await fetch('/inventario/poco-stock/', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const productos = data.productos_bajo_stock || [];
+        const cantidad = productos.length;
+
+        countDisplay.textContent = cantidad;
+
+      } catch (error) {
+        console.error('Error cargando contador de stock:', error);
+        countDisplay.textContent = '!';
+      }
+    }
+
+    function irAInventarioStock() {
+      window.location.href = '/inventario/?filter=bajo-stock';
+    }
+
+    initializeBusinessId();
+  </script>
+</body>
+</html>
