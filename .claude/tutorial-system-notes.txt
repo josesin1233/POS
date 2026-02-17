@@ -1,0 +1,91 @@
+===========================================
+SISTEMA DE TUTORIALES INTERACTIVOS - NOTAS
+===========================================
+
+UBICACION DEL CODIGO:
+- Archivo principal: static/js/tutorial-helper.js
+- Incluido en: templates/pos/pos_minimalista.html, templates/caja.html, templates/registro.html
+- Tambien en: templates/base_production.html, templates/pos/pos.html
+
+COMO FUNCIONA:
+1. Boton flotante morado en esquina inferior derecha
+2. Draggable - se puede mover a cualquier posicion
+3. Guarda posicion en localStorage
+4. Al hacer click, muestra modal con PESTANAS para todas las secciones
+5. Tutoriales cross-page: puede redirigir a otra pagina y auto-iniciar el tutorial
+6. Elementos con fallback: si un selector no existe, intenta un selector alternativo
+7. Si un elemento no se encuentra, salta al siguiente paso automaticamente
+
+SISTEMA DE PESTANAS:
+- Modal muestra tabs: Punto de Venta, Inventario, Caja, Registro
+- Cada tab muestra los tutoriales de esa seccion
+- La pagina actual se marca con un punto morado en el tab
+- Tutoriales de otra pagina muestran badge "Ir a [Pagina]"
+
+TUTORIALES CROSS-PAGE:
+- Si seleccionas un tutorial de otra pagina, se muestra modal de redireccion
+- Al confirmar, guarda tutorial pendiente en localStorage (tutorial-pending)
+- Al cargar la pagina destino, checkPendingTutorial() lo detecta y auto-inicia
+- Timeout de 800ms para esperar que la pagina cargue completamente
+
+TUTORIALES IMPLEMENTADOS:
+
+1. POS - "Como realizar una venta?" (7 pasos)
+   - Buscar por nombre, codigo, cantidad, agregar, total, tabla, cobrar
+
+2. POS - "Como buscar productos?" (5 pasos)
+   - Campo nombre, sugerencias, codigo, precio, stock
+
+3. Inventario - "Como agregar productos?" (6 pasos)
+   - Codigo, nombre, precio, stock, stock minimo, boton agregar
+
+4. Inventario - "Como actualizar stock?" (6 pasos)
+   - Codigo busqueda, info producto, stock agregar, precio, stock minimo, actualizar
+
+5. Inventario - "Como buscar y editar productos?" (3 pasos)
+   - Buscar inventario, tabla productos, productos poco stock
+
+6. Caja - "Como abrir la caja?" (5 pasos)
+   - Estado caja, billetes, monedas, total, boton abrir
+
+7. Caja - "Como registrar gastos?" (4 pasos)
+   - Nuevo gasto, formulario, tabla gastos, total gastos
+
+8. Caja - "Como cerrar la caja?" (4 pasos)
+   - Efectivo esperado, efectivo real, diferencia, boton cerrar
+
+9. Registro - "Como ver el historial de ventas?" (4 pasos)
+   - Total dia, tabla ventas, expandir grupos, detalles venta
+
+10. Registro - "Como filtrar por fecha?" (5 pasos)
+    - Filtro dia, mes, anio, boton filtrar, limpiar
+
+ESTRUCTURA DE TUTORIALES:
+{
+  'nombre-pagina': [
+    {
+      id: 'id-tutorial',
+      title: 'Titulo',
+      description: 'Descripcion',
+      page: 'nombre-pagina',
+      steps: [
+        {
+          target: '#selector-css',
+          message: 'Mensaje',
+          position: 'bottom|top|left|right',
+          fallback: '#selector-alternativo',  // opcional
+          isLast: true|false  // opcional
+        }
+      ]
+    }
+  ]
+}
+
+ESTILOS:
+- Boton flotante: Gradiente morado #6366f1 -> #8b5cf6
+- Highlight: Borde #6366f1 con sombra suave
+- Overlay: rgba(0, 0, 0, 0.7)
+- Modales: Fondo blanco, texto gris oscuro
+- Boton primario: #6366f1
+- Boton secundario: #f3f4f6
+- Badge cross-page: fondo amarillo #fef3c7, texto #92400e

@@ -1,6 +1,7 @@
 /**
  * TutorialHelper - Sistema de tutoriales interactivos
  * Botón flotante con tutoriales paso a paso para guiar a los usuarios
+ * Incluye: sistema de pestañas, tutoriales cross-page, auto-inicio
  */
 
 class TutorialHelper {
@@ -14,78 +15,364 @@ class TutorialHelper {
     this.instructionModal = null;
 
     // Posición del botón (se guarda en localStorage)
-    this.position = this.loadPosition() || { x: 20, y: 20 }; // 20px desde esquina inferior derecha
+    this.position = this.loadPosition() || { x: 20, y: 20 };
+
+    // Mapeo de páginas a URLs y labels
+    this.pageConfig = {
+      'pos': { label: 'Punto de Venta', url: '/punto_de_venta/', icon: '🛒' },
+      'inventario': { label: 'Inventario', url: '/inventario/', icon: '📦' },
+      'caja': { label: 'Caja', url: '/caja/', icon: '💰' },
+      'registro': { label: 'Registro', url: '/registro/', icon: '📋' }
+    };
 
     // Tutoriales definidos por página
     this.tutorials = {
-      'inventario': [
+      'pos': [
         {
-          id: 'agregar-producto',
-          title: '¿Cómo agregar productos a inventario?',
-          description: 'Aprende a agregar nuevos productos paso a paso',
+          id: 'realizar-venta',
+          title: '¿Cómo realizar una venta?',
+          description: 'Aprende el flujo completo: buscar producto, agregar al carrito y cobrar',
+          page: 'pos',
           steps: [
             {
-              target: '#nuevo-codigo',
-              message: 'Primero, ingresa el código del producto. Puedes escribirlo manualmente, usar el botón SCAN para escanearlo, o AUTO para asignar uno automático.',
-              position: 'bottom',
-              waitForInput: false
+              target: '#nombre',
+              message: 'Busca el producto escribiendo su nombre aquí. Aparecerán sugerencias conforme escribas.',
+              position: 'bottom'
             },
             {
-              target: '#nuevo-nombre',
-              message: 'Ahora, escribe el nombre del producto. Sé descriptivo para identificarlo fácilmente.',
-              position: 'bottom',
-              waitForInput: false
+              target: '#codigo',
+              message: 'También puedes buscar por código de barras. Escríbelo o usa el botón SCAN para escanear con la cámara.',
+              position: 'bottom'
             },
             {
-              target: '#nuevo-precio',
-              message: 'Ingresa el precio del producto. Usa punto decimal para centavos (ejemplo: 15.50)',
-              position: 'bottom',
-              waitForInput: false
+              target: '#cantidad',
+              message: 'Ajusta la cantidad que el cliente quiere comprar.',
+              position: 'bottom'
             },
             {
-              target: '#nuevo-stock',
-              message: 'Define el stock inicial. Esta es la cantidad de unidades que tienes disponibles.',
-              position: 'bottom',
-              waitForInput: false
+              target: '#formulario-producto button[type="submit"]',
+              message: 'Haz clic en "Agregar al Carrito" para añadir el producto. También puedes presionar Enter en el campo de código.',
+              position: 'top'
             },
             {
-              target: '#nuevo-stock-minimo',
-              message: 'Opcional: Establece el stock mínimo. Recibirás alertas cuando el stock baje de este número.',
-              position: 'bottom',
-              waitForInput: false
+              target: '#total',
+              message: 'Aquí se muestra el total acumulado de todos los productos en el carrito.',
+              position: 'top'
             },
             {
-              target: 'button[type="submit"]',
-              message: '¡Perfecto! Ahora haz clic en "Agregar Producto" para guardar el producto en tu inventario.',
+              target: '#tabla-productos',
+              message: 'En esta tabla verás los productos agregados. Puedes ajustar cantidades con los botones + y -, o eliminar productos.',
               position: 'top',
-              waitForInput: false,
+              fallback: '#carrito-vacio'
+            },
+            {
+              target: 'button[onclick="cobrar()"]',
+              message: 'Cuando el cliente esté listo para pagar, presiona "Cobrar". Se abrirá un modal para elegir el método de pago: Efectivo, Transferencia o Tarjeta.',
+              position: 'top',
+              isLast: true
+            }
+          ]
+        },
+        {
+          id: 'buscar-productos',
+          title: '¿Cómo buscar productos?',
+          description: 'Diferentes formas de encontrar productos rápidamente',
+          page: 'pos',
+          steps: [
+            {
+              target: '#nombre',
+              message: 'Escribe al menos 2 letras del nombre del producto. Aparecerá un menú desplegable con sugerencias que coincidan.',
+              position: 'bottom'
+            },
+            {
+              target: '#search-suggestions',
+              message: 'Las sugerencias aparecerán aquí mostrando nombre, código, stock y precio. Haz clic en una para seleccionarla.',
+              position: 'bottom',
+              fallback: '#nombre'
+            },
+            {
+              target: '#codigo',
+              message: 'Si conoces el código exacto, escríbelo aquí. El producto se autocompletará automáticamente.',
+              position: 'bottom'
+            },
+            {
+              target: '#precio',
+              message: 'Una vez encontrado el producto, el precio se muestra aquí automáticamente (solo lectura).',
+              position: 'bottom'
+            },
+            {
+              target: '#stock',
+              message: 'El stock disponible se muestra aquí para que sepas cuántas unidades hay antes de vender.',
+              position: 'bottom',
               isLast: true
             }
           ]
         }
       ],
-      'pos': [
+      'inventario': [
         {
-          id: 'realizar-venta',
-          title: '¿Cómo realizar una venta?',
-          description: 'Tutorial próximamente...',
-          steps: []
+          id: 'agregar-producto',
+          title: '¿Cómo agregar productos?',
+          description: 'Aprende a agregar nuevos productos paso a paso',
+          page: 'inventario',
+          steps: [
+            {
+              target: '#nuevo-codigo',
+              message: 'Primero, ingresa el código del producto. Puedes escribirlo manualmente, usar el botón SCAN para escanearlo, o AUTO para asignar uno automático.',
+              position: 'bottom'
+            },
+            {
+              target: '#nuevo-nombre',
+              message: 'Ahora, escribe el nombre del producto. Sé descriptivo para identificarlo fácilmente.',
+              position: 'bottom'
+            },
+            {
+              target: '#nuevo-precio',
+              message: 'Ingresa el precio del producto. Usa punto decimal para centavos (ejemplo: 15.50)',
+              position: 'bottom'
+            },
+            {
+              target: '#nuevo-stock',
+              message: 'Define el stock inicial. Esta es la cantidad de unidades que tienes disponibles.',
+              position: 'bottom'
+            },
+            {
+              target: '#nuevo-stock-minimo',
+              message: 'Opcional: Establece el stock mínimo. Recibirás alertas cuando el stock baje de este número.',
+              position: 'bottom'
+            },
+            {
+              target: '#form-agregar-producto button[type="submit"]',
+              message: '¡Perfecto! Ahora haz clic en "Agregar Producto" para guardar el producto en tu inventario.',
+              position: 'top',
+              isLast: true
+            }
+          ]
+        },
+        {
+          id: 'actualizar-stock',
+          title: '¿Cómo actualizar stock?',
+          description: 'Aprende a modificar el stock y precio de productos existentes',
+          page: 'inventario',
+          steps: [
+            {
+              target: '#stock-codigo',
+              message: 'Ingresa el código del producto que deseas actualizar. Puedes escribirlo o usar SCAN para escanearlo.',
+              position: 'bottom'
+            },
+            {
+              target: '#producto-info',
+              message: 'Aquí se mostrará la información del producto encontrado: nombre, stock actual y precio.',
+              position: 'bottom'
+            },
+            {
+              target: '#stock-agregar',
+              message: 'Escribe la cantidad a agregar o restar del stock. Usa números negativos para restar (ejemplo: -5 para quitar 5 unidades).',
+              position: 'bottom'
+            },
+            {
+              target: '#nuevo-precio-update',
+              message: 'Opcional: Si necesitas cambiar el precio, escribe el nuevo precio aquí. Déjalo vacío para mantener el precio actual.',
+              position: 'bottom'
+            },
+            {
+              target: '#stock-minimo-update',
+              message: 'Opcional: Actualiza el stock mínimo para las alertas de poco stock.',
+              position: 'bottom'
+            },
+            {
+              target: '#form-actualizar-producto button[type="submit"]',
+              message: 'Haz clic en "Actualizar" para guardar los cambios.',
+              position: 'top',
+              isLast: true
+            }
+          ]
+        },
+        {
+          id: 'buscar-editar-productos',
+          title: '¿Cómo buscar y editar productos?',
+          description: 'Busca productos en tu inventario y edítalos directamente',
+          page: 'inventario',
+          steps: [
+            {
+              target: '#buscar-inventario',
+              message: 'Usa este campo para buscar productos por nombre o código. La tabla se filtra en tiempo real conforme escribes.',
+              position: 'bottom'
+            },
+            {
+              target: '#productos-table',
+              message: 'Aquí se muestra toda tu lista de productos con código, nombre, precio, stock y stock mínimo.',
+              position: 'top'
+            },
+            {
+              target: '#productos-poco-stock',
+              message: 'En esta sección aparecen los productos con poco stock. Puedes hacer clic en "Reabastecer" para ir directamente al formulario de actualización.',
+              position: 'top',
+              fallback: '#poco-stock-container',
+              isLast: true
+            }
+          ]
         }
       ],
       'caja': [
         {
-          id: 'control-caja',
-          title: '¿Cómo usar el control de caja?',
-          description: 'Tutorial próximamente...',
-          steps: []
+          id: 'abrir-caja',
+          title: '¿Cómo abrir la caja?',
+          description: 'Aprende a iniciar tu turno abriendo la caja con el monto inicial',
+          page: 'caja',
+          steps: [
+            {
+              target: '#estado-caja',
+              message: 'Aquí puedes ver el estado actual de la caja: "Abierta" o "Cerrada". Haz clic para navegar a la sección correspondiente.',
+              position: 'bottom'
+            },
+            {
+              target: '#monto-inicial-billetes',
+              message: 'Ingresa la cantidad de billetes con la que inicias el día. Esto es tu fondo de caja.',
+              position: 'bottom'
+            },
+            {
+              target: '#monto-inicial-monedas',
+              message: 'Ingresa la cantidad de monedas. El total se calculará automáticamente.',
+              position: 'bottom'
+            },
+            {
+              target: '#monto-inicial-total',
+              message: 'Aquí se muestra el total calculado (billetes + monedas). Este campo es de solo lectura.',
+              position: 'bottom'
+            },
+            {
+              target: '#form-apertura button[type="submit"]',
+              message: 'Haz clic en "Abrir Caja" para comenzar tu turno. La caja quedará abierta hasta que la cierres.',
+              position: 'top',
+              isLast: true
+            }
+          ]
+        },
+        {
+          id: 'registrar-gastos',
+          title: '¿Cómo registrar gastos?',
+          description: 'Registra gastos, compras y retiros durante el día',
+          page: 'caja',
+          steps: [
+            {
+              target: '#btn-nuevo-gasto',
+              message: 'Haz clic en "+ Nuevo Gasto" para abrir el formulario de registro de gastos.',
+              position: 'bottom'
+            },
+            {
+              target: '#form-gasto-container',
+              message: 'Aquí aparecerá el formulario con los campos: Concepto (descripción del gasto), Monto, y Tipo (Compra, Gasto Operativo, Retiro u Otro).',
+              position: 'top',
+              fallback: '#btn-nuevo-gasto'
+            },
+            {
+              target: '#tabla-gastos',
+              message: 'Los gastos registrados aparecen en esta tabla con la hora, concepto, tipo y monto de cada uno.',
+              position: 'top'
+            },
+            {
+              target: '#total-gastos',
+              message: 'Aquí se muestra el total acumulado de gastos del día. Este monto se descuenta del efectivo esperado al cerrar la caja.',
+              position: 'top',
+              isLast: true
+            }
+          ]
+        },
+        {
+          id: 'cerrar-caja',
+          title: '¿Cómo cerrar la caja?',
+          description: 'Cierra tu turno contando el efectivo y cuadrando la caja',
+          page: 'caja',
+          steps: [
+            {
+              target: '#efectivo-esperado',
+              message: 'Este es el efectivo que debería haber en caja: monto inicial + ventas en efectivo - gastos.',
+              position: 'bottom'
+            },
+            {
+              target: '#efectivo-real',
+              message: 'Cuenta el dinero en tu caja y escribe la cantidad real aquí. La diferencia se calculará automáticamente.',
+              position: 'bottom'
+            },
+            {
+              target: '#diferencia',
+              message: 'Aquí se muestra la diferencia. Verde si hay sobrante, rojo si falta dinero.',
+              position: 'bottom'
+            },
+            {
+              target: '#form-cierre button[type="submit"]',
+              message: 'Haz clic en "Cerrar Caja" para finalizar tu turno. Se guardará el registro del cierre con todos los detalles.',
+              position: 'top',
+              isLast: true
+            }
+          ]
         }
       ],
       'registro': [
         {
-          id: 'ver-ventas',
-          title: '¿Cómo ver el registro de ventas?',
-          description: 'Tutorial próximamente...',
-          steps: []
+          id: 'ver-historial',
+          title: '¿Cómo ver el historial de ventas?',
+          description: 'Explora el registro completo de ventas y movimientos',
+          page: 'registro',
+          steps: [
+            {
+              target: '#total-dia',
+              message: 'Aquí se muestra el total de ventas del día actual. Se actualiza automáticamente.',
+              position: 'bottom'
+            },
+            {
+              target: '#tabla-ventas',
+              message: 'Esta es la tabla principal de actividades. Muestra ventas y movimientos de inventario organizados jerárquicamente por año, mes, semana y día.',
+              position: 'top'
+            },
+            {
+              target: '#tabla-ventas-body',
+              message: 'Haz clic en cualquier fila de grupo (año, mes, semana, día) para expandir o contraer su contenido. Las ventas de hoy se muestran expandidas por defecto.',
+              position: 'top'
+            },
+            {
+              target: '#tabla-ventas-body',
+              message: 'Al expandir una venta individual, verás los productos vendidos, cantidades, precios y el cambio de stock que generó cada venta.',
+              position: 'top',
+              isLast: true
+            }
+          ]
+        },
+        {
+          id: 'filtrar-ventas',
+          title: '¿Cómo filtrar por fecha?',
+          description: 'Filtra ventas por día, mes o año específico',
+          page: 'registro',
+          steps: [
+            {
+              target: '#filtro-dia',
+              message: 'Selecciona un día específico para ver solo las ventas de esa fecha.',
+              position: 'bottom'
+            },
+            {
+              target: '#filtro-mes',
+              message: 'O selecciona un mes completo para ver todas las ventas de ese período.',
+              position: 'bottom'
+            },
+            {
+              target: '#filtro-anio',
+              message: 'También puedes filtrar por año. Escribe el año (ejemplo: 2025).',
+              position: 'bottom'
+            },
+            {
+              target: '#filtro-form button[type="submit"]',
+              message: 'Haz clic en "Filtrar" para aplicar los filtros seleccionados.',
+              position: 'right',
+              fallback: '#filtro-form'
+            },
+            {
+              target: '#filtro-form',
+              message: 'Usa el botón "Limpiar" para quitar todos los filtros y ver el historial completo nuevamente.',
+              position: 'bottom',
+              isLast: true
+            }
+          ]
         }
       ]
     };
@@ -97,6 +384,32 @@ class TutorialHelper {
     this.createFloatingButton();
     this.setupDragAndDrop();
     this.restorePosition();
+    this.checkPendingTutorial();
+  }
+
+  // Verificar si hay un tutorial pendiente por auto-iniciar (cross-page)
+  checkPendingTutorial() {
+    const pending = localStorage.getItem('tutorial-pending');
+    if (!pending) return;
+
+    try {
+      const { tutorialId, page } = JSON.parse(pending);
+      const currentPage = this.getCurrentPage();
+
+      if (currentPage === page) {
+        localStorage.removeItem('tutorial-pending');
+        // Esperar a que la página cargue completamente
+        setTimeout(() => {
+          const tutorials = this.tutorials[page] || [];
+          const tutorial = tutorials.find(t => t.id === tutorialId);
+          if (tutorial && tutorial.steps.length > 0) {
+            this.startTutorial(tutorial);
+          }
+        }, 800);
+      }
+    } catch (e) {
+      localStorage.removeItem('tutorial-pending');
+    }
   }
 
   // Cargar posición desde localStorage
@@ -219,7 +532,7 @@ class TutorialHelper {
       .tutorial-modal {
         background: white;
         border-radius: 16px;
-        max-width: 500px;
+        max-width: 560px;
         width: 90%;
         max-height: 80vh;
         overflow-y: auto;
@@ -274,6 +587,55 @@ class TutorialHelper {
         color: #111827;
       }
 
+      /* Tabs */
+      .tutorial-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 16px 24px 0;
+        border-bottom: 1px solid #e5e7eb;
+        overflow-x: auto;
+      }
+
+      .tutorial-tab {
+        padding: 10px 16px;
+        border: none;
+        background: none;
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        white-space: nowrap;
+        border-radius: 0;
+      }
+
+      .tutorial-tab:hover {
+        color: #111827;
+        background: #f9fafb;
+      }
+
+      .tutorial-tab.active {
+        color: #6366f1;
+        border-bottom-color: #6366f1;
+        font-weight: 600;
+      }
+
+      .tutorial-tab-current {
+        position: relative;
+      }
+
+      .tutorial-tab-current::after {
+        content: '';
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 6px;
+        height: 6px;
+        background: #6366f1;
+        border-radius: 50%;
+      }
+
       .tutorial-modal-body {
         padding: 24px;
       }
@@ -323,6 +685,22 @@ class TutorialHelper {
         font-size: 14px;
         color: #6b7280;
         margin: 0;
+      }
+
+      .tutorial-item-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-left: 8px;
+        background: #dbeafe;
+        color: #2563eb;
+      }
+
+      .tutorial-item-badge.cross-page {
+        background: #fef3c7;
+        color: #92400e;
       }
 
       .tutorial-no-items {
@@ -460,6 +838,44 @@ class TutorialHelper {
         background: #e5e7eb;
       }
 
+      /* Modal de redirección cross-page */
+      .tutorial-redirect-modal {
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        animation: scaleIn 0.3s ease;
+        max-width: 420px;
+        width: 90%;
+      }
+
+      .tutorial-redirect-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+
+      .tutorial-redirect-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 8px 0;
+      }
+
+      .tutorial-redirect-message {
+        font-size: 15px;
+        color: #6b7280;
+        margin: 0 0 24px 0;
+        line-height: 1.5;
+      }
+
+      .tutorial-redirect-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+      }
+
       /* Mensaje de éxito */
       .tutorial-success-modal {
         position: fixed;
@@ -513,18 +929,12 @@ class TutorialHelper {
   setupDragAndDrop() {
     let isDragging = false;
     let startX, startY;
-    let initialX, initialY;
 
     this.buttonElement.addEventListener('mousedown', (e) => {
       isDragging = true;
       this.isDragging = false;
       startX = e.clientX;
       startY = e.clientY;
-
-      const rect = this.buttonElement.getBoundingClientRect();
-      initialX = rect.right;
-      initialY = rect.bottom;
-
       this.buttonElement.classList.add('dragging');
     });
 
@@ -534,17 +944,14 @@ class TutorialHelper {
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
 
-      // Si se movió más de 5px, consideramos que está arrastrando
       if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
         this.isDragging = true;
       }
 
       if (this.isDragging) {
-        // Calcular nueva posición desde esquina inferior derecha
         this.position.x = window.innerWidth - e.clientX;
         this.position.y = window.innerHeight - e.clientY;
 
-        // Limitar a los bordes de la ventana
         this.position.x = Math.max(10, Math.min(window.innerWidth - 60, this.position.x));
         this.position.y = Math.max(10, Math.min(window.innerHeight - 60, this.position.y));
 
@@ -559,7 +966,6 @@ class TutorialHelper {
 
         if (this.isDragging) {
           this.savePosition();
-          // Pequeño delay para no activar el click después del drag
           setTimeout(() => {
             this.isDragging = false;
           }, 100);
@@ -568,26 +974,21 @@ class TutorialHelper {
     });
   }
 
-  // Actualizar posición del botón
   updateButtonPosition() {
     this.buttonElement.style.right = `${this.position.x}px`;
     this.buttonElement.style.bottom = `${this.position.y}px`;
   }
 
-  // Restaurar posición guardada
   restorePosition() {
     this.updateButtonPosition();
   }
 
-  // Minimizar/expandir botón
   toggleMinimize() {
     if (!this.isActive) {
-      // Si no hay tutorial activo, mostrar modal de selección
       this.showTutorialModal();
     }
   }
 
-  // Detectar página actual
   getCurrentPage() {
     const path = window.location.pathname;
 
@@ -599,71 +1000,164 @@ class TutorialHelper {
     return 'unknown';
   }
 
-  // Obtener tutoriales de la página actual
-  getPageTutorials() {
-    const page = this.getCurrentPage();
-    return this.tutorials[page] || [];
-  }
-
-  // Mostrar modal de selección de tutoriales
+  // Mostrar modal con pestañas de todos los tutoriales
   showTutorialModal() {
-    const tutorials = this.getPageTutorials();
+    const currentPage = this.getCurrentPage();
+    const pages = Object.keys(this.tutorials);
 
     const overlay = document.createElement('div');
     overlay.className = 'tutorial-modal-overlay';
+
+    // Construir tabs HTML
+    const tabsHtml = pages.map(page => {
+      const config = this.pageConfig[page];
+      const isActive = page === currentPage;
+      const isCurrent = page === currentPage;
+      return `<button class="tutorial-tab ${isActive ? 'active' : ''} ${isCurrent ? 'tutorial-tab-current' : ''}" data-page="${page}">
+        ${config.icon} ${config.label}
+      </button>`;
+    }).join('');
+
+    // Construir contenido para cada tab
+    const renderTutorialList = (page) => {
+      const tutorials = this.tutorials[page] || [];
+      const isCurrentPage = page === currentPage;
+
+      if (tutorials.length === 0) {
+        return `
+          <div class="tutorial-no-items">
+            <div class="tutorial-no-items-icon">📚</div>
+            <p class="tutorial-no-items-text">No hay tutoriales disponibles</p>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="tutorial-list">
+          ${tutorials.map(tutorial => {
+            const hasSteps = tutorial.steps.length > 0;
+            const badge = !isCurrentPage && hasSteps
+              ? `<span class="tutorial-item-badge cross-page">Ir a ${this.pageConfig[page].label}</span>`
+              : '';
+            return `
+              <div class="tutorial-item ${!hasSteps ? 'disabled' : ''}" data-tutorial-id="${tutorial.id}" data-tutorial-page="${page}">
+                <h3 class="tutorial-item-title">${tutorial.title}${badge}</h3>
+                <p class="tutorial-item-desc">${tutorial.description}</p>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    };
+
     overlay.innerHTML = `
       <div class="tutorial-modal">
         <div class="tutorial-modal-header">
           <h2 class="tutorial-modal-title">Tutoriales Interactivos</h2>
           <button class="tutorial-modal-close">&times;</button>
         </div>
-        <div class="tutorial-modal-body">
-          ${tutorials.length > 0 ? `
-            <div class="tutorial-list">
-              ${tutorials.map(tutorial => `
-                <div class="tutorial-item ${tutorial.steps.length === 0 ? 'disabled' : ''}" data-tutorial-id="${tutorial.id}">
-                  <h3 class="tutorial-item-title">${tutorial.title}</h3>
-                  <p class="tutorial-item-desc">${tutorial.description}</p>
-                </div>
-              `).join('')}
-            </div>
-          ` : `
-            <div class="tutorial-no-items">
-              <div class="tutorial-no-items-icon">📚</div>
-              <p class="tutorial-no-items-text">No hay tutoriales disponibles aquí</p>
-              <p class="tutorial-no-items-hint">Navega a otras secciones como Inventario, POS, o Caja para ver tutoriales específicos.</p>
-            </div>
-          `}
+        <div class="tutorial-tabs">${tabsHtml}</div>
+        <div class="tutorial-modal-body" id="tutorial-tab-content">
+          ${renderTutorialList(currentPage)}
         </div>
       </div>
     `;
 
-    // Event listeners
+    // Event: cerrar modal
     const closeBtn = overlay.querySelector('.tutorial-modal-close');
-    closeBtn.addEventListener('click', () => {
-      document.body.removeChild(overlay);
-    });
-
+    closeBtn.addEventListener('click', () => document.body.removeChild(overlay));
     overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        document.body.removeChild(overlay);
-      }
+      if (e.target === overlay) document.body.removeChild(overlay);
     });
 
-    // Tutorial item clicks
+    // Event: cambiar tab
+    const tabs = overlay.querySelectorAll('.tutorial-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const page = tab.dataset.page;
+        const content = overlay.querySelector('#tutorial-tab-content');
+        content.innerHTML = renderTutorialList(page);
+        this._bindTutorialItems(overlay, currentPage);
+      });
+    });
+
+    // Bind tutorial item clicks
+    this._bindTutorialItems(overlay, currentPage);
+
+    document.body.appendChild(overlay);
+  }
+
+  // Bind click events a los items de tutorial
+  _bindTutorialItems(overlay, currentPage) {
     const items = overlay.querySelectorAll('.tutorial-item:not(.disabled)');
     items.forEach(item => {
       item.addEventListener('click', () => {
         const tutorialId = item.dataset.tutorialId;
+        const tutorialPage = item.dataset.tutorialPage;
+        const tutorials = this.tutorials[tutorialPage] || [];
         const tutorial = tutorials.find(t => t.id === tutorialId);
-        if (tutorial) {
+
+        if (!tutorial) return;
+
+        if (tutorialPage !== currentPage) {
+          // Cross-page: mostrar modal de redirección
+          document.body.removeChild(overlay);
+          this.showRedirectModal(tutorial, tutorialPage);
+        } else {
+          // Misma página: iniciar directamente
           document.body.removeChild(overlay);
           this.startTutorial(tutorial);
         }
       });
     });
+  }
 
+  // Mostrar modal de redirección para tutoriales cross-page
+  showRedirectModal(tutorial, targetPage) {
+    const config = this.pageConfig[targetPage];
+
+    const overlay = document.createElement('div');
+    overlay.className = 'tutorial-modal-overlay';
+
+    const modal = document.createElement('div');
+    modal.className = 'tutorial-redirect-modal';
+    modal.innerHTML = `
+      <div class="tutorial-redirect-icon">${config.icon}</div>
+      <h2 class="tutorial-redirect-title">Ir a ${config.label}</h2>
+      <p class="tutorial-redirect-message">
+        Para seguir el tutorial <strong>"${tutorial.title}"</strong> necesitas estar en la página de <strong>${config.label}</strong>.
+        <br><br>
+        Al hacer clic en "Ir", se abrirá la página y el tutorial iniciará automáticamente.
+      </p>
+      <div class="tutorial-redirect-actions">
+        <button class="tutorial-btn tutorial-btn-secondary tutorial-redirect-cancel">Cancelar</button>
+        <button class="tutorial-btn tutorial-btn-primary tutorial-redirect-go">Ir a ${config.label}</button>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
     document.body.appendChild(overlay);
+
+    // Events
+    const cancelBtn = modal.querySelector('.tutorial-redirect-cancel');
+    const goBtn = modal.querySelector('.tutorial-redirect-go');
+
+    cancelBtn.addEventListener('click', () => document.body.removeChild(overlay));
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) document.body.removeChild(overlay);
+    });
+
+    goBtn.addEventListener('click', () => {
+      // Guardar tutorial pendiente en localStorage
+      localStorage.setItem('tutorial-pending', JSON.stringify({
+        tutorialId: tutorial.id,
+        page: targetPage
+      }));
+      // Redirigir
+      window.location.href = config.url;
+    });
   }
 
   // Iniciar tutorial
@@ -672,14 +1166,10 @@ class TutorialHelper {
     this.currentTutorial = tutorial;
     this.currentStep = 0;
 
-    // Crear overlay
     this.createOverlay();
-
-    // Mostrar primer paso
     this.showStep();
   }
 
-  // Crear overlay de highlight
   createOverlay() {
     const overlay = document.createElement('div');
     overlay.className = 'tutorial-highlight-overlay';
@@ -687,35 +1177,36 @@ class TutorialHelper {
     this.overlayElement = overlay;
   }
 
-  // Mostrar paso actual
   showStep() {
     const step = this.currentTutorial.steps[this.currentStep];
     if (!step) return;
 
-    // Encontrar elemento target
-    const targetElement = document.querySelector(step.target);
+    // Encontrar elemento target (con fallback)
+    let targetElement = document.querySelector(step.target);
+    if (!targetElement && step.fallback) {
+      targetElement = document.querySelector(step.fallback);
+    }
     if (!targetElement) {
-      console.error('Tutorial: elemento no encontrado:', step.target);
-      this.endTutorial();
+      // Saltar al siguiente paso si el elemento no existe
+      console.warn('Tutorial: elemento no encontrado:', step.target);
+      if (this.currentStep < this.currentTutorial.steps.length - 1) {
+        this.currentStep++;
+        this.showStep();
+      } else {
+        this.completeTutorial();
+      }
       return;
     }
 
-    // Scroll al elemento
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // Esperar un poco para que el scroll termine
     setTimeout(() => {
-      // Crear highlight
       this.highlightElement(targetElement);
-
-      // Mostrar modal de instrucciones
       this.showInstructionModal(step, targetElement);
     }, 300);
   }
 
-  // Resaltar elemento
   highlightElement(element) {
-    // Remover highlight anterior si existe
     const oldHighlight = document.querySelector('.tutorial-highlight');
     if (oldHighlight) {
       oldHighlight.remove();
@@ -731,7 +1222,6 @@ class TutorialHelper {
 
     document.body.appendChild(highlight);
 
-    // Actualizar posición si el usuario hace scroll
     const updatePosition = () => {
       const newRect = element.getBoundingClientRect();
       highlight.style.top = `${newRect.top - 4}px`;
@@ -741,13 +1231,10 @@ class TutorialHelper {
     window.addEventListener('scroll', updatePosition);
     window.addEventListener('resize', updatePosition);
 
-    // Guardar para limpiar después
     this.currentHighlight = { element: highlight, updatePosition };
   }
 
-  // Mostrar modal de instrucciones
   showInstructionModal(step, targetElement) {
-    // Remover modal anterior si existe
     if (this.instructionModal) {
       this.instructionModal.remove();
     }
@@ -775,11 +1262,9 @@ class TutorialHelper {
       </div>
     `;
 
-    // Posicionar modal cerca del elemento
     document.body.appendChild(modal);
     this.positionInstructionModal(modal, targetElement, step.position);
 
-    // Event listeners
     const closeBtn = modal.querySelector('.tutorial-instruction-close');
     const cancelBtn = modal.querySelector('.tutorial-cancel');
     const nextBtn = modal.querySelector('.tutorial-next');
@@ -791,7 +1276,6 @@ class TutorialHelper {
     this.instructionModal = modal;
   }
 
-  // Posicionar modal de instrucciones
   positionInstructionModal(modal, targetElement, position) {
     const rect = targetElement.getBoundingClientRect();
     const modalRect = modal.getBoundingClientRect();
@@ -820,7 +1304,6 @@ class TutorialHelper {
         left = rect.left + (rect.width / 2) - (modalRect.width / 2);
     }
 
-    // Ajustar para que no se salga de la pantalla
     top = Math.max(20, Math.min(window.innerHeight - modalRect.height - 20, top));
     left = Math.max(20, Math.min(window.innerWidth - modalRect.width - 20, left));
 
@@ -828,7 +1311,6 @@ class TutorialHelper {
     modal.style.left = `${left}px`;
   }
 
-  // Siguiente paso
   nextStep() {
     const step = this.currentTutorial.steps[this.currentStep];
 
@@ -846,12 +1328,8 @@ class TutorialHelper {
     }
   }
 
-  // Completar tutorial
   completeTutorial() {
-    // Limpiar
     this.cleanup();
-
-    // Mostrar mensaje de éxito
     this.showSuccessMessage();
 
     this.isActive = false;
@@ -859,7 +1337,6 @@ class TutorialHelper {
     this.currentStep = 0;
   }
 
-  // Terminar tutorial (cancelado)
   endTutorial() {
     this.cleanup();
     this.isActive = false;
@@ -867,7 +1344,6 @@ class TutorialHelper {
     this.currentStep = 0;
   }
 
-  // Limpiar elementos del tutorial
   cleanup() {
     if (this.overlayElement) {
       this.overlayElement.remove();
@@ -891,7 +1367,6 @@ class TutorialHelper {
     }
   }
 
-  // Mostrar mensaje de éxito
   showSuccessMessage() {
     const overlay = document.createElement('div');
     overlay.className = 'tutorial-modal-overlay';
