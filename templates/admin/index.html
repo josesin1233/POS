@@ -15,6 +15,41 @@
         <p class="dashboard-subtitle">Vista general del sistema</p>
     </div>
 
+    <!-- Formulario Rápido: Cuenta de Prueba Gratis -->
+    <div style="margin-top: 30px; background: linear-gradient(135deg, #f0fdf4, #dcfce7); padding: 24px; border-radius: 8px; border: 2px solid #86efac; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <h2 style="margin-bottom: 16px; color: #166534; font-size: 18px;">Crear Cuenta de Prueba Gratis</h2>
+        <form id="trialForm" method="post" style="display: grid; grid-template-columns: 1fr 1fr 1fr 120px; gap: 12px; align-items: end;">
+            {% csrf_token %}
+            <div>
+                <label style="display: block; margin-bottom: 4px; color: #166534; font-weight: 500; font-size: 13px;">Nombre completo *</label>
+                <input type="text" name="full_name" id="trialFullName" required placeholder="Juan Pérez"
+                       style="width: 100%; padding: 10px; border: 1px solid #86efac; border-radius: 6px; font-size: 14px; background: white;">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 4px; color: #166534; font-weight: 500; font-size: 13px;">Usuario *</label>
+                <input type="text" name="username" id="trialUsername" required placeholder="juanperez"
+                       style="width: 100%; padding: 10px; border: 1px solid #86efac; border-radius: 6px; font-size: 14px; background: white;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 80px; gap: 8px;">
+                <div>
+                    <label style="display: block; margin-bottom: 4px; color: #166534; font-weight: 500; font-size: 13px;">Contraseña *</label>
+                    <input type="password" name="password" id="trialPassword" required placeholder="••••••"
+                           style="width: 100%; padding: 10px; border: 1px solid #86efac; border-radius: 6px; font-size: 14px; background: white;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 4px; color: #166534; font-weight: 500; font-size: 13px;">Días</label>
+                    <input type="number" name="dias_prueba" id="trialDias" value="7" min="1" max="365" required
+                           style="width: 100%; padding: 10px; border: 1px solid #86efac; border-radius: 6px; font-size: 14px; background: white; text-align: center;">
+                </div>
+            </div>
+            <button type="submit"
+                    style="padding: 10px 16px; background: #16a34a; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; height: 42px;">
+                Crear Prueba
+            </button>
+        </form>
+        <div id="trialMessage" style="margin-top: 12px; display: none; padding: 10px; border-radius: 6px; font-size: 14px;"></div>
+    </div>
+
     <!-- Formulario Agregar Usuario (Owner o Employee) -->
     <div class="add-lead-section" style="margin-top: 30px;">
         <h2 style="margin-bottom: 20px; color: #1a202c;">Agregar Nuevo Usuario</h2>
@@ -377,6 +412,48 @@
             montoInput.disabled = false;
             mesesInput.style.background = 'white';
             montoInput.style.background = 'white';
+        }
+    });
+
+    // ========================================
+    // FORMULARIO CUENTA DE PRUEBA GRATIS
+    // ========================================
+    document.getElementById('trialForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const messageDiv = document.getElementById('trialMessage');
+
+        try {
+            const response = await fetch('{% url "admin:add_trial_user" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                messageDiv.style.display = 'block';
+                messageDiv.style.background = '#bbf7d0';
+                messageDiv.style.color = '#166534';
+                messageDiv.textContent = data.message;
+                this.reset();
+                document.getElementById('trialDias').value = '7';
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                messageDiv.style.display = 'block';
+                messageDiv.style.background = '#fecaca';
+                messageDiv.style.color = '#991b1b';
+                messageDiv.textContent = data.error || 'Error al crear la cuenta de prueba';
+            }
+        } catch (error) {
+            messageDiv.style.display = 'block';
+            messageDiv.style.background = '#fecaca';
+            messageDiv.style.color = '#991b1b';
+            messageDiv.textContent = 'Error de conexión. Intenta nuevamente.';
         }
     });
 

@@ -56,6 +56,19 @@ class LoginView(View):
                     messages.error(request, 'La suscripción de tu negocio ha expirado. Contacta al administrador.')
                     return render(request, 'accounts/login.html', {'form': form})
 
+                # Verificar si la cuenta de prueba ha expirado
+                from pos.models import UserRegistration
+                from datetime import date
+                registro = UserRegistration.objects.filter(pos_user=user).first()
+                if registro and registro.fecha_corte and registro.fecha_corte < date.today():
+                    messages.error(
+                        request,
+                        'Tu periodo de prueba gratuita ha terminado. '
+                        'Contrata un plan para seguir usando DulcePOS. '
+                        'Contacta al administrador para más información.'
+                    )
+                    return render(request, 'accounts/login.html', {'form': form})
+
                 # Verificar límite de usuarios simultáneos
                 if self._verificar_limite_usuarios(user):
                     login(request, user)

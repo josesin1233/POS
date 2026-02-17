@@ -712,6 +712,7 @@ class CustomAdminSite(BaseAdminSite):
         urls = super().get_urls()
         custom_urls = [
             path('add_lead_manual/', self.admin_view(self.add_lead_manual_view), name='add_lead_manual'),
+            path('add_trial_user/', self.admin_view(self.add_trial_user_view), name='add_trial_user'),
             path('get_businesses/', self.admin_view(self.get_businesses_view), name='get_businesses'),
         ]
         return custom_urls + urls
@@ -736,6 +737,94 @@ class CustomAdminSite(BaseAdminSite):
                 return JsonResponse({
                     'success': False,
                     'error': str(e)
+                }, status=500)
+
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    def add_trial_user_view(self, request):
+        """Crear cuenta de prueba gratis rápida"""
+        if request.method == 'POST':
+            try:
+                from accounts.models import Business, User, UserPermissions
+                from django.contrib.auth.hashers import make_password
+                from datetime import date, timedelta
+
+                full_name = request.POST.get('full_name', '').strip()
+                username = request.POST.get('username', '').strip()
+                password = request.POST.get('password', '').strip()
+                dias_prueba = request.POST.get('dias_prueba', '7').strip()
+
+                if not all([full_name, username, password]):
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Nombre, usuario y contraseña son obligatorios'
+                    }, status=400)
+
+                try:
+                    dias = int(dias_prueba)
+                    if dias < 1:
+                        raise ValueError()
+                except ValueError:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Los días deben ser un número mayor a 0'
+                    }, status=400)
+
+                if User.objects.filter(username=username).exists():
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'El nombre de usuario ya existe'
+                    }, status=400)
+
+                # Crear negocio de prueba
+                business = Business.objects.create(
+                    name=f'{full_name} - Prueba',
+                    subscription_active=True
+                )
+
+                # Crear usuario
+                user = User.objects.create(
+                    username=username,
+                    first_name=full_name.split()[0] if full_name.split() else full_name,
+                    last_name=' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else '',
+                    password=make_password(password),
+                    business=business,
+                    is_business_owner=True,
+                    is_staff=False,
+                    is_active=True
+                )
+
+                # Crear permisos de owner
+                UserPermissions.create_default_permissions(user, business, is_owner=True)
+
+                # Crear registro con fecha de corte
+                fecha_inicio = date.today()
+                fecha_corte = fecha_inicio + timedelta(days=dias)
+
+                UserRegistration.objects.create(
+                    full_name=full_name,
+                    email=f'{username}@prueba.local',
+                    phone='0000000000',
+                    status='activo',
+                    business=business,
+                    pos_user=user,
+                    fecha_inicio_contrato=fecha_inicio,
+                    fecha_corte=fecha_corte,
+                    monto_pagado=0,
+                    notes=f'Cuenta de prueba gratis - {dias} días'
+                )
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Cuenta de prueba creada: {full_name} ({username}) - {dias} días'
+                })
+
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al crear cuenta: {str(e)}'
                 }, status=500)
 
         return JsonResponse({'error': 'Método no permitido'}, status=405)
