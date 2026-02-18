@@ -656,6 +656,12 @@
         <p id="totalConfirmacion" style="font-size: 2rem; font-weight: bold; text-align: center; color: #22c55e;"></p>
       </div>
 
+      <div id="campoReferencia" style="display: none; margin-bottom: 1rem;">
+        <label style="display: block; margin-bottom: 0.5rem; color: #a0a0a0; font-size: 0.875rem; font-weight: 500;">Número de referencia de la transferencia *</label>
+        <input type="text" id="referenciaTransferencia" placeholder="Ej: 1234567890"
+               style="width: 100%; padding: 0.75rem; border: 2px solid #333333; border-radius: 0.5rem; font-size: 1rem; text-align: center; background-color: #1a1a1a; color: #ffffff;">
+      </div>
+
       <p style="text-align: center; margin-bottom: 1.5rem; color: #a0a0a0;">
         ¿Confirma que el pago fue <span style="font-weight: 600; color: #ffffff;">realizado correctamente</span>?
       </p>
@@ -1303,15 +1309,34 @@
       document.getElementById('metodoConfirmacion').textContent = metodoTexto;
       document.getElementById('totalConfirmacion').textContent = formatearPesos(totalVenta);
 
+      // Mostrar campo de referencia solo para transferencia
+      const campoRef = document.getElementById('campoReferencia');
+      const inputRef = document.getElementById('referenciaTransferencia');
+      if (metodo === 'transferencia') {
+        campoRef.style.display = 'block';
+        inputRef.value = '';
+      } else {
+        campoRef.style.display = 'none';
+      }
+
       document.getElementById('modalConfirmacionPago').style.display = 'flex';
     }
 
     // Confirmar pago (transferencia/tarjeta)
     async function confirmarPago() {
+      // Si es transferencia, validar referencia
+      if (metodoPagoSeleccionado === 'transferencia') {
+        const referencia = document.getElementById('referenciaTransferencia').value.trim();
+        if (!referencia) {
+          alert('Ingresa el número de referencia de la transferencia');
+          return;
+        }
+      }
       cerrarModalConfirmacionPago();
-
-      // Para transferencia/tarjeta: monto_pagado = total, cambio = 0
-      await registrarVentaConMetodo(metodoPagoSeleccionado, totalVenta, 0);
+      const referencia = metodoPagoSeleccionado === 'transferencia'
+        ? document.getElementById('referenciaTransferencia').value.trim()
+        : null;
+      await registrarVentaConMetodo(metodoPagoSeleccionado, totalVenta, 0, referencia);
     }
 
     // Cancelar confirmación de pago
@@ -1327,12 +1352,21 @@
     }
 
     // Registrar venta con método de pago
-    async function registrarVentaConMetodo(metodo, montoPagado, cambio) {
+    async function registrarVentaConMetodo(metodo, montoPagado, cambio, referencia = null) {
       try {
         const productos = carritoLocal.map(p => ({
           codigo: p.codigo,
           cantidad: p.cantidad
         }));
+
+        const bodyData = {
+          productos,
+          monto_pagado: montoPagado,
+          metodo_pago: metodo
+        };
+        if (referencia) {
+          bodyData.referencia_transferencia = referencia;
+        }
 
         const res = await fetch("/punto_de_venta/registrar-venta/", {
           method: "POST",
@@ -1340,11 +1374,7 @@
             "Content-Type": "application/json",
             'X-CSRFToken': getCookie('csrftoken')
           },
-          body: JSON.stringify({
-            productos,
-            monto_pagado: montoPagado,
-            metodo_pago: metodo
-          })
+          body: JSON.stringify(bodyData)
         });
 
         const data = await res.json();

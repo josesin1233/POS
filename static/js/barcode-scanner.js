@@ -114,58 +114,78 @@ class BarCodeScanner {
       // Check HTTPS compatibility first
       const httpsCheck = this.checkHTTPS();
       console.log('🔒 HTTPS Check:', httpsCheck);
-      
+
       if (httpsCheck.required && !httpsCheck.available) {
         this.updateStatus(httpsCheck.message + ' - Cámara no disponible', 'text-red-600', 'bg-red-50');
         return;
       }
-      
-      // Show iOS version info for debugging
-      if (this.isiOS()) {
-        const iosVersion = this.getIOSVersion();
-        if (iosVersion) {
-          console.log(`📱 iOS ${iosVersion.full} detected`);
-          this.updateStatus(`📱 iOS ${iosVersion.full} - Solicitando permisos...`, 'text-blue-600', 'bg-blue-50');
-        }
-      } else {
-        this.updateStatus('🔐 Solicitando permisos de cámara...', 'text-blue-600', 'bg-blue-50');
-      }
-      
-      // iPhone 6S specific permission request
+
+      // Check if permission was already granted (skip prompt if so)
+      let permissionAlreadyGranted = false;
       try {
-        const constraints = this.isiPhone6S() ? {
-          video: { 
-            width: { ideal: 640, max: 1280 }, 
-            height: { ideal: 480, max: 720 },
-            facingMode: 'environment'
-          }, 
-          audio: false 
-        } : {
-          video: { 
-            width: { ideal: 1920 }, 
-            height: { ideal: 1080 } 
-          }, 
-          audio: false 
-        };
-        
-        const tempStream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        tempStream.getTracks().forEach(track => track.stop());
-        this.updateStatus('✅ Permisos concedidos, detectando cámaras...', 'text-green-600', 'bg-green-50');
-      } catch (permissionError) {
-        console.error('❌ Permission error:', permissionError);
-        
-        if (this.isiPhone6S()) {
-          const iosVersion = this.getIOSVersion();
-          if (iosVersion && iosVersion.major < 11) {
-            this.updateStatus(`❌ iOS ${iosVersion.full}: getUserMedia no soportado`, 'text-red-600', 'bg-red-50');
-            return;
-          }
+        if (navigator.permissions && navigator.permissions.query) {
+          const permStatus = await navigator.permissions.query({ name: 'camera' });
+          permissionAlreadyGranted = permStatus.state === 'granted';
+          console.log('📷 Camera permission state:', permStatus.state);
         }
-        
-        this.updateStatus('❌ Permisos de cámara denegados - Permite el acceso', 'text-red-600', 'bg-red-50');
-        console.error('Permisos denegados:', permissionError);
-        return;
+      } catch (e) {
+        // permissions.query not supported (e.g. Safari), fall through
+        console.log('📷 permissions.query not supported, checking via enumerateDevices');
+        // Alternative check: if enumerateDevices returns labels, permission was granted
+        const devs = await navigator.mediaDevices.enumerateDevices();
+        const videoDevs = devs.filter(d => d.kind === 'videoinput');
+        permissionAlreadyGranted = videoDevs.length > 0 && videoDevs[0].label !== '';
+      }
+
+      if (permissionAlreadyGranted) {
+        console.log('✅ Camera permission already granted, skipping prompt');
+        this.updateStatus('✅ Permisos concedidos, detectando cámaras...', 'text-green-600', 'bg-green-50');
+      } else {
+        // Need to request permission
+        if (this.isiOS()) {
+          const iosVersion = this.getIOSVersion();
+          if (iosVersion) {
+            console.log(`📱 iOS ${iosVersion.full} detected`);
+            this.updateStatus(`📱 iOS ${iosVersion.full} - Solicitando permisos...`, 'text-blue-600', 'bg-blue-50');
+          }
+        } else {
+          this.updateStatus('🔐 Solicitando permisos de cámara...', 'text-blue-600', 'bg-blue-50');
+        }
+
+        try {
+          const constraints = this.isiPhone6S() ? {
+            video: {
+              width: { ideal: 640, max: 1280 },
+              height: { ideal: 480, max: 720 },
+              facingMode: 'environment'
+            },
+            audio: false
+          } : {
+            video: {
+              width: { ideal: 1920 },
+              height: { ideal: 1080 }
+            },
+            audio: false
+          };
+
+          const tempStream = await navigator.mediaDevices.getUserMedia(constraints);
+          tempStream.getTracks().forEach(track => track.stop());
+          this.updateStatus('✅ Permisos concedidos, detectando cámaras...', 'text-green-600', 'bg-green-50');
+        } catch (permissionError) {
+          console.error('❌ Permission error:', permissionError);
+
+          if (this.isiPhone6S()) {
+            const iosVersion = this.getIOSVersion();
+            if (iosVersion && iosVersion.major < 11) {
+              this.updateStatus(`❌ iOS ${iosVersion.full}: getUserMedia no soportado`, 'text-red-600', 'bg-red-50');
+              return;
+            }
+          }
+
+          this.updateStatus('❌ Permisos de cámara denegados - Permite el acceso', 'text-red-600', 'bg-red-50');
+          console.error('Permisos denegados:', permissionError);
+          return;
+        }
       }
 
       // Enumerar dispositivos
@@ -250,12 +270,14 @@ class BarCodeScanner {
         window.barcodeScanner.targetField = targetFieldId;
         console.log(`🎯 SCANNER DEBUG: Set targetField to: ${window.barcodeScanner.targetField}`);
       }
-      
+
       modal.classList.remove('hidden');
-      
+      modal.style.display = ''; // CRITICAL: Reset display in case close() set it to none
+
       // Reset scanner overlay and status to initial state
       const overlay = document.getElementById('scanner-overlay');
       if (overlay) {
+        overlay.classList.remove('success');
         overlay.innerHTML = `
           <div style="border: 3px dashed #ef4444; max-width: 280px; width: 80%; height: 80px; max-height: 25%; border-radius: 12px; background: rgba(239, 68, 68, 0.1); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
             <span style="color: white; font-size: 14px; font-weight: 600; background: rgba(239, 68, 68, 0.8); padding: 8px 16px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
@@ -264,22 +286,20 @@ class BarCodeScanner {
           </div>
         `;
       }
-      
+
       // Reset status message
       if (window.barcodeScanner) {
         window.barcodeScanner.updateStatus('Preparando escáner de códigos...', 'text-gray-600', 'bg-gray-50');
       }
-      
+
       setTimeout(async () => {
         await window.barcodeScanner.loadCameras();
-        
+
         if (window.barcodeScanner.cameras.length > 0) {
-          // Auto-iniciar más rápido
-          setTimeout(() => {
-            window.barcodeScanner.startScanning();
-          }, 500);
+          // Auto-iniciar inmediatamente
+          window.barcodeScanner.startScanning();
         }
-      }, 200);
+      }, 100);
     }
   }
 
@@ -290,14 +310,15 @@ class BarCodeScanner {
     if (window.barcodeScanner) {
       console.log('🛑 Closing scanner - stopping all streams...');
       window.barcodeScanner.stopScanning();
-      
+
       // CRITICAL: Completely clean up the scanner state
       window.barcodeScanner.isScanning = false;
       window.barcodeScanner.codeReader = null;
       window.barcodeScanner.scanAttempts = 0;
       window.barcodeScanner.lastScannedCode = null;
+      window.barcodeScanner.lastScanTime = 0;
       window.barcodeScanner.targetField = null;
-      
+
       // Clean up video element completely
       const videoElement = document.getElementById('barcode-video');
       if (videoElement) {
@@ -306,13 +327,14 @@ class BarCodeScanner {
         videoElement.style.backgroundColor = 'black';
       }
     }
-    
+
     const modal = document.getElementById('barcode-modal');
     if (modal) {
       modal.classList.add('hidden');
-      modal.style.display = 'none';
+      // Do NOT set display:none - let the hidden class handle visibility
+      // This way open() can simply remove 'hidden' to show it again
     }
-    
+
     console.log('✅ Scanner modal completely closed and cleaned');
   }
 
@@ -322,7 +344,7 @@ class BarCodeScanner {
   async startScanning() {
     if (this.isScanning) {
       this.stopScanning();
-      await new Promise(resolve => setTimeout(resolve, 500)); // Longer wait for iPhone 6S cleanup
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
 
     try {
@@ -907,56 +929,55 @@ class BarCodeScanner {
         }
       });
 
-      // Strategy 2: Additional high-frequency manual scanning for difficult codes
+      // Strategy 2: High-frequency supplementary scanning for faster detection
+      // Reuse canvas to avoid GC pressure
+      const scanCanvas = document.createElement('canvas');
+      const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+      let streamCheckCounter = 0;
+
       scanInterval = setInterval(() => {
-        if (this.isScanning && videoElement) {
-          // Validate stream health every few cycles
-          if (this.scanAttempts % 10 === 0) {
-            this.validateAndRecoverStream();
-          }
-          
-          if (videoElement.videoWidth > 0) {
-            try {
-              // Create canvas for image processing
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              canvas.width = videoElement.videoWidth;
-              canvas.height = videoElement.videoHeight;
-              
-              // Draw current frame
-              ctx.drawImage(videoElement, 0, 0);
-              
-              // Enhanced image processing for better detection
-              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-              this.enhanceImageForBarcode(imageData, ctx, canvas);
-              
-              // Try to decode the enhanced image
-              this.codeReader.decodeFromImageUrl(canvas.toDataURL())
-                .then(result => {
-                  if (result) {
-                    const code = result.getText();
-                    const now = Date.now();
-                    if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
-                      console.log('🔥 ¡Código detectado con algoritmo de mejora de imagen!', code);
-                      this.lastScannedCode = code;
-                      this.lastScanTime = now;
-                      this.onCodeScanned(code);
-                    }
-                  }
-                })
-                .catch(() => {
-                  // Silent fail - this is supplementary scanning
-                });
-            } catch (error) {
-              // Silent fail for supplementary strategy
+        if (!this.isScanning || !videoElement) return;
+
+        streamCheckCounter++;
+        // Validate stream health every 50 cycles (~5s)
+        if (streamCheckCounter % 50 === 0) {
+          this.validateAndRecoverStream();
+        }
+
+        if (videoElement.videoWidth > 0) {
+          try {
+            // Reuse canvas, resize only if needed
+            if (scanCanvas.width !== videoElement.videoWidth) {
+              scanCanvas.width = videoElement.videoWidth;
+              scanCanvas.height = videoElement.videoHeight;
             }
-          } else if (this.scanAttempts % 5 === 0) {
-            // Video has zero dimensions, might be black screen
-            console.warn('⚠️ Video dimensions are zero, attempting recovery...');
-            this.validateAndRecoverStream();
+
+            scanCtx.drawImage(videoElement, 0, 0);
+
+            // Enhanced image processing for better detection
+            const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+            this.enhanceImageForBarcode(imageData, scanCtx, scanCanvas);
+
+            // Try to decode the enhanced image
+            this.codeReader.decodeFromImageUrl(scanCanvas.toDataURL())
+              .then(result => {
+                if (result) {
+                  const code = result.getText();
+                  const now = Date.now();
+                  if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
+                    console.log('🔥 ¡Código detectado con algoritmo de mejora de imagen!', code);
+                    this.lastScannedCode = code;
+                    this.lastScanTime = now;
+                    this.onCodeScanned(code);
+                  }
+                }
+              })
+              .catch(() => {});
+          } catch (error) {
+            // Silent fail for supplementary strategy
           }
         }
-      }, 200); // Scan every 200ms for supplementary detection
+      }, 100); // Scan every 100ms for faster detection
 
       this.scanInterval = scanInterval;
       this.updateStatus('🎯 Escaneador activo - Posiciona el código lentamente', 'text-green-600 animate-pulse', 'bg-green-50');

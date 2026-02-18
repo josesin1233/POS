@@ -128,7 +128,7 @@ class Producto(models.Model):
     # Inventario
     stock = models.PositiveIntegerField(default=0, verbose_name="Stock actual")
     stock_minimo = models.PositiveIntegerField(
-        default=10,
+        default=0,
         verbose_name="Stock mínimo"
     )
     stock_maximo = models.PositiveIntegerField(
@@ -279,7 +279,13 @@ class Venta(models.Model):
         decimal_places=2,
         default=Decimal('0.00')
     )
-    
+    referencia_transferencia = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name='Referencia de transferencia'
+    )
+
     # Estado y fechas
     estado = models.CharField(
         max_length=20,

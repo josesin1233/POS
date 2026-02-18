@@ -369,7 +369,8 @@ def registrar_venta(request):
         data = json.loads(request.body)
         productos = data.get('productos', [])
         monto_pagado = Decimal(str(data.get('monto_pagado', 0)))
-        metodo_pago = data.get('metodo_pago', 'efectivo')  # Recibir método de pago del frontend
+        metodo_pago = data.get('metodo_pago', 'efectivo')
+        referencia_transferencia = data.get('referencia_transferencia', '').strip() if data.get('referencia_transferencia') else None
 
         # Validar método de pago
         metodos_validos = ['efectivo', 'tarjeta', 'transferencia', 'credito', 'mixto']
@@ -435,7 +436,8 @@ def registrar_venta(request):
             total=total_venta,
             monto_pagado=monto_pagado,
             cambio=monto_pagado - total_venta,
-            metodo_pago=metodo_pago  # Guardar método de pago recibido
+            metodo_pago=metodo_pago,
+            referencia_transferencia=referencia_transferencia
         )
         
         # Crear detalles y actualizar stock CON REGISTRO DE MOVIMIENTOS
@@ -630,6 +632,7 @@ def ventas_api(request):
                     },
                     'folio': venta.folio,
                     'metodo_pago': venta.get_metodo_pago_display(),
+                    'referencia_transferencia': venta.referencia_transferencia or '',
                     'detalles': [
                         {
                             'producto': {'nombre': detalle.producto.nombre},
@@ -713,6 +716,7 @@ def ventas_api(request):
                 },
                 'folio': venta.folio,
                 'metodo_pago': venta.get_metodo_pago_display(),
+                'referencia_transferencia': venta.referencia_transferencia or '',
                 'productos': productos_venta,
                 'movimientos_stock': [
                     {
@@ -1667,6 +1671,7 @@ def crear_vista_agrupada_jerarquica(business, ventas, movimientos):
                                 'usuario': usuario_nombre,
                                 'total': float(venta.total),
                                 'metodo_pago': venta.get_metodo_pago_display(),
+                                'referencia_transferencia': venta.referencia_transferencia or '',
                                 'productos': [
                                     {
                                         'nombre': detalle.producto.nombre,
@@ -1863,6 +1868,7 @@ def registro_completo_api(request):
                 'usuario': usuario_nombre,
                 'total': float(venta.total),
                 'metodo_pago': venta.get_metodo_pago_display(),
+                'referencia_transferencia': venta.referencia_transferencia or '',
                 'productos': [
                     {
                         'nombre': detalle.producto.nombre,

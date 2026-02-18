@@ -297,7 +297,7 @@
         filaHeader.innerHTML = `
           <td colspan="7" class="p-3 font-semibold" style="color: var(--accent-blue);">
             Venta #${actividad.id} del ${fecha} - Total: ${formatearPesos(actividad.total)}
-            - Usuario: ${actividad.usuario} - Método: ${actividad.metodo_pago}
+            - Usuario: ${actividad.usuario} - Método: ${actividad.metodo_pago}${actividad.referencia_transferencia ? ' - Ref: ' + actividad.referencia_transferencia : ''}
             <span id="toggle-${ventaId}" style="float: right;"></span>
           </td>
         `;
@@ -427,7 +427,7 @@
               ventaHeader.onclick = () => toggleVenta(ventaId);
               ventaHeader.innerHTML = `
                 <td colspan="7" class="p-2 text-sm font-medium" style="color: var(--accent-blue); padding-left: 5rem;">
-                  Venta #${venta.id} - ${formatearPesos(venta.total)} - ${venta.productos.length} items - ${venta.metodo_pago} - ${venta.usuario} - ${fecha}
+                  Venta #${venta.id} - ${formatearPesos(venta.total)} - ${venta.productos.length} items - ${venta.metodo_pago}${venta.referencia_transferencia ? ' - Ref: ' + venta.referencia_transferencia : ''} - ${venta.usuario} - ${fecha}
                   <span id="toggle-${ventaId}" style="float: right;"></span>
                 </td>
               `;
