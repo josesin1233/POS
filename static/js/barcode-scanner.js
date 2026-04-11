@@ -7,6 +7,8 @@ class BarCodeScanner {
     this.isScanning = false;
     this.stream = null;
     this.codeReader = null;
+    this.detector = null;
+    this.rafId = null;
     this.cameras = [];
     this.currentCameraId = null;
     this.onScanCallback = null;
@@ -691,9 +693,9 @@ class BarCodeScanner {
       this.updateStatus('📱 Cámara activa - Posiciona el código DESPACIO y CENTRADO', 'text-green-600 loading', 'bg-green-50');
       this.isScanning = true;
 
-      // Cargar ZXing y comenzar
-      await this.loadZXing();
-      this.startZXingScanner();
+      // Cargar detector y comenzar
+      await this.loadBarcodeDetector();
+      this.startBarcodeDetector();
 
       // Timeout de seguridad
       this.scanTimeout = setTimeout(() => {
@@ -855,174 +857,81 @@ class BarCodeScanner {
   }
 
   /**
-   * Cargar ZXing - Updated to latest version
+   * Cargar BarcodeDetector (nativo en Chrome/Android, polyfill ZXing-WASM en iOS/Firefox)
    */
-  async loadZXing() {
-    if (window.ZXing) return;
+  async loadBarcodeDetector() {
+    if ('BarcodeDetector' in window) return; // Ya disponible nativamente
 
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = 'https://unpkg.com/@zxing/library@latest/umd/index.min.js';
+      // Polyfill que usa ZXing-WASM: nativo en Chrome/Edge/Android, WASM en iOS/Firefox
+      script.src = 'https://cdn.jsdelivr.net/npm/barcode-detector@3/dist/es2022/polyfill.min.js';
       script.onload = () => {
-        this.updateStatus('📚 Librería ZXing cargada - Escáner listo', 'text-blue-600', 'bg-blue-50');
+        this.updateStatus('Librería cargada - Escáner listo', 'text-blue-600', 'bg-blue-50');
         resolve();
       };
-      script.onerror = reject;
+      script.onerror = () => {
+        // Si el CDN falla, el escáner no puede continuar
+        reject(new Error('No se pudo cargar la librería del escáner'));
+      };
       document.head.appendChild(script);
     });
   }
 
   /**
-   * Iniciar ZXing - Modern API Implementation
+   * Iniciar detección de códigos de barras con BarcodeDetector API
+   * - Chrome/Android/Edge: usa detección nativa por hardware (muy rápido)
+   * - iOS Safari / Firefox: usa polyfill ZXing-WASM (más rápido que ZXing JS)
    */
-  async startZXingScanner() {
+  async startBarcodeDetector() {
     try {
-      this.codeReader = new ZXing.BrowserMultiFormatReader();
-      
-      // Start continuous decode from video device using modern API
-      const videoElement = document.getElementById('barcode-video');
-      
-      // OPTIMIZED BUT COMPATIBLE CONSTRAINTS FOR FASTER BARCODE SCANNING
-      const constraints = {
-        video: {
-          deviceId: this.currentCameraId ? { exact: this.currentCameraId } : undefined,
-          // Higher resolution for better code recognition with compatibility fallback
-          width: { ideal: 1920, min: 640 },
-          height: { ideal: 1080, min: 480 },
-          // Frame rate optimization where supported
-          frameRate: { ideal: 30, min: 15 },
-          facingMode: this.isMobile() ? 'environment' : undefined
-          // Removed advanced camera controls for better compatibility
-        }
-      };
-      
-      // ENHANCED DETECTION WITH MULTIPLE STRATEGIES
-      let scanInterval;
-      
-      // Strategy 1: Continuous scanning with optimized frequency
-      const result = await this.codeReader.decodeFromConstraints(constraints, videoElement, (result, error) => {
-        if (result) {
-          const code = result.getText();
-          
-          // Enhanced duplicate prevention with timestamp
-          const now = Date.now();
-          if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
-            console.log('🎯 ¡Código detectado con algoritmo principal!', code);
-            this.lastScannedCode = code;
-            this.lastScanTime = now;
-            this.onCodeScanned(code);
-          }
-        }
-        
-        if (error && !(error instanceof ZXing.NotFoundException)) {
-          this.scanAttempts++;
-          if (this.scanAttempts < this.maxAttempts) {
-            console.log(`Intento de escaneo ${this.scanAttempts}/${this.maxAttempts}`);
-            
-            // Feedback progresivo
-            if (this.scanAttempts === 2) {
-              this.updateStatus('🔍 Analizando código - Mantén estable', 'text-yellow-600', 'bg-yellow-50');
-            } else if (this.scanAttempts === 4) {
-              this.updateStatus('🎯 Casi listo - Acerca más el código', 'text-orange-600', 'bg-orange-50');
-            }
-          }
-        }
-      });
+      const formats = [
+        'ean_13', 'ean_8', 'upc_a', 'upc_e',
+        'code_128', 'code_39', 'code_93',
+        'qr_code', 'itf', 'data_matrix', 'aztec', 'pdf417'
+      ];
 
-      // Strategy 2: High-frequency supplementary scanning for faster detection
-      // Reuse canvas to avoid GC pressure
-      const scanCanvas = document.createElement('canvas');
-      const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+      this.detector = new BarcodeDetector({ formats });
+
+      const videoElement = document.getElementById('barcode-video');
       let streamCheckCounter = 0;
 
-      scanInterval = setInterval(() => {
+      const scan = async () => {
         if (!this.isScanning || !videoElement) return;
 
         streamCheckCounter++;
-        // Validate stream health every 50 cycles (~5s)
-        if (streamCheckCounter % 50 === 0) {
+        if (streamCheckCounter % 150 === 0) {
           this.validateAndRecoverStream();
         }
 
-        if (videoElement.videoWidth > 0) {
+        if (videoElement.videoWidth > 0 && videoElement.readyState >= 2) {
           try {
-            // Reuse canvas, resize only if needed
-            if (scanCanvas.width !== videoElement.videoWidth) {
-              scanCanvas.width = videoElement.videoWidth;
-              scanCanvas.height = videoElement.videoHeight;
-            }
-
-            scanCtx.drawImage(videoElement, 0, 0);
-
-            // Enhanced image processing for better detection
-            const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-            this.enhanceImageForBarcode(imageData, scanCtx, scanCanvas);
-
-            // Try to decode the enhanced image
-            this.codeReader.decodeFromImageUrl(scanCanvas.toDataURL())
-              .then(result => {
-                if (result) {
-                  const code = result.getText();
-                  const now = Date.now();
-                  if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
-                    console.log('🔥 ¡Código detectado con algoritmo de mejora de imagen!', code);
-                    this.lastScannedCode = code;
-                    this.lastScanTime = now;
-                    this.onCodeScanned(code);
-                  }
-                }
-              })
-              .catch(() => {});
-          } catch (error) {
-            // Silent fail for supplementary strategy
-          }
-        }
-      }, 100); // Scan every 100ms for faster detection
-
-      this.scanInterval = scanInterval;
-      this.updateStatus('🎯 Escaneador activo - Posiciona el código lentamente', 'text-green-600 animate-pulse', 'bg-green-50');
-
-    } catch (error) {
-      console.error('Error ZXing:', error);
-      this.updateStatus('❌ Error del escáner - Intenta reiniciar', 'text-red-600', 'bg-red-50');
-      
-      // Fallback to older API if new one fails
-      this.fallbackZXingScanner();
-    }
-  }
-  
-  /**
-   * Fallback ZXing implementation for older browsers
-   */
-  fallbackZXingScanner() {
-    try {
-      if (!this.codeReader) {
-        this.codeReader = new ZXing.BrowserMultiFormatReader();
-      }
-      
-      // Use older decodeFromVideoDevice if available
-      if (typeof this.codeReader.decodeFromVideoDevice === 'function') {
-        this.codeReader.decodeFromVideoDevice(
-          this.currentCameraId,
-          'barcode-video',
-          (result, err) => {
-            if (result) {
-              const code = result.getText();
-              if (this.lastScannedCode !== code) {
-                console.log('¡Código detectado (fallback)!', code);
+            const barcodes = await this.detector.detect(videoElement);
+            if (barcodes.length > 0) {
+              const code = barcodes[0].rawValue;
+              const now = Date.now();
+              if (this.lastScannedCode !== code || (now - this.lastScanTime) > 2000) {
+                console.log('Codigo detectado:', code);
                 this.lastScannedCode = code;
+                this.lastScanTime = now;
                 this.onCodeScanned(code);
+                return; // Pausa el loop hasta que el usuario esté listo para otro escaneo
               }
             }
+          } catch (e) {
+            // Silent fail, continuar escaneando
           }
-        );
-        this.updateStatus('📱 Escáner en modo compatibilidad', 'text-blue-600', 'bg-blue-50');
-      } else {
-        throw new Error('No compatible ZXing API found');
-      }
+        }
+
+        this.rafId = requestAnimationFrame(scan);
+      };
+
+      this.rafId = requestAnimationFrame(scan);
+      this.updateStatus('Escaneador activo - Posiciona el codigo', 'text-green-600 animate-pulse', 'bg-green-50');
+
     } catch (error) {
-      console.error('Fallback ZXing también falló:', error);
-      this.updateStatus('❌ Error crítico del escáner', 'text-red-600', 'bg-red-50');
+      console.error('Error BarcodeDetector:', error);
+      this.updateStatus('Error del escaner - Intenta reiniciar', 'text-red-600', 'bg-red-50');
     }
   }
 
@@ -1238,18 +1147,19 @@ class BarCodeScanner {
       clearTimeout(this.scanTimeout);
     }
     
-    // Clear supplementary scanning interval
-    if (this.scanInterval) {
-      clearInterval(this.scanInterval);
-      this.scanInterval = null;
+    // Cancelar loop de animación
+    if (this.rafId) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
-    
+
+    this.detector = null;
+
+    // Compatibilidad: limpiar codeReader si quedó de sesión anterior
     if (this.codeReader) {
       try {
         this.codeReader.reset();
-      } catch (e) {
-        console.warn('Warning resetting code reader:', e);
-      }
+      } catch (e) {}
       this.codeReader = null;
     }
     
